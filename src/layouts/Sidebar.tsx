@@ -21,25 +21,21 @@ const adminNavItems = [
   { path: '/admin/dashboard', labelKey: 'nav.admin.dashboard', icon: LayoutDashboard },
   { path: '/admin/agents', labelKey: 'nav.admin.agents', icon: Users },
   { path: '/admin/admins', labelKey: 'nav.admin.admins', icon: ShieldCheck, superAdminOnly: true },
-  { path: '/admin/customers', labelKey: 'nav.admin.users', icon: Users },
-  { path: '/admin/referrals', labelKey: 'nav.admin.referrals', icon: UserPlus },
   { path: '/admin/forms', labelKey: 'nav.admin.forms', icon: FileText },
-  { path: '/admin/withdrawals', labelKey: 'nav.admin.withdrawals', icon: Wallet },
   { path: '/admin/settings', labelKey: 'nav.admin.settings', icon: Settings },
 ];
 
 const agentNavItems = [
   { path: '/agent/dashboard', labelKey: 'nav.agent.dashboard', icon: LayoutDashboard },
-  { path: '/agent/register-customer', labelKey: 'nav.agent.register_user', icon: UserPlus },
   { path: '/agent/customers', labelKey: 'nav.agent.my_users', icon: Users },
-  { path: '/agent/referrals', labelKey: 'nav.agent.referrals', icon: UserPlus },
-  { path: '/agent/documents', labelKey: 'nav.agent.documents', icon: FileText },
+  { path: '/agent/forms', labelKey: 'nav.agent.forms', icon: FileText },
   { path: '/agent/profile', labelKey: 'nav.agent.profile', icon: Users },
   { path: '/agent/settings', labelKey: 'nav.agent.settings', icon: Settings },
 ];
 
 const withdrawalNavItems = [
   { path: '/withdrawal/dashboard', labelKey: 'nav.withdrawal.dashboard', icon: LayoutDashboard },
+  { path: '/withdrawal/forms', labelKey: 'nav.withdrawal.forms', icon: FileText },
   { path: '/withdrawal/request', labelKey: 'nav.withdrawal.request_withdrawal', icon: Wallet },
   { path: '/withdrawal/history', labelKey: 'nav.withdrawal.history', icon: Clock },
   { path: '/withdrawal/notifications', labelKey: 'nav.withdrawal.notifications', icon: Bell },

@@ -166,7 +166,7 @@ export default function DynamicFormRenderer({
                 error={error}
                 accept={field.validation?.allowedFileTypes}
                 maxSizeMB={field.validation?.maxFileSizeMB}
-                value={(answers[field.id] as File | null) ?? null}
+                value={answers[field.id] ?? null}
                 onChange={(file) => onChange(field.id, file)}
                 onBlur={() => onBlur(field.id)}
               />

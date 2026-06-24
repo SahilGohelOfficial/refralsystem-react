@@ -25,6 +25,7 @@
       "dashboard": "एजेंट डैशबोर्ड",
       "register_user": "उपयोगकर्ता पंजीकृत करें",
       "my_users": "मेरे उपयोगकर्ता",
+      "forms": "फॉर्म",
       "referrals": "रेफरल",
       "documents": "दस्तावेज़",
       "profile": "प्रोफ़ाइल",
@@ -32,6 +33,7 @@
     },
     "withdrawal": {
       "dashboard": "वॉलेट डैशबोर्ड",
+      "forms": "फॉर्म",
       "request_withdrawal": "निकासी का अनुरोध करें",
       "history": "निकासी इतिहास",
       "notifications": "सूचनाएं",
@@ -78,9 +80,44 @@
     "submitter_user": "उपयोगकर्ता",
     "col_published": "प्रकाशित",
     "col_submitter": "जमाकर्ता",
+    "col_submitted_count": "जमा संख्या",
+    "col_responses": "प्रतिक्रियाएं",
     "status_published": "प्रकाशित",
     "status_draft": "ड्राफ्ट",
-    "forbidden": "केवल सुपर एडमिन फॉर्म प्रबंधित कर सकते हैं"
+    "view_responses": "प्रतिक्रियाएं",
+    "forbidden": "केवल सुपर एडमिन फॉर्म प्रबंधित कर सकते हैं",
+    "responses": {
+      "title": "फॉर्म प्रतिक्रियाएं",
+      "subtitle": "जमा की गई प्रतिक्रियाएं देखें।",
+      "subtitle_with_form": "\"{{title}}\" के लिए प्रतिक्रियाएं",
+      "empty": "अभी तक कोई प्रतिक्रिया जमा नहीं हुई है।",
+      "col_expand": "विवरण",
+      "col_submitter_type": "प्रकार",
+      "col_submitter_name": "नाम",
+      "col_submitter_phone": "फोन",
+      "col_submitted_at": "जमा समय",
+      "expand": "विस्तार करें",
+      "collapse": "समेटें",
+      "response_id": "प्रतिक्रिया आईडी",
+      "no_answers": "कोई उत्तर उपलब्ध नहीं है।",
+      "download": "डाउनलोड",
+      "unknown": "अज्ञात"
+    },
+    "portal": {
+      "empty": "अभी कोई फॉर्म उपलब्ध नहीं है।",
+      "col_submitted": "जमा किया",
+      "col_action": "कार्रवाई",
+      "submitted_yes": "जमा किया",
+      "submitted_no": "जमा नहीं किया",
+      "submitted_na": "लागू नहीं",
+      "open": "खोलें",
+      "fill": "भरें",
+      "edit": "संपादित करें",
+      "submit": "जमा करें",
+      "submit_success": "फॉर्म सफलतापूर्वक जमा हुआ।",
+      "submit_error": "फॉर्म जमा करने में विफल। कृपया पुनः प्रयास करें।",
+      "type_mismatch": "यह फॉर्म आपके खाते के प्रकार के लिए उपलब्ध नहीं है।"
+    }
   },
   "register": {
     "badge": "रेफरल पंजीकरण",
@@ -199,6 +236,20 @@
       "save": "परिवर्तन सहेजें",
       "err_phone": "फ़ोन नंबर ठीक 10 अंकों का होना चाहिए",
       "err_email": "वैध ईमेल आवश्यक है"
+    },
+    "forms": {
+      "title": "फॉर्म",
+      "subtitle": "एजेंट्स के लिए निर्धारित फॉर्म भरें।",
+      "submit_title": "फॉर्म भरें",
+      "submit_subtitle": "फॉर्म पूरा करें और अपना उत्तर जमा करें।"
+    }
+  },
+  "withdrawal": {
+    "forms": {
+      "title": "फॉर्म",
+      "subtitle": "उपयोगकर्ताओं के लिए निर्धारित फॉर्म भरें।",
+      "submit_title": "फॉर्म भरें",
+      "submit_subtitle": "फॉर्म पूरा करें और अपना उत्तर जमा करें।"
     }
   }
 }

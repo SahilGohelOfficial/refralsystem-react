@@ -25,6 +25,7 @@
       "dashboard": "એજન્ટ ડેશબોર્ડ",
       "register_user": "વપરાશકર્તા નોંધણી",
       "my_users": "મારા વપરાશકર્તાઓ",
+      "forms": "ફોર્મ",
       "referrals": "રેફરલ્સ",
       "documents": "દસ્તાવેજો",
       "profile": "પ્રોફાઇલ",
@@ -32,6 +33,7 @@
     },
     "withdrawal": {
       "dashboard": "વૉલેટ ડેશબોર્ડ",
+      "forms": "ફોર્મ",
       "request_withdrawal": "ઉપાડ વિનંતી",
       "history": "ઉપાડ ઇતિહાસ",
       "notifications": "સૂચનાઓ",
@@ -78,9 +80,44 @@
     "submitter_user": "વપરાશકર્તાઓ",
     "col_published": "પ્રકાશિત",
     "col_submitter": "સબમિટર",
+    "col_submitted_count": "સબમિટ ગણતરી",
+    "col_responses": "પ્રતિસાદો",
     "status_published": "પ્રકાશિત",
     "status_draft": "ડ્રાફ્ટ",
-    "forbidden": "ફક્ત સુપર એડમિન ફોર્મ મેનેજ કરી શકે છે"
+    "view_responses": "પ્રતિસાદો",
+    "forbidden": "ફક્ત સુપર એડમિન ફોર્મ મેનેજ કરી શકે છે",
+    "responses": {
+      "title": "ફોર્મ પ્રતિસાદો",
+      "subtitle": "સબમિટ કરેલા પ્રતિસાદોની સમીક્ષા કરો.",
+      "subtitle_with_form": "\"{{title}}\" માટેના પ્રતિસાદો",
+      "empty": "હજુ સુધી કોઈ પ્રતિસાદ સબમિટ થયો નથી.",
+      "col_expand": "વિગતો",
+      "col_submitter_type": "પ્રકાર",
+      "col_submitter_name": "નામ",
+      "col_submitter_phone": "ફોન",
+      "col_submitted_at": "સબમિટ સમય",
+      "expand": "વિસ્તૃત કરો",
+      "collapse": "સમેટો",
+      "response_id": "પ્રતિસાદ આઈડી",
+      "no_answers": "કોઈ જવાબ ઉપલબ્ધ નથી.",
+      "download": "ડાઉનલોડ",
+      "unknown": "અજ્ઞાત"
+    },
+    "portal": {
+      "empty": "હાલમાં કોઈ ફોર્મ ઉપલબ્ધ નથી.",
+      "col_submitted": "સબમિટ કર્યું",
+      "col_action": "ક્રિયા",
+      "submitted_yes": "સબમિટ કર્યું",
+      "submitted_no": "સબમિટ નથી કર્યું",
+      "submitted_na": "લાગુ પડતું નથી",
+      "open": "ખોલો",
+      "fill": "ભરો",
+      "edit": "સંપાદિત કરો",
+      "submit": "સબમિટ કરો",
+      "submit_success": "ફોર્મ સફળતાપૂર્વક સબમિટ થયું.",
+      "submit_error": "ફોર્મ સબમિટ કરવામાં નિષ્ફળ. કૃપા કરીને ફરી પ્રયાસ કરો.",
+      "type_mismatch": "આ ફોર્મ તમારા એકાઉન્ટ પ્રકાર માટે ઉપલબ્ધ નથી."
+    }
   },
   "register": {
     "badge": "રેફરલ નોંધણી",
@@ -199,6 +236,20 @@
       "save": "ફેરફારો સાચવો",
       "err_phone": "ફોન નંબર ચોક્કસ 10 અંકનો હોવો જોઈએ",
       "err_email": "માન્ય ઇમેઇલ જરૂરી છે"
+    },
+    "forms": {
+      "title": "ફોર્મ",
+      "subtitle": "એજન્ટ માટેના ફોર્મ ભરો.",
+      "submit_title": "ફોર્મ ભરો",
+      "submit_subtitle": "ફોર્મ પૂર્ણ કરો અને તમારો પ્રતિસાદ સબમિટ કરો."
+    }
+  },
+  "withdrawal": {
+    "forms": {
+      "title": "ફોર્મ",
+      "subtitle": "વપરાશકર્તા માટેના ફોર્મ ભરો.",
+      "submit_title": "ફોર્મ ભરો",
+      "submit_subtitle": "ફોર્મ પૂર્ણ કરો અને તમારો પ્રતિસાદ સબમિટ કરો."
     }
   }
 }

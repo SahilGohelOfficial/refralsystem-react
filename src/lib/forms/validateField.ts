@@ -1,11 +1,23 @@
 import type { FormAnswerValue, FormAnswers, FormField } from '../../types/form'
 
+function isStoredFileAnswer(value: unknown): boolean {
+  return (
+    !!value &&
+    typeof value === 'object' &&
+    'kind' in value &&
+    (value as { kind?: unknown }).kind === 'file' &&
+    'key' in value &&
+    typeof (value as { key?: unknown }).key === 'string'
+  )
+}
+
 function isEmpty(value: FormAnswerValue | undefined): boolean {
   if (value === null || value === undefined) return true
   if (typeof value === 'string') return value.trim() === ''
   if (typeof value === 'boolean') return value === false
   if (Array.isArray(value)) return value.length === 0
   if (value instanceof File) return false
+  if (isStoredFileAnswer(value)) return false
   return true
 }
 

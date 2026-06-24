@@ -184,8 +184,63 @@ export interface FormSummary {
   description: string | null;
   isPublished: boolean;
   submissionUserType: SubmissionUserType;
+  isSubmitted: boolean | null;
+  submittedCount: number | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface StoredFileMeta {
+  kind: 'file';
+  key: string;
+  name: string;
+  size: number;
+  type: string;
+}
+
+export type SubmittedAnswerValue =
+  | string
+  | string[]
+  | boolean
+  | StoredFileMeta
+  | null;
+
+export interface SubmitFormResponsePayload {
+  answers: Record<string, SubmittedAnswerValue>;
+}
+
+export interface FormResponse {
+  id: string;
+  formId: string;
+  submitterId: string | null;
+  submitterType: SubmissionUserType | null;
+  submitter: {
+    id: string | null;
+    type: SubmissionUserType | null;
+    name: string | null;
+    phoneNumber: string | null;
+  };
+  answers: Record<string, SubmittedAnswerValue>;
+  submittedAt: string;
+}
+
+export interface PresignFormUploadPayload {
+  fieldId: string;
+  fileName: string;
+  contentType: string;
+  size: number;
+}
+
+export interface PresignFormUploadResponse {
+  uploadUrl: string;
+  key: string;
+  url: string;
+  expiresIn: number;
+}
+
+export interface FormResponseFileDownloadResponse {
+  downloadUrl: string;
+  expiresIn: number;
 }
 
 export interface ApiFormField {

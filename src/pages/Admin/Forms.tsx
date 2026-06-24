@@ -131,7 +131,9 @@ const Forms = () => {
                 <TableHead>{t('forms.col_title', 'Title')}</TableHead>
                 <TableHead>{t('forms.col_published', 'Published')}</TableHead>
                 <TableHead>{t('forms.col_submitter', 'Submitter')}</TableHead>
+                <TableHead>{t('forms.col_submitted_count', 'Submitted Count')}</TableHead>
                 <TableHead>{t('forms.col_updated', 'Last Updated')}</TableHead>
+                <TableHead className="text-right">{t('forms.col_responses', 'Responses')}</TableHead>
                 {isSuperAdmin && (
                   <TableHead className="text-right">{t('forms.col_actions', 'Actions')}</TableHead>
                 )}
@@ -160,7 +162,17 @@ const Forms = () => {
                       ? t('forms.submitter_agent', 'Agents')
                       : t('forms.submitter_user', 'Users')}
                   </TableCell>
+                  <TableCell>{form.submittedCount ?? 0}</TableCell>
                   <TableCell>{formatDate(form.updatedAt)}</TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => navigate(`/admin/forms/${form.id}/responses`)}
+                    >
+                      {t('forms.view_responses', 'Responses')}
+                    </Button>
+                  </TableCell>
                   {isSuperAdmin && (
                     <TableCell className="text-right">
                       <Dropdown

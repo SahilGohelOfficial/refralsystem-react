@@ -25,6 +25,7 @@
       "dashboard": "Agent Dashboard",
       "register_user": "Register User",
       "my_users": "My Users",
+      "forms": "Forms",
       "referrals": "Referrals",
       "documents": "Documents",
       "profile": "Profile",
@@ -32,6 +33,7 @@
     },
     "withdrawal": {
       "dashboard": "Wallet Dashboard",
+      "forms": "Forms",
       "request_withdrawal": "Request Withdrawal",
       "history": "Withdrawal History",
       "notifications": "Notifications",
@@ -78,9 +80,44 @@
     "submitter_user": "Users",
     "col_published": "Published",
     "col_submitter": "Submitter",
+    "col_submitted_count": "Submitted Count",
+    "col_responses": "Responses",
     "status_published": "Published",
     "status_draft": "Draft",
-    "forbidden": "Only super admins can manage forms"
+    "view_responses": "Responses",
+    "forbidden": "Only super admins can manage forms",
+    "responses": {
+      "title": "Form Responses",
+      "subtitle": "Review submitted responses.",
+      "subtitle_with_form": "Responses for \"{{title}}\"",
+      "empty": "No responses submitted yet.",
+      "col_expand": "Details",
+      "col_submitter_type": "Type",
+      "col_submitter_name": "Name",
+      "col_submitter_phone": "Phone",
+      "col_submitted_at": "Submitted At",
+      "expand": "Expand",
+      "collapse": "Collapse",
+      "response_id": "Response ID",
+      "no_answers": "No answers available.",
+      "download": "Download",
+      "unknown": "Unknown"
+    },
+    "portal": {
+      "empty": "No forms available right now.",
+      "col_submitted": "Submitted",
+      "col_action": "Action",
+      "submitted_yes": "Submitted",
+      "submitted_no": "Not submitted",
+      "submitted_na": "N/A",
+      "open": "Open",
+      "fill": "Fill",
+      "edit": "Edit",
+      "submit": "Submit",
+      "submit_success": "Form submitted successfully.",
+      "submit_error": "Failed to submit form. Please try again.",
+      "type_mismatch": "This form is not available for your account type."
+    }
   },
   "register": {
     "badge": "Referral registration",
@@ -199,6 +236,20 @@
       "save": "Save changes",
       "err_phone": "Phone number must be exactly 10 digits",
       "err_email": "Valid email is required"
+    },
+    "forms": {
+      "title": "Forms",
+      "subtitle": "Fill forms assigned to agents.",
+      "submit_title": "Fill Form",
+      "submit_subtitle": "Complete the form and submit your response."
+    }
+  },
+  "withdrawal": {
+    "forms": {
+      "title": "Forms",
+      "subtitle": "Fill forms assigned to users.",
+      "submit_title": "Fill Form",
+      "submit_subtitle": "Complete the form and submit your response."
     }
   }
 }

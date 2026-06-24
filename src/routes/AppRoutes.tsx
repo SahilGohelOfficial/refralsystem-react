@@ -16,6 +16,7 @@ const Referrals = lazy(() => import('../pages/Admin/Referrals'));
 const Withdrawals = lazy(() => import('../pages/Admin/Withdrawals'));
 const Forms = lazy(() => import('../pages/Admin/Forms'));
 const FormBuilderPage = lazy(() => import('../pages/Admin/FormBuilderPage'));
+const FormResponses = lazy(() => import('../pages/Admin/FormResponses'));
 const Settings = lazy(() => import('../pages/Settings/Settings'));
 const ChangePassword = lazy(() => import('../pages/ChangePassword/ChangePassword'));
 
@@ -25,10 +26,14 @@ const AgentSettings = lazy(() => import('../pages/Agent/Settings'));
 const AgentSignUp = lazy(() => import('../pages/Agent/AgentSignUp'));
 const AgentProfile = lazy(() => import('../pages/Agent/AgentProfile'));
 const AgentMyUsers = lazy(() => import('../pages/Agent/MyUsers'));
+const AgentForms = lazy(() => import('../pages/Agent/AgentForms'));
+const AgentFormSubmit = lazy(() => import('../pages/Agent/AgentFormSubmit'));
 
 // Withdrawal Pages
 const WithdrawalDashboard = lazy(() => import('../pages/Withdrawal/WithdrawalDashboard'));
 const WithdrawalSettings = lazy(() => import('../pages/Withdrawal/Settings'));
+const WithdrawalForms = lazy(() => import('../pages/Withdrawal/WithdrawalForms'));
+const WithdrawalFormSubmit = lazy(() => import('../pages/Withdrawal/WithdrawalFormSubmit'));
 
 const RegisterUser = lazy(() => import('../pages/RegisterUser/RegisterUser'));
 
@@ -74,6 +79,7 @@ const AppRoutes = () => {
           <Route path="customers" element={<Users />} />
           <Route path="referrals" element={<Referrals />} />
           <Route path="forms" element={<Forms />} />
+          <Route path="forms/:formId/responses" element={<FormResponses />} />
           <Route
             path="forms/new"
             element={
@@ -112,6 +118,8 @@ const AppRoutes = () => {
           <Route index element={<Navigate to="/agent/dashboard" replace />} />
           <Route path="dashboard" element={<AgentDashboard />} />
           <Route path="customers" element={<AgentMyUsers />} />
+          <Route path="forms" element={<AgentForms />} />
+          <Route path="forms/:formId" element={<AgentFormSubmit />} />
           <Route path="referrals" element={<div className="p-8"><h2 className="text-2xl text-text font-bold">Referrals (Coming Soon)</h2></div>} />
           <Route path="documents" element={<div className="p-8"><h2 className="text-2xl text-text font-bold">Documents (Coming Soon)</h2></div>} />
           <Route path="profile" element={<AgentProfile />} />
@@ -127,6 +135,8 @@ const AppRoutes = () => {
         }>
           <Route index element={<Navigate to="/withdrawal/dashboard" replace />} />
           <Route path="dashboard" element={<WithdrawalDashboard />} />
+          <Route path="forms" element={<WithdrawalForms />} />
+          <Route path="forms/:formId" element={<WithdrawalFormSubmit />} />
           <Route path="request" element={<div className="p-8"><h2 className="text-2xl text-text font-bold">Request Withdrawal (Coming Soon)</h2></div>} />
           <Route path="history" element={<div className="p-8"><h2 className="text-2xl text-text font-bold">Withdrawal History (Coming Soon)</h2></div>} />
           <Route path="notifications" element={<div className="p-8"><h2 className="text-2xl text-text font-bold">Notifications (Coming Soon)</h2></div>} />

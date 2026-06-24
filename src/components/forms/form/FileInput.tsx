@@ -2,6 +2,7 @@ import { forwardRef, type ChangeEvent, useRef } from 'react'
 import { Upload } from 'lucide-react'
 import { cn } from '../../../lib/forms/cn'
 import Field from './Field'
+import type { StoredFileAnswer } from '../../../types/form'
 
 type FileInputProps = {
   id: string
@@ -11,7 +12,7 @@ type FileInputProps = {
   required?: boolean
   accept?: string[]
   maxSizeMB?: number
-  value?: File | null
+  value?: File | StoredFileAnswer | null
   onChange: (file: File | null) => void
   onBlur?: () => void
   className?: string

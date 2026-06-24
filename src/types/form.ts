@@ -41,7 +41,21 @@ export type FormSchema = {
   submissionUserType?: SubmissionUserType
 }
 
-export type FormAnswerValue = string | string[] | boolean | File | null
+export type StoredFileAnswer = {
+  kind: 'file'
+  key: string
+  name: string
+  size: number
+  type: string
+}
+
+export type FormAnswerValue =
+  | string
+  | string[]
+  | boolean
+  | File
+  | StoredFileAnswer
+  | null
 
 export type FormAnswers = Record<string, FormAnswerValue>
 
