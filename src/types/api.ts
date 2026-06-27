@@ -127,6 +127,8 @@ export interface City {
   stateId: number;
 }
 
+export type UserStatus = 'pending' | 'approved' | 'rejected';
+
 export interface ReferralUser {
   id: string;
   firstName: string;
@@ -134,8 +136,15 @@ export interface ReferralUser {
   phoneNumber: string;
   email: string;
   agentId: string | null;
+  status: UserStatus;
+  note: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface UpdateUserStatusPayload {
+  status: 'approved' | 'rejected';
+  note?: string;
 }
 
 export function formatUserName(user: Pick<ReferralUser, 'firstName' | 'lastName'>): string {
@@ -286,4 +295,19 @@ export interface UpdateFormPayload {
   fields?: ApiFormField[];
   isPublished?: boolean;
   submissionUserType?: SubmissionUserType;
+}
+
+export interface Chain {
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateChainPayload {
+  name: string;
+}
+
+export interface UpdateChainPayload {
+  name?: string;
 }

@@ -49,7 +49,7 @@ const MyUsers = () => {
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await listMyUsers();
+      const data = await listMyUsers('approved');
       setUsers(data);
     } catch (error) {
       toast.error(formatApiError(error as ApiError));

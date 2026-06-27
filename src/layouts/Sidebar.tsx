@@ -14,6 +14,8 @@ import {
   Bell,
   LogOut,
   ShieldCheck,
+  Link2,
+  ClipboardList,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -21,6 +23,7 @@ const adminNavItems = [
   { path: '/admin/dashboard', labelKey: 'nav.admin.dashboard', icon: LayoutDashboard },
   { path: '/admin/agents', labelKey: 'nav.admin.agents', icon: Users },
   { path: '/admin/admins', labelKey: 'nav.admin.admins', icon: ShieldCheck, superAdminOnly: true },
+  { path: '/admin/chains', labelKey: 'nav.admin.chains', icon: Link2, superAdminOnly: true },
   { path: '/admin/forms', labelKey: 'nav.admin.forms', icon: FileText },
   { path: '/admin/settings', labelKey: 'nav.admin.settings', icon: Settings },
 ];
@@ -28,6 +31,7 @@ const adminNavItems = [
 const agentNavItems = [
   { path: '/agent/dashboard', labelKey: 'nav.agent.dashboard', icon: LayoutDashboard },
   { path: '/agent/customers', labelKey: 'nav.agent.my_users', icon: Users },
+  { path: '/agent/user-requests', labelKey: 'nav.agent.user_requests', icon: ClipboardList },
   { path: '/agent/forms', labelKey: 'nav.agent.forms', icon: FileText },
   { path: '/agent/profile', labelKey: 'nav.agent.profile', icon: Users },
   { path: '/agent/settings', labelKey: 'nav.agent.settings', icon: Settings },

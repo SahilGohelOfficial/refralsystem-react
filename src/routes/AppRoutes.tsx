@@ -11,6 +11,7 @@ const Login = lazy(() => import('../pages/Login/Login'));
 const AdminDashboard = lazy(() => import('../pages/Admin/AdminDashboard'));
 const Agents = lazy(() => import('../pages/Admin/Agents'));
 const Admins = lazy(() => import('../pages/Admin/Admins'));
+const Chains = lazy(() => import('../pages/Admin/Chains'));
 const Users = lazy(() => import('../pages/Admin/Users'));
 const Referrals = lazy(() => import('../pages/Admin/Referrals'));
 const Withdrawals = lazy(() => import('../pages/Admin/Withdrawals'));
@@ -26,6 +27,8 @@ const AgentSettings = lazy(() => import('../pages/Agent/Settings'));
 const AgentSignUp = lazy(() => import('../pages/Agent/AgentSignUp'));
 const AgentProfile = lazy(() => import('../pages/Agent/AgentProfile'));
 const AgentMyUsers = lazy(() => import('../pages/Agent/MyUsers'));
+const UserRequests = lazy(() => import('../pages/Agent/UserRequests'));
+const UserRequestDetail = lazy(() => import('../pages/Agent/UserRequestDetail'));
 const AgentForms = lazy(() => import('../pages/Agent/AgentForms'));
 const AgentFormSubmit = lazy(() => import('../pages/Agent/AgentFormSubmit'));
 
@@ -76,6 +79,14 @@ const AppRoutes = () => {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="chains"
+            element={
+              <ProtectedRoute allowedRoles={['superAdmin']}>
+                <Chains />
+              </ProtectedRoute>
+            }
+          />
           <Route path="customers" element={<Users />} />
           <Route path="referrals" element={<Referrals />} />
           <Route path="forms" element={<Forms />} />
@@ -118,6 +129,8 @@ const AppRoutes = () => {
           <Route index element={<Navigate to="/agent/dashboard" replace />} />
           <Route path="dashboard" element={<AgentDashboard />} />
           <Route path="customers" element={<AgentMyUsers />} />
+          <Route path="user-requests" element={<UserRequests />} />
+          <Route path="user-requests/:userId" element={<UserRequestDetail />} />
           <Route path="forms" element={<AgentForms />} />
           <Route path="forms/:formId" element={<AgentFormSubmit />} />
           <Route path="referrals" element={<div className="p-8"><h2 className="text-2xl text-text font-bold">Referrals (Coming Soon)</h2></div>} />

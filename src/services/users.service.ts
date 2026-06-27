@@ -31,3 +31,7 @@ export function assignAgent(userId: string, payload: AssignAgentPayload) {
     ...publicOpts,
   });
 }
+
+export function getMyProfile() {
+  return api<ReferralUser>('/users/me');
+}

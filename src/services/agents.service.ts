@@ -11,6 +11,8 @@ import type {
   UpdateAgentProfilePayload,
   ReferralUser,
   UpdateUserPayload,
+  UpdateUserStatusPayload,
+  UserStatus,
 } from '../types/api';
 
 export function listAgents() {
@@ -72,8 +74,9 @@ export function updateAgentProfile(payload: UpdateAgentProfilePayload) {
   });
 }
 
-export function listMyUsers() {
-  return api<ReferralUser[]>('/agents/me/users');
+export function listMyUsers(status?: UserStatus) {
+  const query = status ? `?status=${status}` : '';
+  return api<ReferralUser[]>(`/agents/me/users${query}`);
 }
 
 export function getMyUser(id: string) {
@@ -89,4 +92,11 @@ export function updateMyUser(id: string, payload: UpdateUserPayload) {
 
 export function deleteMyUser(id: string) {
   return api<MessageResponse>(`/agents/me/users/${id}`, { method: 'DELETE' });
+}
+
+export function updateMyUserStatus(id: string, payload: UpdateUserStatusPayload) {
+  return api<ReferralUser>(`/agents/me/users/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
 }

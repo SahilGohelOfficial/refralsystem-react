@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import {
   adminLogin,
   agentLogin,
@@ -15,7 +15,8 @@ import {
   setUnauthorizedHandler,
 } from '../lib/api';
 import { isAdminPortalRole } from '../lib/roles';
-import type { ApiError, PortalRole, Agent } from '../types/api';
+import { getMyProfile } from '../services/users.service';
+import type { ApiError, PortalRole, Agent, UserStatus } from '../types/api';
 import { formatAgentName, formatUserName } from '../types/api';
 
 export interface User {
@@ -24,6 +25,8 @@ export interface User {
   email: string | null;
   role: PortalRole;
   agentLoginId?: string;
+  status?: UserStatus;
+  note?: string | null;
 }
 
 interface AuthContextType {
@@ -33,6 +36,7 @@ interface AuthContextType {
   login: (identifier: string, password: string, portal: PortalRole) => Promise<void>;
   loginWithAgentSession: (accessToken: string, agent: Agent) => void;
   logout: () => Promise<void>;
+  refreshUserProfile: () => Promise<void>;
 }
 
 const USER_KEY = 'app_user';
@@ -119,6 +123,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             name: formatUserName(loginUser),
             email: loginUser.email,
             role: 'withdrawal',
+            status: loginUser.status,
+            note: loginUser.note,
           },
           accessToken,
         );
@@ -177,11 +183,35 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     );
   };
 
+  const refreshUserProfile = useCallback(async (): Promise<void> => {
+    const token = getAccessToken();
+    if (!token) return;
+
+    try {
+      const profile = await getMyProfile();
+      setUser((current) => {
+        if (!current || current.role !== 'withdrawal') return current;
+        const updated: User = {
+          ...current,
+          name: formatUserName(profile),
+          email: profile.email,
+          status: profile.status,
+          note: profile.note,
+        };
+        localStorage.setItem(USER_KEY, JSON.stringify(updated));
+        return updated;
+      });
+    } catch (error) {
+      throw new Error(formatApiError(error as ApiError));
+    }
+  }, []);
+
   const value = {
     user,
     login,
     loginWithAgentSession,
     logout,
+    refreshUserProfile,
     loading,
     isAuthenticated: !!user && !!getAccessToken(),
   };
