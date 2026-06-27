@@ -32,19 +32,20 @@ const agentNavItems = [
   { path: '/agent/dashboard', labelKey: 'nav.agent.dashboard', icon: LayoutDashboard },
   { path: '/agent/customers', labelKey: 'nav.agent.my_users', icon: Users },
   { path: '/agent/user-requests', labelKey: 'nav.agent.user_requests', icon: ClipboardList },
+  { path: '/agent/your-chains', labelKey: 'nav.agent.your_chains', icon: Link2 },
   { path: '/agent/forms', labelKey: 'nav.agent.forms', icon: FileText },
   { path: '/agent/profile', labelKey: 'nav.agent.profile', icon: Users },
   { path: '/agent/settings', labelKey: 'nav.agent.settings', icon: Settings },
 ];
 
-const withdrawalNavItems = [
-  { path: '/withdrawal/dashboard', labelKey: 'nav.withdrawal.dashboard', icon: LayoutDashboard },
-  { path: '/withdrawal/forms', labelKey: 'nav.withdrawal.forms', icon: FileText },
-  { path: '/withdrawal/request', labelKey: 'nav.withdrawal.request_withdrawal', icon: Wallet },
-  { path: '/withdrawal/history', labelKey: 'nav.withdrawal.history', icon: Clock },
-  { path: '/withdrawal/notifications', labelKey: 'nav.withdrawal.notifications', icon: Bell },
-  { path: '/withdrawal/profile', labelKey: 'nav.withdrawal.profile', icon: Users },
-  { path: '/withdrawal/settings', labelKey: 'nav.withdrawal.settings', icon: Settings },
+const userNavItems = [
+  { path: '/user/dashboard', labelKey: 'nav.user_portal.dashboard', icon: LayoutDashboard },
+  { path: '/user/forms', labelKey: 'nav.user_portal.forms', icon: FileText },
+  { path: '/user/request', labelKey: 'nav.user_portal.request_withdrawal', icon: Wallet },
+  { path: '/user/history', labelKey: 'nav.user_portal.history', icon: Clock },
+  { path: '/user/notifications', labelKey: 'nav.user_portal.notifications', icon: Bell },
+  { path: '/user/profile', labelKey: 'nav.user_portal.profile', icon: Users },
+  { path: '/user/settings', labelKey: 'nav.user_portal.settings', icon: Settings },
 ];
 
 interface SidebarProps {
@@ -65,9 +66,9 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
   if (user?.role === 'agent') {
     navItems = agentNavItems;
     title = 'Agent Portal';
-  } else if (user?.role === 'withdrawal') {
-    navItems = withdrawalNavItems;
-    title = 'User Wallet';
+  } else if (user?.role === 'user') {
+    navItems = userNavItems;
+    title = 'User Portal';
   } else {
     navItems =
       user?.role === 'superAdmin'

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { Search, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Card } from '../../ui/Card';
 import { Table, TableCell, TableHead, TableHeader, TableRow } from '../../ui/Table';
@@ -10,6 +10,7 @@ import Input from '../../ui/Input';
 import Badge from '../../ui/Badge';
 import { formatApiError } from '../../../lib/api';
 import { listForms } from '../../../services/forms.service';
+import PortalFormViewModal from './PortalFormViewModal';
 import type { ApiError, FormSummary, SubmissionUserType } from '../../../types/api';
 
 type PortalFormsListProps = {
@@ -39,6 +40,7 @@ export default function PortalFormsList({
   const [forms, setForms] = useState<FormSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [viewFormId, setViewFormId] = useState<string | null>(null);
 
   const fetchForms = useCallback(async () => {
     setLoading(true);
@@ -68,11 +70,11 @@ export default function PortalFormsList({
   const title =
     userType === 'agent'
       ? t('agent.forms.title', 'Forms')
-      : t('withdrawal.forms.title', 'Forms');
+      : t('user_portal.forms.title', 'Forms');
   const subtitle =
     userType === 'agent'
       ? t('agent.forms.subtitle', 'Fill forms assigned to agents.')
-      : t('withdrawal.forms.subtitle', 'Fill forms assigned to users.');
+      : t('user_portal.forms.subtitle', 'Fill forms assigned to users.');
 
   return (
     <div className="space-y-6">
@@ -141,14 +143,27 @@ export default function PortalFormsList({
                   </TableCell>
                   <TableCell>{formatDate(form.updatedAt)}</TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      size="sm"
-                      onClick={() => navigate(`${detailsPathPrefix}/${form.id}`)}
-                    >
-                      {form.isSubmitted
-                        ? t('forms.portal.edit', 'Edit')
-                        : t('forms.portal.fill', 'Fill')}
-                    </Button>
+                    <div className="flex justify-end items-center gap-2">
+                      {form.isSubmitted === true ? (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          aria-label={t('forms.portal.view', 'View')}
+                          title={t('forms.portal.view', 'View')}
+                          onClick={() => setViewFormId(form.id)}
+                        >
+                          <Eye size={16} />
+                        </Button>
+                      ) : null}
+                      <Button
+                        size="sm"
+                        onClick={() => navigate(`${detailsPathPrefix}/${form.id}`)}
+                      >
+                        {form.isSubmitted
+                          ? t('forms.portal.edit', 'Edit')
+                          : t('forms.portal.fill', 'Fill')}
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -156,6 +171,12 @@ export default function PortalFormsList({
           </Table>
         )}
       </Card>
+
+      <PortalFormViewModal
+        isOpen={viewFormId !== null}
+        onClose={() => setViewFormId(null)}
+        formId={viewFormId}
+      />
     </div>
   );
 }

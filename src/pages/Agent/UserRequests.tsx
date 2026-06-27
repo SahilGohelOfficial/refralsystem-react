@@ -131,6 +131,7 @@ const UserRequests = () => {
                 <TableHead>{t('agent.user_requests.col_email', 'Email')}</TableHead>
                 <TableHead>{t('agent.user_requests.col_status', 'Status')}</TableHead>
                 <TableHead>{t('agent.user_requests.col_submitted', 'Submitted')}</TableHead>
+                <TableHead>{t('agent.user_requests.col_forms', 'Forms')}</TableHead>
               </TableRow>
             </TableHeader>
             <tbody>
@@ -153,6 +154,11 @@ const UserRequests = () => {
                     </Badge>
                   </TableCell>
                   <TableCell>{formatDate(user.createdAt)}</TableCell>
+                  <TableCell>
+                    <span className="font-medium text-text">
+                      {user.filledFormsCount ?? 0}/{user.totalFormsCount ?? 0}
+                    </span>
+                  </TableCell>
                 </TableRow>
               ))}
             </tbody>

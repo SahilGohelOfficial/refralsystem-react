@@ -13,6 +13,12 @@ import {
   presignFormUpload,
   submitFormResponse,
 } from '../../../services/forms.service';
+import {
+  getUserForm,
+  listUserFormResponses,
+  presignUserFormUpload,
+  submitUserFormResponse,
+} from '../../../services/agents.service';
 import type {
   ApiError,
   Form,
@@ -26,6 +32,7 @@ import type { FormAnswerValue, FormAnswers, FormField } from '../../../types/for
 type PortalFormSubmitProps = {
   userType: SubmissionUserType;
   listPath: string;
+  userId?: string;
 };
 
 function getDefaultAnswers(fields: FormField[]): FormAnswers {
@@ -115,7 +122,11 @@ async function uploadFileToPresignedUrl(
   }
 }
 
-export default function PortalFormSubmit({ userType, listPath }: PortalFormSubmitProps) {
+export default function PortalFormSubmit({
+  userType,
+  listPath,
+  userId,
+}: PortalFormSubmitProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { formId = '' } = useParams<{ formId: string }>();
@@ -136,8 +147,10 @@ export default function PortalFormSubmit({ userType, listPath }: PortalFormSubmi
     setLoading(true);
     try {
       const [data, responses] = await Promise.all([
-        getForm(formId),
-        listFormResponses(formId),
+        userId ? getUserForm(userId, formId) : getForm(formId),
+        userId
+          ? listUserFormResponses(userId, formId)
+          : listFormResponses(formId),
       ]);
       if (data.submissionUserType !== userType) {
         toast.error(
@@ -160,7 +173,7 @@ export default function PortalFormSubmit({ userType, listPath }: PortalFormSubmi
     } finally {
       setLoading(false);
     }
-  }, [formId, listPath, navigate, t, userType]);
+  }, [formId, listPath, navigate, t, userId, userType]);
 
   useEffect(() => {
     void fetchForm();
@@ -201,12 +214,19 @@ export default function PortalFormSubmit({ userType, listPath }: PortalFormSubmi
       const value = answers[field.id];
 
       if (value instanceof File) {
-        const presign = await presignFormUpload(form.id, {
-          fieldId: field.id,
-          fileName: value.name,
-          contentType: value.type || 'application/octet-stream',
-          size: value.size,
-        });
+        const presign = userId
+          ? await presignUserFormUpload(userId, form.id, {
+              fieldId: field.id,
+              fileName: value.name,
+              contentType: value.type || 'application/octet-stream',
+              size: value.size,
+            })
+          : await presignFormUpload(form.id, {
+              fieldId: field.id,
+              fileName: value.name,
+              contentType: value.type || 'application/octet-stream',
+              size: value.size,
+            });
 
         await uploadFileToPresignedUrl(presign.uploadUrl, value);
 
@@ -234,7 +254,7 @@ export default function PortalFormSubmit({ userType, listPath }: PortalFormSubmi
     }
 
     return payloadAnswers;
-  }, [answers, fields, form]);
+  }, [answers, fields, form, userId]);
 
   const handleSubmit = useCallback(async () => {
     if (!form) return;
@@ -248,7 +268,11 @@ export default function PortalFormSubmit({ userType, listPath }: PortalFormSubmi
     setSubmitting(true);
     try {
       const preparedAnswers = await buildSubmissionAnswers();
-      await submitFormResponse(form.id, { answers: preparedAnswers });
+      if (userId) {
+        await submitUserFormResponse(userId, form.id, { answers: preparedAnswers });
+      } else {
+        await submitFormResponse(form.id, { answers: preparedAnswers });
+      }
       toast.success(
         t('forms.portal.submit_success', 'Form submitted successfully.'),
       );
@@ -268,17 +292,22 @@ export default function PortalFormSubmit({ userType, listPath }: PortalFormSubmi
     } finally {
       setSubmitting(false);
     }
-  }, [answers, buildSubmissionAnswers, fields, form, listPath, navigate, t]);
+  }, [answers, buildSubmissionAnswers, fields, form, listPath, navigate, t, userId]);
 
-  const pageTitle =
-    userType === 'agent'
+  const pageTitle = userId
+    ? t('agent.my_users.submit_title', 'Fill User Form')
+    : userType === 'agent'
       ? t('agent.forms.submit_title', 'Fill Form')
-      : t('withdrawal.forms.submit_title', 'Fill Form');
-  const pageSubtitle =
-    userType === 'agent'
+      : t('user_portal.forms.submit_title', 'Fill Form');
+  const pageSubtitle = userId
+    ? t(
+        'agent.my_users.submit_subtitle',
+        'Complete the form on behalf of this user.',
+      )
+    : userType === 'agent'
       ? t('agent.forms.submit_subtitle', 'Complete the form and submit your response.')
       : t(
-          'withdrawal.forms.submit_subtitle',
+          'user_portal.forms.submit_subtitle',
           'Complete the form and submit your response.',
         );
 

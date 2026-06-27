@@ -204,12 +204,17 @@ const MyUsers = () => {
                 <TableHead>{t('agent.my_users.col_phone', 'Phone')}</TableHead>
                 <TableHead>{t('agent.my_users.col_email', 'Email')}</TableHead>
                 <TableHead>{t('agent.my_users.col_registered', 'Registered')}</TableHead>
+                <TableHead>{t('agent.my_users.col_forms', 'Forms')}</TableHead>
                 <TableHead className="text-right">{t('agent.my_users.col_actions', 'Actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <tbody>
               {filteredUsers.map((user) => (
-                <TableRow key={user.id}>
+                <TableRow
+                  key={user.id}
+                  className="cursor-pointer hover:bg-surface/50"
+                  onClick={() => navigate(`/agent/customers/${user.id}`)}
+                >
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
@@ -223,11 +228,20 @@ const MyUsers = () => {
                   <TableCell>{user.phoneNumber}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{formatDate(user.createdAt)}</TableCell>
+                  <TableCell>
+                    <span className="font-medium text-text">
+                      {user.filledFormsCount ?? 0}/{user.totalFormsCount ?? 0}
+                    </span>
+                  </TableCell>
                   <TableCell className="text-right">
                     <Dropdown
                       align="right"
                       trigger={
-                        <button className="p-1 text-text-secondary hover:text-text hover:bg-surface rounded-md transition-colors">
+                        <button
+                          type="button"
+                          className="p-1 text-text-secondary hover:text-text hover:bg-surface rounded-md transition-colors"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <MoreVertical size={16} />
                         </button>
                       }

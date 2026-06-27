@@ -77,7 +77,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     if (storedUser && token) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsed = JSON.parse(storedUser) as User & { role: string };
+        if (parsed.role === 'withdrawal') {
+          parsed.role = 'user';
+          localStorage.setItem(USER_KEY, JSON.stringify(parsed));
+        }
+        setUser(parsed);
       } catch {
         clearSession();
       }
@@ -115,14 +120,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         return;
       }
 
-      if (portal === 'withdrawal') {
+      if (portal === 'user') {
         const { accessToken, user: loginUser } = await userLogin(identifier, password);
         persistSession(
           {
             id: loginUser.id,
             name: formatUserName(loginUser),
             email: loginUser.email,
-            role: 'withdrawal',
+            role: 'user',
             status: loginUser.status,
             note: loginUser.note,
           },
@@ -160,7 +165,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       if (currentUser.role === 'agent') {
         await agentLogout();
-      } else if (currentUser.role === 'withdrawal') {
+      } else if (currentUser.role === 'user') {
         await userLogout();
       } else if (isAdminPortalRole(currentUser.role)) {
         await adminLogout();
@@ -190,7 +195,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       const profile = await getMyProfile();
       setUser((current) => {
-        if (!current || current.role !== 'withdrawal') return current;
+        if (!current || current.role !== 'user') return current;
         const updated: User = {
           ...current,
           name: formatUserName(profile),

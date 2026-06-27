@@ -27,17 +27,18 @@
       "register_user": "उपयोगकर्ता पंजीकृत करें",
       "my_users": "मेरे उपयोगकर्ता",
       "user_requests": "उपयोगकर्ता अनुरोध",
+      "your_chains": "आपकी चेन",
       "forms": "फॉर्म",
       "referrals": "रेफरल",
       "documents": "दस्तावेज़",
       "profile": "प्रोफ़ाइल",
       "settings": "सेटिंग्स"
     },
-    "withdrawal": {
-      "dashboard": "वॉलेट डैशबोर्ड",
+    "user_portal": {
+      "dashboard": "डैशबोर्ड",
       "forms": "फॉर्म",
-      "request_withdrawal": "निकासी का अनुरोध करें",
-      "history": "निकासी इतिहास",
+      "request_withdrawal": "निकासी का अनुरोध",
+      "history": "इतिहास",
       "notifications": "सूचनाएं",
       "profile": "प्रोफ़ाइल",
       "settings": "सेटिंग्स"
@@ -115,6 +116,10 @@
       "open": "खोलें",
       "fill": "भरें",
       "edit": "संपादित करें",
+      "view": "देखें",
+      "view_title": "जमा किया गया फॉर्म",
+      "view_submitted_at": "जमा किया गया",
+      "view_empty": "कोई जमा किया गया फॉर्म नहीं मिला।",
       "submit": "जमा करें",
       "submit_success": "फॉर्म सफलतापूर्वक जमा हुआ।",
       "submit_error": "फॉर्म जमा करने में विफल। कृपया पुनः प्रयास करें।",
@@ -164,7 +169,11 @@
     "err_phone": "फ़ोन नंबर ठीक 10 अंकों का होना चाहिए",
     "err_email": "वैध ईमेल आवश्यक है",
     "agent_location_locked": "स्थान आपके पंजीकृत सेवा क्षेत्र पर सेट है।",
-    "agent_self_assign": "आपको रेफरल एजेंट के रूप में नियुक्त किया जाएगा"
+    "agent_self_assign": "आपको रेफरल एजेंट के रूप में नियुक्त किया जाएगा",
+    "password": "पासवर्ड",
+    "password_hint": "कम से कम 8 अक्षर, अक्षर और संख्याएँ",
+    "referral_code": "रेफरल कोड",
+    "referral_code_hint": "वैकल्पिक — रेफरर कोड दर्ज करें"
   },
   "agent": {
     "signup": {
@@ -224,7 +233,10 @@
       "col_phone": "फ़ोन",
       "col_email": "ईमेल",
       "col_registered": "पंजीकृत",
+      "col_forms": "फॉर्म",
       "col_actions": "कार्रवाई",
+      "submit_title": "उपयोगकर्ता फॉर्म भरें",
+      "submit_subtitle": "इस उपयोगकर्ता की ओर से फॉर्म पूरा करें।",
       "edit": "संपादित करें",
       "delete": "हटाएं",
       "edit_title": "उपयोगकर्ता संपादित करें",
@@ -253,6 +265,8 @@
       "col_email": "ईमेल",
       "col_status": "स्थिति",
       "col_submitted": "जमा किया",
+      "col_forms": "फॉर्म",
+      "col_actions": "कार्रवाई",
       "status_pending": "लंबित",
       "status_rejected": "अस्वीकृत",
       "status_approved": "स्वीकृत"
@@ -278,6 +292,27 @@
       "note_required": "अस्वीकृति नोट आवश्यक है",
       "confirm_reject": "अस्वीकृति की पुष्टि करें",
       "reject_success": "उपयोगकर्ता सफलतापूर्वक अस्वीकृत"
+    },
+    "user_detail": {
+      "forms_section": "फॉर्म",
+      "forms_completed": "पूर्ण",
+      "referred_by": "रेफरल द्वारा",
+      "referral_code": "रेफरल कोड"
+    },
+    "approval_modal": {
+      "title": "उपयोगकर्ता स्वीकृत करें — चेन चुनें",
+      "description": "इस उपयोगकर्ता को जिस चेन में जोड़ना है वह चुनें।",
+      "chain_label": "चेन",
+      "select_chain": "— चेन चुनें —",
+      "confirm": "स्वीकृत करें"
+    },
+    "chain_referrals": {
+      "title": "आपकी चेन",
+      "subtitle": "अपनी चेन असाइनमेंट और रेफरल स्थितियाँ देखें",
+      "empty": "अभी तक कोई चेन असाइनमेंट नहीं",
+      "empty_chain": "इस चेन में कोई उपयोगकर्ता नहीं",
+      "referred_by": "{{name}} द्वारा रेफर",
+      "position": "स्थिति {{pos}}"
     },
     "forms": {
       "title": "फॉर्म",
@@ -305,7 +340,7 @@
     "updated": "अपडेट किया गया",
     "actions": "कार्रवाई"
   },
-  "withdrawal": {
+  "user_portal": {
     "status": {
       "pending": "आपका अनुरोध लंबित है",
       "pending_desc": "आपका पंजीकरण अनुरोध आपके नियुक्त एजेंट की समीक्षा की प्रतीक्षा में है।",
@@ -318,7 +353,12 @@
       "title": "फॉर्म",
       "subtitle": "उपयोगकर्ताओं के लिए निर्धारित फॉर्म भरें।",
       "submit_title": "फॉर्म भरें",
-      "submit_subtitle": "फॉर्म पूरा करें और अपना उत्तर जमा करें।"
+      "submit_subtitle": "फॉर्म पूरा करें और अपना उत्तर जमा करें।",
+      "not_eligible": "पात्र नहीं",
+      "not_eligible_title": "आप अभी फॉर्म भरने के लिए पात्र नहीं हैं",
+      "not_eligible_pending": "आपका पंजीकरण एजेंट की स्वीकृति की प्रतीक्षा में है। स्वीकृत होने के बाद आप फॉर्म भर सकेंगे।",
+      "not_eligible_rejected": "आपका पंजीकरण आपके एजेंट द्वारा अस्वीकृत कर दिया गया। स्वीकृत होने तक आप फॉर्म नहीं भर सकते।",
+      "back_to_forms": "फॉर्म पर वापस जाएं"
     }
   }
 }

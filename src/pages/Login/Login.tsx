@@ -27,7 +27,7 @@ const Login = () => {
   const location = useLocation();
 
   const path = location.pathname;
-  let portal: 'admin' | 'agent' | 'withdrawal' = 'admin';
+  let portal: 'admin' | 'agent' | 'user' = 'admin';
   let title = 'Admin Portal';
   let identifierLabel = 'Email address';
   let identifierType: 'email' | 'text' = 'email';
@@ -41,9 +41,9 @@ const Login = () => {
     identifierType = 'text';
     identifierPlaceholder = 'AGT-XXXXXX';
     demoHint = 'Use credentials provided when your agent account was created';
-  } else if (path.includes('withdrawal')) {
-    portal = 'withdrawal';
-    title = 'User Withdrawal Portal';
+  } else if (path.startsWith('/user')) {
+    portal = 'user';
+    title = 'User Portal';
     identifierLabel = 'Phone number';
     identifierType = 'text';
     identifierPlaceholder = '9876543210';
@@ -73,7 +73,7 @@ const Login = () => {
       return 'Enter a valid email address';
     }
 
-    if (portal === 'withdrawal' && !PHONE_REGEX.test(trimmedValue)) {
+    if (portal === 'user' && !PHONE_REGEX.test(trimmedValue)) {
       return 'Phone number must be exactly 10 digits';
     }
 
@@ -99,7 +99,7 @@ const Login = () => {
 
   const handleIdentifierChange = (value: string) => {
     const nextValue =
-      portal === 'withdrawal' ? value.replace(/\D/g, '').slice(0, 10) : value;
+      portal === 'user' ? value.replace(/\D/g, '').slice(0, 10) : value;
     setIdentifier(nextValue);
     setFieldErrors((prev) => ({ ...prev, identifier: undefined }));
   };
@@ -117,7 +117,7 @@ const Login = () => {
     }
 
     const normalizedIdentifier =
-      portal === 'withdrawal'
+      portal === 'user'
         ? identifier.replace(/\D/g, '')
         : identifier.trim();
 
@@ -134,7 +134,7 @@ const Login = () => {
     }
   };
 
-  const IdentifierIcon = portal === 'agent' ? User : portal === 'withdrawal' ? Phone : Mail;
+  const IdentifierIcon = portal === 'agent' ? User : portal === 'user' ? Phone : Mail;
 
   return (
     <div className="min-h-screen bg-background flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -172,9 +172,9 @@ const Login = () => {
               icon={IdentifierIcon}
               value={identifier}
               onChange={(e) => handleIdentifierChange(e.target.value)}
-              inputMode={portal === 'withdrawal' ? 'numeric' : undefined}
-              maxLength={portal === 'withdrawal' ? 10 : undefined}
-              pattern={portal === 'withdrawal' ? '\\d{10}' : undefined}
+              inputMode={portal === 'user' ? 'numeric' : undefined}
+              maxLength={portal === 'user' ? 10 : undefined}
+              pattern={portal === 'user' ? '\\d{10}' : undefined}
               autoComplete={portal === 'admin' ? 'email' : 'username'}
               error={fieldErrors.identifier}
               required
@@ -222,6 +222,18 @@ const Login = () => {
                   className="text-primary hover:underline font-medium"
                 >
                   {t('agent.signup.link', 'Sign up')}
+                </button>
+              </p>
+            )}
+            {portal === 'user' && (
+              <p className="mt-3 text-sm text-text-secondary">
+                New user?{' '}
+                <button
+                  type="button"
+                  onClick={() => navigate('/register')}
+                  className="text-primary hover:underline font-medium"
+                >
+                  Register for referral
                 </button>
               </p>
             )}

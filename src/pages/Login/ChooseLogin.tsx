@@ -55,9 +55,9 @@ const ChooseLogin = () => {
             <p className="text-sm text-text-secondary leading-relaxed">Partner Access & User Onboarding</p>
           </button>
 
-          {/* User Withdrawal Portal */}
+          {/* User Portal */}
           <button
-            onClick={() => navigate('/withdrawal/login')}
+            onClick={() => navigate('/user/login')}
             className="group relative glass-panel p-8 rounded-2xl border border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-[0_0_30px_rgba(212,160,23,0.15)] hover:-translate-y-2 text-left w-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
           >
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
@@ -66,21 +66,10 @@ const ChooseLogin = () => {
             <div className="w-16 h-16 rounded-xl bg-surface border border-border flex items-center justify-center mb-8 group-hover:bg-primary/10 transition-colors">
               <Wallet className="text-primary" size={32} />
             </div>
-            <h3 className="text-2xl font-bold text-text mb-3">User Withdrawal</h3>
-            <p className="text-sm text-text-secondary leading-relaxed">Wallet Management & Payment Requests</p>
+            <h3 className="text-2xl font-bold text-text mb-3">User Portal</h3>
+            <p className="text-sm text-text-secondary leading-relaxed">Account access & referral services</p>
           </button>
         </div>
-
-        <p className="mt-10 text-center text-sm text-text-secondary">
-          New user?{' '}
-          <button
-            type="button"
-            onClick={() => navigate('/register')}
-            className="text-primary hover:underline font-medium"
-          >
-            Register for referral
-          </button>
-        </p>
       </div>
     </div>
   );

@@ -4,15 +4,24 @@ import type {
   AgentLoginResponse,
   CreateAgentPayload,
   CreateAgentResponse,
+  Form,
+  FormResponse,
+  FormResponseFileDownloadResponse,
+  FormSummary,
   MessageResponse,
+  PresignFormUploadPayload,
+  PresignFormUploadResponse,
   ResetAgentPasswordResponse,
   SignUpAgentPayload,
+  SubmitFormResponsePayload,
   UpdateAgentPayload,
   UpdateAgentProfilePayload,
   ReferralUser,
   UpdateUserPayload,
   UpdateUserStatusPayload,
   UserStatus,
+  ApprovalInfo,
+  ChainWithUsers,
 } from '../types/api';
 
 export function listAgents() {
@@ -99,4 +108,60 @@ export function updateMyUserStatus(id: string, payload: UpdateUserStatusPayload)
     method: 'PATCH',
     body: JSON.stringify(payload),
   });
+}
+
+export function getApprovalInfo(userId: string) {
+  return api<ApprovalInfo>(`/agents/me/users/${userId}/approval-info`);
+}
+
+export function getMyChainReferrals() {
+  return api<{ chains: ChainWithUsers[] }>('/agents/me/chain-referrals');
+}
+
+export function listUserForms(userId: string) {
+  return api<FormSummary[]>(`/agents/me/users/${userId}/forms`);
+}
+
+export function getUserForm(userId: string, formId: string) {
+  return api<Form>(`/agents/me/users/${userId}/forms/${formId}`);
+}
+
+export function listUserFormResponses(userId: string, formId: string) {
+  return api<FormResponse[]>(`/agents/me/users/${userId}/forms/${formId}/responses`);
+}
+
+export function submitUserFormResponse(
+  userId: string,
+  formId: string,
+  payload: SubmitFormResponsePayload,
+) {
+  return api<FormResponse>(`/agents/me/users/${userId}/forms/${formId}/responses`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function presignUserFormUpload(
+  userId: string,
+  formId: string,
+  payload: PresignFormUploadPayload,
+) {
+  return api<PresignFormUploadResponse>(
+    `/agents/me/users/${userId}/forms/${formId}/uploads/presign`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export function getUserFormResponseFileDownloadUrl(
+  userId: string,
+  formId: string,
+  responseId: string,
+  fieldId: string,
+) {
+  return api<FormResponseFileDownloadResponse>(
+    `/agents/me/users/${userId}/forms/${formId}/responses/${responseId}/files/${fieldId}/download`,
+  );
 }

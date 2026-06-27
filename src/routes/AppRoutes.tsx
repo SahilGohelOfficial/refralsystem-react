@@ -28,11 +28,14 @@ const AgentSignUp = lazy(() => import('../pages/Agent/AgentSignUp'));
 const AgentProfile = lazy(() => import('../pages/Agent/AgentProfile'));
 const AgentMyUsers = lazy(() => import('../pages/Agent/MyUsers'));
 const UserRequests = lazy(() => import('../pages/Agent/UserRequests'));
-const UserRequestDetail = lazy(() => import('../pages/Agent/UserRequestDetail'));
+const AgentUserDetail = lazy(() => import('../pages/Agent/AgentUserDetail'));
+const AgentUserFormsRedirect = lazy(() => import('../pages/Agent/AgentUserFormsRedirect'));
 const AgentForms = lazy(() => import('../pages/Agent/AgentForms'));
 const AgentFormSubmit = lazy(() => import('../pages/Agent/AgentFormSubmit'));
+const AgentUserFormSubmit = lazy(() => import('../pages/Agent/AgentUserFormSubmit'));
+const AgentChainReferrals = lazy(() => import('../pages/Agent/AgentChainReferrals'));
 
-// Withdrawal Pages
+// User Portal Pages
 const WithdrawalDashboard = lazy(() => import('../pages/Withdrawal/WithdrawalDashboard'));
 const WithdrawalSettings = lazy(() => import('../pages/Withdrawal/Settings'));
 const WithdrawalForms = lazy(() => import('../pages/Withdrawal/WithdrawalForms'));
@@ -60,7 +63,8 @@ const AppRoutes = () => {
         <Route path="/admin/login" element={<Login />} />
         <Route path="/agent/login" element={<Login />} />
         <Route path="/agent/sign-up" element={<AgentSignUp />} />
-        <Route path="/withdrawal/login" element={<Login />} />
+        <Route path="/user/login" element={<Login />} />
+        <Route path="/withdrawal/login" element={<Navigate to="/user/login" replace />} />
         
         {/* Admin Protected Routes */}
         <Route path="/admin" element={
@@ -129,10 +133,16 @@ const AppRoutes = () => {
           <Route index element={<Navigate to="/agent/dashboard" replace />} />
           <Route path="dashboard" element={<AgentDashboard />} />
           <Route path="customers" element={<AgentMyUsers />} />
+          <Route path="customers/:userId" element={<AgentUserDetail />} />
+          <Route path="customers/:userId/forms" element={<AgentUserFormsRedirect />} />
+          <Route path="customers/:userId/forms/:formId" element={<AgentUserFormSubmit />} />
           <Route path="user-requests" element={<UserRequests />} />
-          <Route path="user-requests/:userId" element={<UserRequestDetail />} />
+          <Route path="user-requests/:userId" element={<AgentUserDetail />} />
+          <Route path="user-requests/:userId/forms" element={<AgentUserFormsRedirect />} />
+          <Route path="user-requests/:userId/forms/:formId" element={<AgentUserFormSubmit />} />
           <Route path="forms" element={<AgentForms />} />
           <Route path="forms/:formId" element={<AgentFormSubmit />} />
+          <Route path="your-chains" element={<AgentChainReferrals />} />
           <Route path="referrals" element={<div className="p-8"><h2 className="text-2xl text-text font-bold">Referrals (Coming Soon)</h2></div>} />
           <Route path="documents" element={<div className="p-8"><h2 className="text-2xl text-text font-bold">Documents (Coming Soon)</h2></div>} />
           <Route path="profile" element={<AgentProfile />} />
@@ -140,13 +150,13 @@ const AppRoutes = () => {
           <Route path="settings" element={<AgentSettings />} />
         </Route>
 
-        {/* Withdrawal Protected Routes */}
-        <Route path="/withdrawal" element={
-          <ProtectedRoute allowedRoles={['withdrawal']}>
+        {/* User Portal Protected Routes */}
+        <Route path="/user" element={
+          <ProtectedRoute allowedRoles={['user']}>
             <DashboardLayout />
           </ProtectedRoute>
         }>
-          <Route index element={<Navigate to="/withdrawal/dashboard" replace />} />
+          <Route index element={<Navigate to="/user/dashboard" replace />} />
           <Route path="dashboard" element={<WithdrawalDashboard />} />
           <Route path="forms" element={<WithdrawalForms />} />
           <Route path="forms/:formId" element={<WithdrawalFormSubmit />} />
@@ -156,6 +166,8 @@ const AppRoutes = () => {
           <Route path="profile" element={<div className="p-8"><h2 className="text-2xl text-text font-bold">Profile (Coming Soon)</h2></div>} />
           <Route path="settings" element={<WithdrawalSettings />} />
         </Route>
+
+        <Route path="/withdrawal/*" element={<Navigate to="/user/dashboard" replace />} />
 
         <Route path="*" element={<NotFound />} />
       </Routes>

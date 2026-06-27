@@ -27,17 +27,18 @@
       "register_user": "Register User",
       "my_users": "My Users",
       "user_requests": "User Requests",
+      "your_chains": "Your Chains",
       "forms": "Forms",
       "referrals": "Referrals",
       "documents": "Documents",
       "profile": "Profile",
       "settings": "Settings"
     },
-    "withdrawal": {
-      "dashboard": "Wallet Dashboard",
+    "user_portal": {
+      "dashboard": "Dashboard",
       "forms": "Forms",
       "request_withdrawal": "Request Withdrawal",
-      "history": "Withdrawal History",
+      "history": "History",
       "notifications": "Notifications",
       "profile": "Profile",
       "settings": "Settings"
@@ -115,6 +116,10 @@
       "open": "Open",
       "fill": "Fill",
       "edit": "Edit",
+      "view": "View",
+      "view_title": "Submitted form",
+      "view_submitted_at": "Submitted at",
+      "view_empty": "No submission found.",
       "submit": "Submit",
       "submit_success": "Form submitted successfully.",
       "submit_error": "Failed to submit form. Please try again.",
@@ -164,7 +169,11 @@
     "err_phone": "Phone number must be exactly 10 digits",
     "err_email": "Valid email is required",
     "agent_location_locked": "Location is set to your registered service area.",
-    "agent_self_assign": "You will be assigned as the referral agent"
+    "agent_self_assign": "You will be assigned as the referral agent",
+    "password": "Password",
+    "password_hint": "Minimum 8 characters with letters and numbers",
+    "referral_code": "Referral code",
+    "referral_code_hint": "Optional — enter a referrer code"
   },
   "agent": {
     "signup": {
@@ -224,7 +233,10 @@
       "col_phone": "Phone",
       "col_email": "Email",
       "col_registered": "Registered",
+      "col_forms": "Forms",
       "col_actions": "Actions",
+      "submit_title": "Fill User Form",
+      "submit_subtitle": "Complete the form on behalf of this user.",
       "edit": "Edit",
       "delete": "Delete",
       "edit_title": "Edit User",
@@ -253,6 +265,8 @@
       "col_email": "Email",
       "col_status": "Status",
       "col_submitted": "Submitted",
+      "col_forms": "Forms",
+      "col_actions": "Actions",
       "status_pending": "Pending",
       "status_rejected": "Rejected",
       "status_approved": "Approved"
@@ -278,6 +292,27 @@
       "note_required": "Rejection note is required",
       "confirm_reject": "Confirm Reject",
       "reject_success": "User rejected successfully"
+    },
+    "user_detail": {
+      "forms_section": "Forms",
+      "forms_completed": "completed",
+      "referred_by": "Referral by",
+      "referral_code": "Referral code"
+    },
+    "approval_modal": {
+      "title": "Approve User — Select Chain",
+      "description": "Select the chain this user should be assigned to.",
+      "chain_label": "Chain",
+      "select_chain": "— Select a chain —",
+      "confirm": "Confirm Approve"
+    },
+    "chain_referrals": {
+      "title": "Your Chains",
+      "subtitle": "View your chain assignments and referral positions",
+      "empty": "No chain assignments yet",
+      "empty_chain": "No users in this chain",
+      "referred_by": "Referred by {{name}}",
+      "position": "Position {{pos}}"
     },
     "forms": {
       "title": "Forms",
@@ -305,7 +340,7 @@
     "updated": "Updated",
     "actions": "Actions"
   },
-  "withdrawal": {
+  "user_portal": {
     "status": {
       "pending": "Your request is pending",
       "pending_desc": "Your registration request is awaiting review by your assigned agent.",
@@ -318,7 +353,12 @@
       "title": "Forms",
       "subtitle": "Fill forms assigned to users.",
       "submit_title": "Fill Form",
-      "submit_subtitle": "Complete the form and submit your response."
+      "submit_subtitle": "Complete the form and submit your response.",
+      "not_eligible": "Not eligible",
+      "not_eligible_title": "You are not eligible to fill forms yet",
+      "not_eligible_pending": "Your registration is awaiting agent approval. You can fill forms once approved.",
+      "not_eligible_rejected": "Your registration was rejected by your agent. You cannot fill forms until you are approved.",
+      "back_to_forms": "Back to forms"
     }
   }
 }

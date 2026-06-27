@@ -55,6 +55,7 @@ const RegisterUser = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [referralCode, setReferralCode] = useState('');
 
   const [states, setStates] = useState<State[]>([]);
   const [cities, setCities] = useState<City[]>([]);
@@ -182,13 +183,15 @@ const RegisterUser = () => {
 
     setSubmitting(true);
     try {
-      const user = await createUser({
+      const payload = {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         phoneNumber,
         email: email.trim(),
         password,
-      });
+        ...(referralCode.trim() ? { referralCode: referralCode.trim().toUpperCase() } : {}),
+      };
+      const user = await createUser(payload);
       setCreatedUser(user);
       setStep('location');
       toast.success(t('register.profile_saved', 'Profile saved'));
@@ -390,6 +393,15 @@ const RegisterUser = () => {
                   required
                   disabled={submitting}
                 />
+                {!isAgentPortal ? (
+                  <Input
+                    label={t('register.referral_code', 'Referral code')}
+                    value={referralCode}
+                    onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                    placeholder={t('register.referral_code_hint', 'Optional — enter a referrer code')}
+                    disabled={submitting}
+                  />
+                ) : null}
                 <div className="flex justify-end pt-2">
                   <Button type="submit" isLoading={submitting} className="gap-2">
                     {t('register.continue', 'Continue')}

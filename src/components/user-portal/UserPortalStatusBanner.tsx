@@ -4,9 +4,10 @@ import { AlertCircle, CheckCircle, Clock, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import type { UserStatus } from '../../types/api';
 
-const APPROVAL_SHOWN_KEY = (userId: string) => `withdrawalApprovalShown_${userId}`;
+const APPROVAL_SHOWN_KEY = (userId: string) => `userPortalApprovalShown_${userId}`;
+const LEGACY_APPROVAL_SHOWN_KEY = (userId: string) => `withdrawalApprovalShown_${userId}`;
 
-const WithdrawalStatusBanner = () => {
+const UserPortalStatusBanner = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [dismissedApproved, setDismissedApproved] = useState(false);
@@ -16,13 +17,15 @@ const WithdrawalStatusBanner = () => {
 
   useEffect(() => {
     if (!user?.id || status !== 'approved') return;
-    const shown = localStorage.getItem(APPROVAL_SHOWN_KEY(user.id));
-    if (shown === 'true') {
+    const shown =
+      localStorage.getItem(APPROVAL_SHOWN_KEY(user.id)) === 'true' ||
+      localStorage.getItem(LEGACY_APPROVAL_SHOWN_KEY(user.id)) === 'true';
+    if (shown) {
       setDismissedApproved(true);
     }
   }, [user?.id, status]);
 
-  if (!user || user.role !== 'withdrawal' || !status) {
+  if (!user || user.role !== 'user' || !status) {
     return null;
   }
 
@@ -32,11 +35,11 @@ const WithdrawalStatusBanner = () => {
         <Clock className="text-warning shrink-0 mt-0.5" size={20} />
         <div>
           <p className="font-semibold text-text">
-            {t('withdrawal.status.pending', 'Your request is pending')}
+            {t('user_portal.status.pending', 'Your request is pending')}
           </p>
           <p className="text-sm text-text-secondary mt-1">
             {t(
-              'withdrawal.status.pending_desc',
+              'user_portal.status.pending_desc',
               'Your registration request is awaiting review by your assigned agent.',
             )}
           </p>
@@ -51,12 +54,12 @@ const WithdrawalStatusBanner = () => {
         <AlertCircle className="text-error shrink-0 mt-0.5" size={20} />
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-error">
-            {t('withdrawal.status.rejected', 'Your request was rejected by your agent')}
+            {t('user_portal.status.rejected', 'Your request was rejected by your agent')}
           </p>
           {note && (
             <p className="text-sm text-text mt-2">
               <span className="font-medium">
-                {t('withdrawal.status.rejected_note', 'Reason:')}
+                {t('user_portal.status.rejected_note', 'Reason:')}
               </span>{' '}
               {note}
             </p>
@@ -72,11 +75,11 @@ const WithdrawalStatusBanner = () => {
         <CheckCircle className="text-success shrink-0 mt-0.5" size={20} />
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-text">
-            {t('withdrawal.status.approved_once', 'Your request has been approved!')}
+            {t('user_portal.status.approved_once', 'Your request has been approved!')}
           </p>
           <p className="text-sm text-text-secondary mt-1">
             {t(
-              'withdrawal.status.approved_once_desc',
+              'user_portal.status.approved_once_desc',
               'Your agent has approved your registration. You now have full access.',
             )}
           </p>
@@ -101,4 +104,4 @@ const WithdrawalStatusBanner = () => {
   return null;
 };
 
-export default WithdrawalStatusBanner;
+export default UserPortalStatusBanner;

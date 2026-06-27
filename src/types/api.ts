@@ -1,6 +1,6 @@
 export type AdminRole = 'superAdmin' | 'admin';
 
-export type PortalRole = 'admin' | 'superAdmin' | 'agent' | 'withdrawal';
+export type PortalRole = 'admin' | 'superAdmin' | 'agent' | 'user';
 
 export interface Admin {
   id: string;
@@ -138,13 +138,25 @@ export interface ReferralUser {
   agentId: string | null;
   status: UserStatus;
   note: string | null;
+  referralCode: string | null;
+  referredByUserId: string | null;
+  referredByName: string | null;
   createdAt: string;
   updatedAt: string;
+  filledFormsCount?: number;
+  totalFormsCount?: number;
 }
 
 export interface UpdateUserStatusPayload {
   status: 'approved' | 'rejected';
   note?: string;
+  chainId?: string;
+}
+
+export interface ApprovalInfo {
+  requiresChainSelection: boolean;
+  suggestedChainId: string | null;
+  chains: Chain[];
 }
 
 export function formatUserName(user: Pick<ReferralUser, 'firstName' | 'lastName'>): string {
@@ -164,6 +176,7 @@ export interface CreateUserPayload {
   phoneNumber: string;
   email: string;
   password: string;
+  referralCode?: string;
 }
 
 export interface AssignAgentPayload {
@@ -310,4 +323,19 @@ export interface CreateChainPayload {
 
 export interface UpdateChainPayload {
   name?: string;
+}
+
+export interface ChainReferralUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  position: number;
+  assignType: 'auto' | 'manual';
+  referredByName: string | null;
+}
+
+export interface ChainWithUsers {
+  id: string;
+  name: string;
+  users: ChainReferralUser[];
 }

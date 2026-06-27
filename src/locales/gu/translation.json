@@ -27,17 +27,18 @@
       "register_user": "વપરાશકર્તા નોંધણી",
       "my_users": "મારા વપરાશકર્તાઓ",
       "user_requests": "વપરાશકર્તા વિનંતીઓ",
+      "your_chains": "તમારી ચેઈન",
       "forms": "ફોર્મ",
       "referrals": "રેફરલ્સ",
       "documents": "દસ્તાવેજો",
       "profile": "પ્રોફાઇલ",
       "settings": "સેટિંગ્સ"
     },
-    "withdrawal": {
-      "dashboard": "વૉલેટ ડેશબોર્ડ",
+    "user_portal": {
+      "dashboard": "ડેશબોર્ડ",
       "forms": "ફોર્મ",
       "request_withdrawal": "ઉપાડ વિનંતી",
-      "history": "ઉપાડ ઇતિહાસ",
+      "history": "ઇતિહાસ",
       "notifications": "સૂચનાઓ",
       "profile": "પ્રોફાઇલ",
       "settings": "સેટિંગ્સ"
@@ -115,6 +116,10 @@
       "open": "ખોલો",
       "fill": "ભરો",
       "edit": "સંપાદિત કરો",
+      "view": "જુઓ",
+      "view_title": "સબમિટ કરેલ ફોર્મ",
+      "view_submitted_at": "સબમિટ કર્યું",
+      "view_empty": "કોઈ સબમિશન મળ્યું નથી.",
       "submit": "સબમિટ કરો",
       "submit_success": "ફોર્મ સફળતાપૂર્વક સબમિટ થયું.",
       "submit_error": "ફોર્મ સબમિટ કરવામાં નિષ્ફળ. કૃપા કરીને ફરી પ્રયાસ કરો.",
@@ -164,7 +169,11 @@
     "err_phone": "ફોન નંબર ચોક્કસ 10 અંકનો હોવો જોઈએ",
     "err_email": "માન્ય ઇમેઇલ જરૂરી છે",
     "agent_location_locked": "સ્થાન તમારા નોંધાયેલ સેવા વિસ્તાર પર સેટ છે.",
-    "agent_self_assign": "તમને રેફરલ એજન્ટ તરીકે સોંપવામાં આવશે"
+    "agent_self_assign": "તમને રેફરલ એજન્ટ તરીકે સોંપવામાં આવશે",
+    "password": "પાસવર્ડ",
+    "password_hint": "ઓછામાં ઓછા 8 અક્ષરો, અક્ષરો અને નંબરો",
+    "referral_code": "રેફરલ કોડ",
+    "referral_code_hint": "વૈકલ્પિક — રેફરર કોડ દાખલ કરો"
   },
   "agent": {
     "signup": {
@@ -224,7 +233,10 @@
       "col_phone": "ફોન",
       "col_email": "ઇમેઇલ",
       "col_registered": "નોંધાયેલ",
+      "col_forms": "ફોર્મ",
       "col_actions": "ક્રિયાઓ",
+      "submit_title": "વપરાશકર્તા ફોર્મ ભરો",
+      "submit_subtitle": "આ વપરાશકર્તા તરફથી ફોર્મ પૂર્ણ કરો.",
       "edit": "સંપાદિત કરો",
       "delete": "કાઢી નાખો",
       "edit_title": "વપરાશકર્તા સંપાદિત કરો",
@@ -253,6 +265,8 @@
       "col_email": "ઇમેઇલ",
       "col_status": "સ્થિતિ",
       "col_submitted": "સબમિટ",
+      "col_forms": "ફોર્મ",
+      "col_actions": "ક્રિયાઓ",
       "status_pending": "બાકી",
       "status_rejected": "નકારેલ",
       "status_approved": "મંજૂર"
@@ -278,6 +292,27 @@
       "note_required": "નકારણ નોંધ જરૂરી છે",
       "confirm_reject": "નકારણની પુષ્ટિ કરો",
       "reject_success": "વપરાશકર્તા સફળતાપૂર્વક નકાર્યો"
+    },
+    "user_detail": {
+      "forms_section": "ફોર્મ",
+      "forms_completed": "પૂર્ણ",
+      "referred_by": "રેફરલ દ્વારા",
+      "referral_code": "રેફરલ કોડ"
+    },
+    "approval_modal": {
+      "title": "વપરાશકર્તા મંજૂર કરો — ચેઈન પસંદ કરો",
+      "description": "આ વપરાશકર્તાને કઈ ચેઈનમાં ઉમેરવા તે પસંદ કરો.",
+      "chain_label": "ચેઈન",
+      "select_chain": "— ચેઈન પસંદ કરો —",
+      "confirm": "મંજૂર કરો"
+    },
+    "chain_referrals": {
+      "title": "તમારી ચેઈન",
+      "subtitle": "તમારી ચેઈન સોંપણી અને રેફરલ સ્થિતિ જુઓ",
+      "empty": "હજુ સુધી કોઈ ચેઈન સોંપણી નથી",
+      "empty_chain": "આ ચેઈનમાં કોઈ વપરાશકર્તા નથી",
+      "referred_by": "{{name}} દ્વારા રેફર",
+      "position": "સ્થિતિ {{pos}}"
     },
     "forms": {
       "title": "ફોર્મ",
@@ -305,7 +340,7 @@
     "updated": "અપડેટ કર્યું",
     "actions": "ક્રિયાઓ"
   },
-  "withdrawal": {
+  "user_portal": {
     "status": {
       "pending": "તમારી વિનંતી બાકી છે",
       "pending_desc": "તમારી નોંધણી વિનંતી તમારા સોંપેલ એજન્ટની સમીક્ષાની રાહ જોઈ રહી છે.",
@@ -318,7 +353,12 @@
       "title": "ફોર્મ",
       "subtitle": "વપરાશકર્તા માટેના ફોર્મ ભરો.",
       "submit_title": "ફોર્મ ભરો",
-      "submit_subtitle": "ફોર્મ પૂર્ણ કરો અને તમારો પ્રતિસાદ સબમિટ કરો."
+      "submit_subtitle": "ફોર્મ પૂર્ણ કરો અને તમારો પ્રતિસાદ સબમિટ કરો.",
+      "not_eligible": "પાત્ર નથી",
+      "not_eligible_title": "તમે હજુ ફોર્મ ભરવા માટે પાત્ર નથી",
+      "not_eligible_pending": "તમારી નોંધણી એજન્ટની મંજૂરીની રાહ જોઈ રહી છે. મંજૂર થયા પછી તમે ફોર્મ ભરી શકશો.",
+      "not_eligible_rejected": "તમારી નોંધણી તમારા એજન્ટ દ્વારા નકારવામાં આવી. મંજૂર થાય ત્યાં સુધી તમે ફોર્મ ભરી શકતા નથી.",
+      "back_to_forms": "ફોર્મ પર પાછા જાઓ"
     }
   }
 }
