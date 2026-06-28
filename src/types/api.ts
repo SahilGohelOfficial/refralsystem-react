@@ -6,6 +6,7 @@ export interface Admin {
   id: string;
   name: string;
   email: string;
+  phoneNumber: string | null;
   role: AdminRole;
   isActive: boolean;
   lastLogin: string | null;
@@ -218,6 +219,7 @@ export interface AssignAgentPayload {
 export interface CreateAdminPayload {
   name: string;
   email: string;
+  phoneNumber: string;
   password: string;
   role?: AdminRole;
 }
@@ -225,6 +227,7 @@ export interface CreateAdminPayload {
 export interface UpdateAdminPayload {
   name?: string;
   email?: string;
+  phoneNumber?: string;
   role?: AdminRole;
 }
 

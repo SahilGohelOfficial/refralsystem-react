@@ -47,6 +47,7 @@ const Admins = () => {
 
   const [formName, setFormName] = useState('');
   const [formEmail, setFormEmail] = useState('');
+  const [formPhoneNumber, setFormPhoneNumber] = useState('');
   const [formPassword, setFormPassword] = useState('');
   const [formRole, setFormRole] = useState<AdminRole>('admin');
   const [resetPassword, setResetPassword] = useState('');
@@ -70,6 +71,7 @@ const Admins = () => {
   const resetForm = () => {
     setFormName('');
     setFormEmail('');
+    setFormPhoneNumber('');
     setFormPassword('');
     setFormRole('admin');
     setResetPassword('');
@@ -83,6 +85,7 @@ const Admins = () => {
   const openEdit = (admin: Admin) => {
     setFormName(admin.name);
     setFormEmail(admin.email);
+    setFormPhoneNumber(admin.phoneNumber ?? '');
     setFormRole(admin.role);
     setEditingAdmin(admin);
   };
@@ -94,6 +97,7 @@ const Admins = () => {
       await createAdmin({
         name: formName,
         email: formEmail,
+        phoneNumber: formPhoneNumber,
         password: formPassword,
         role: formRole,
       });
@@ -117,6 +121,7 @@ const Admins = () => {
       await updateAdmin(editingAdmin.id, {
         name: formName,
         email: formEmail,
+        phoneNumber: formPhoneNumber,
         role: formRole,
       });
       toast.success('Admin updated successfully');
@@ -162,6 +167,7 @@ const Admins = () => {
     return (
       admin.name.toLowerCase().includes(query) ||
       admin.email.toLowerCase().includes(query) ||
+      (admin.phoneNumber?.includes(query) ?? false) ||
       admin.role.toLowerCase().includes(query)
     );
   });
@@ -182,6 +188,16 @@ const Admins = () => {
         onChange={(e) => setFormEmail(e.target.value)}
         required
         disabled={submitting}
+      />
+      <Input
+        label="Phone Number"
+        type="tel"
+        value={formPhoneNumber}
+        onChange={(e) => setFormPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+        required
+        disabled={submitting}
+        maxLength={10}
+        placeholder="10-digit mobile number"
       />
       <Input
         label="Password"
@@ -237,6 +253,16 @@ const Admins = () => {
         required
         disabled={submitting}
       />
+      <Input
+        label="Phone Number"
+        type="tel"
+        value={formPhoneNumber}
+        onChange={(e) => setFormPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+        required
+        disabled={submitting}
+        maxLength={10}
+        placeholder="10-digit mobile number"
+      />
       <Select
         label="Role"
         value={formRole}
@@ -283,7 +309,7 @@ const Admins = () => {
           <div className="w-full sm:w-96">
             <Input
               icon={Search}
-              placeholder="Search by name, email, or role..."
+              placeholder="Search by name, email, phone, or role..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -319,7 +345,10 @@ const Admins = () => {
                       </div>
                       <div>
                         <div className="font-medium text-text">{admin.name}</div>
-                        <div className="text-xs text-text-secondary">{admin.email}</div>
+                        <div className="text-xs text-text-secondary">
+                          {admin.email}
+                          {admin.phoneNumber ? ` · ${admin.phoneNumber}` : ''}
+                        </div>
                       </div>
                     </div>
                   </TableCell>
