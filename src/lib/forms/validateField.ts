@@ -1,4 +1,5 @@
 import type { FormAnswerValue, FormAnswers, FormField } from '../../types/form'
+import { validateDateValue } from './dateBounds'
 
 function isStoredFileAnswer(value: unknown): boolean {
   return (
@@ -34,6 +35,8 @@ function defaultMessage(field: FormField): string {
     case 'dropdown':
     case 'radio':
       return 'Please make a selection.'
+    case 'date':
+      return 'Please select a date.'
     default:
       return 'This field is required.'
   }
@@ -78,6 +81,11 @@ export function validateField(
         return 'Invalid validation pattern.'
       }
     }
+  }
+
+  if (field.type === 'date' && typeof value === 'string' && value) {
+    const dateError = validateDateValue(value, validation, errorMessage)
+    if (dateError) return dateError
   }
 
   if (field.type === 'file' && value instanceof File) {

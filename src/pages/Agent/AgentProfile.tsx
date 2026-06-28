@@ -26,6 +26,7 @@ const AgentProfile = () => {
   const [profile, setProfile] = useState<Agent | null>(null);
 
   const [firstName, setFirstName] = useState('');
+  const [middleName, setMiddleName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
@@ -74,6 +75,7 @@ const AgentProfile = () => {
       const [agent, stateList] = await Promise.all([getAgentProfile(), listStates()]);
       setProfile(agent);
       setFirstName(agent.firstName);
+      setMiddleName(agent.middleName ?? '');
       setLastName(agent.lastName);
       setPhoneNumber(agent.phoneNumber ?? '');
       setEmail(agent.email ?? '');
@@ -122,6 +124,7 @@ const AgentProfile = () => {
     try {
       const updated = await updateAgentProfile({
         firstName: firstName.trim(),
+        middleName: middleName.trim(),
         lastName: lastName.trim(),
         phoneNumber: phoneNumber || undefined,
         email: email.trim() || undefined,
@@ -179,12 +182,18 @@ const AgentProfile = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Input
                   label={t('agent.profile.first_name', 'First name')}
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   required
+                  disabled={submitting}
+                />
+                <Input
+                  label={t('agent.profile.middle_name', 'Middle name')}
+                  value={middleName}
+                  onChange={(e) => setMiddleName(e.target.value)}
                   disabled={submitting}
                 />
                 <Input

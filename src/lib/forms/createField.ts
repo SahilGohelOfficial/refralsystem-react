@@ -5,6 +5,7 @@ import { assertUniqueFieldLabel, labelToFieldId } from './fieldId'
 const DEFAULT_LABELS: Record<FieldType, string> = {
   text: 'Text Field',
   textarea: 'Textarea Field',
+  date: 'Date Field',
   dropdown: 'Dropdown Field',
   multi_dropdown: 'Multi Dropdown Field',
   radio: 'Radio Field',

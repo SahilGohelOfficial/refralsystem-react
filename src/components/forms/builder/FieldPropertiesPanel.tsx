@@ -121,6 +121,7 @@ export default function FieldPropertiesPanel({
     field.type === 'dropdown' ||
     field.type === 'multi_dropdown'
   const hasTextValidation = field.type === 'text' || field.type === 'textarea'
+  const hasDateValidation = field.type === 'date'
   const hasFileValidation = field.type === 'file'
   const hasOptions = FIELD_TYPES_WITH_OPTIONS.includes(field.type)
 
@@ -237,6 +238,47 @@ export default function FieldPropertiesPanel({
                   onUpdateValidation({ pattern: pattern || undefined })
                 }
                 placeholder="^EMP-\d{4}$"
+              />
+            </>
+          )}
+
+          {hasDateValidation && (
+            <>
+              <Toggle
+                label="Only future dates"
+                checked={validation.onlyFuture ?? false}
+                onChange={(onlyFuture) =>
+                  onUpdateValidation({
+                    onlyFuture,
+                    onlyPast: onlyFuture ? false : validation.onlyPast,
+                  })
+                }
+              />
+              <Toggle
+                label="Only past dates"
+                checked={validation.onlyPast ?? false}
+                onChange={(onlyPast) =>
+                  onUpdateValidation({
+                    onlyPast,
+                    onlyFuture: onlyPast ? false : validation.onlyFuture,
+                  })
+                }
+              />
+              <TextInput
+                label="Min date"
+                type="date"
+                value={validation.minDate ?? ''}
+                onChange={(minDate) =>
+                  onUpdateValidation({ minDate: minDate || undefined })
+                }
+              />
+              <TextInput
+                label="Max date"
+                type="date"
+                value={validation.maxDate ?? ''}
+                onChange={(maxDate) =>
+                  onUpdateValidation({ maxDate: maxDate || undefined })
+                }
               />
             </>
           )}

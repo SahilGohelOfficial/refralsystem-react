@@ -42,6 +42,7 @@ const MyUsers = () => {
   const [submitting, setSubmitting] = useState(false);
 
   const [firstName, setFirstName] = useState('');
+  const [middleName, setMiddleName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
@@ -65,6 +66,7 @@ const MyUsers = () => {
   const openEdit = async (user: ReferralUser) => {
     setEditingUser(user);
     setFirstName(user.firstName);
+    setMiddleName(user.middleName ?? '');
     setLastName(user.lastName);
     setPhoneNumber(user.phoneNumber);
     setEmail(user.email);
@@ -73,6 +75,7 @@ const MyUsers = () => {
       const fresh = await getMyUser(user.id);
       setEditingUser(fresh);
       setFirstName(fresh.firstName);
+      setMiddleName(fresh.middleName ?? '');
       setLastName(fresh.lastName);
       setPhoneNumber(fresh.phoneNumber);
       setEmail(fresh.email);
@@ -86,6 +89,7 @@ const MyUsers = () => {
   const closeEdit = () => {
     setEditingUser(null);
     setFirstName('');
+    setMiddleName('');
     setLastName('');
     setPhoneNumber('');
     setEmail('');
@@ -108,6 +112,7 @@ const MyUsers = () => {
     try {
       await updateMyUser(editingUser.id, {
         firstName: firstName.trim(),
+        middleName: middleName.trim(),
         lastName: lastName.trim(),
         phoneNumber,
         email: email.trim(),
@@ -272,12 +277,18 @@ const MyUsers = () => {
           </div>
         ) : (
           <form onSubmit={handleUpdate} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <Input
                 label={t('agent.my_users.first_name', 'First name')}
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 required
+                disabled={submitting}
+              />
+              <Input
+                label={t('agent.my_users.middle_name', 'Middle name')}
+                value={middleName}
+                onChange={(e) => setMiddleName(e.target.value)}
                 disabled={submitting}
               />
               <Input

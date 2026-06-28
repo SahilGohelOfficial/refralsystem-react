@@ -1,41 +1,39 @@
-import { useState, useEffect, useCallback, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft,
-  ArrowRight,
   CheckCircle2,
-  MapPin,
+  Home,
+  Smartphone,
   User,
   Users,
+  Wallet,
 } from 'lucide-react';
-import toast from 'react-hot-toast';
 import { Card, CardContent } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
-import Input from '../../components/ui/Input';
-import Select from '../../components/ui/Select';
 import Badge from '../../components/ui/Badge';
 import { useAuth } from '../../context/AuthContext';
-import { formatApiError } from '../../lib/api';
-import { listCities, listStates } from '../../services/location.service';
-import { getAgentProfile } from '../../services/agents.service';
-import { assignAgent, createUser, listAgentsByLocation } from '../../services/users.service';
-import type { Agent, ApiError, City, ReferralUser, State } from '../../types/api';
-import { formatAgentName } from '../../types/api';
+import { formatAgentName, formatUserName } from '../../types/api';
+import { useRegisterForm, type RegisterStep } from './useRegisterForm';
+import RegisterPersonalStep from './RegisterPersonalStep';
+import RegisterAddressStep from './RegisterAddressStep';
+import RegisterBankStep from './RegisterBankStep';
+import RegisterOtpStep from './RegisterOtpStep';
 
-type Step = 'profile' | 'location' | 'agent' | 'success';
-
-const STEPS: { id: Step; labelKey: string; fallback: string; icon: typeof User }[] = [
-  { id: 'profile', labelKey: 'register.step_profile', fallback: 'Your details', icon: User },
-  { id: 'location', labelKey: 'register.step_location', fallback: 'Location', icon: MapPin },
+const STEPS: {
+  id: RegisterStep;
+  labelKey: string;
+  fallback: string;
+  icon: typeof User;
+}[] = [
+  { id: 'personal', labelKey: 'register.step_personal', fallback: 'Personal', icon: User },
+  { id: 'address', labelKey: 'register.step_address', fallback: 'Address', icon: Home },
+  { id: 'bank', labelKey: 'register.step_bank', fallback: 'Bank', icon: Wallet },
+  { id: 'otp', labelKey: 'register.step_otp', fallback: 'Verify mobile', icon: Smartphone },
   { id: 'agent', labelKey: 'register.step_agent', fallback: 'Choose agent', icon: Users },
 ];
 
 const AGENT_PORTAL_STEPS = STEPS.filter((s) => s.id !== 'agent');
-
-function normalizePhone(value: string): string {
-  return value.replace(/\D/g, '').slice(0, 10);
-}
 
 const RegisterUser = () => {
   const navigate = useNavigate();
@@ -43,238 +41,88 @@ const RegisterUser = () => {
   const { user } = useAuth();
   const isAgentPortal = user?.role === 'agent';
 
-  const [step, setStep] = useState<Step>('profile');
-  const [submitting, setSubmitting] = useState(false);
-  const [loadingAgents, setLoadingAgents] = useState(false);
+  const form = useRegisterForm({
+    t,
+    isAgentPortal,
+    agentUserId: user?.id,
+  });
 
-  const [createdUser, setCreatedUser] = useState<ReferralUser | null>(null);
-  const [assignedUser, setAssignedUser] = useState<ReferralUser | null>(null);
-
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [referralCode, setReferralCode] = useState('');
-
-  const [states, setStates] = useState<State[]>([]);
-  const [cities, setCities] = useState<City[]>([]);
-  const [formStateId, setFormStateId] = useState('');
-  const [formCityId, setFormCityId] = useState('');
-  const [loadingCities, setLoadingCities] = useState(false);
-
-  const [agents, setAgents] = useState<Agent[]>([]);
-  const [selectedAgentId, setSelectedAgentId] = useState('');
-  const [agentProfile, setAgentProfile] = useState<Agent | null>(null);
-  const [loadingAgentProfile, setLoadingAgentProfile] = useState(false);
-
-  const locationLocked = isAgentPortal && !!agentProfile?.state && !!agentProfile?.city;
-
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-
-  const fetchStates = useCallback(async () => {
-    try {
-      const data = await listStates();
-      setStates(data);
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchStates();
-  }, [fetchStates]);
-
-  useEffect(() => {
-    if (!isAgentPortal) return;
-    let cancelled = false;
-    setLoadingAgentProfile(true);
-    getAgentProfile()
-      .then((profile) => {
-        if (!cancelled) setAgentProfile(profile);
-      })
-      .catch((error) => {
-        if (!cancelled) toast.error(formatApiError(error as ApiError));
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingAgentProfile(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [isAgentPortal]);
-
-  useEffect(() => {
-    if (!isAgentPortal || !agentProfile?.state || states.length === 0) return;
-    const matchedState = states.find((s) => s.name === agentProfile.state);
-    if (matchedState) {
-      setFormStateId(String(matchedState.id));
-    }
-  }, [isAgentPortal, agentProfile, states]);
-
-  useEffect(() => {
-    if (!isAgentPortal || !agentProfile?.city || cities.length === 0) return;
-    const matchedCity = cities.find((c) => c.name === agentProfile.city);
-    if (matchedCity) {
-      setFormCityId(String(matchedCity.id));
-    }
-  }, [isAgentPortal, agentProfile, cities]);
-
-  useEffect(() => {
-    if (!formStateId) {
-      setCities([]);
-      setFormCityId('');
-      return;
-    }
-    let cancelled = false;
-    setLoadingCities(true);
-    listCities(Number(formStateId))
-      .then((data) => {
-        if (!cancelled) setCities(data);
-      })
-      .catch((error) => {
-        if (!cancelled) toast.error(formatApiError(error as ApiError));
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingCities(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [formStateId]);
-
-  const validateProfile = () => {
-    const errors: Record<string, string> = {};
-    if (!firstName.trim()) errors.firstName = t('register.err_first_name', 'First name is required');
-    if (!lastName.trim()) errors.lastName = t('register.err_last_name', 'Last name is required');
-    if (!/^\d{10}$/.test(phoneNumber)) {
-      errors.phoneNumber = t(
-        'register.err_phone',
-        'Phone number must be exactly 10 digits',
-      );
-    }
-    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errors.email = t('register.err_email', 'Valid email is required');
-    }
-    if (!password.trim()) {
-      errors.password = t('register.err_password_required', 'Password is required');
-    } else if (
-      password.length < 8 ||
-      !/[a-zA-Z]/.test(password) ||
-      !/[0-9]/.test(password)
-    ) {
-      errors.password = t(
-        'register.err_password_rules',
-        'Password must be at least 8 characters and include letters and numbers',
-      );
-    }
-    setFieldErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleProfileSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!validateProfile()) return;
-
-    if (createdUser) {
-      setStep('location');
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const payload = {
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        phoneNumber,
-        email: email.trim(),
-        password,
-        ...(referralCode.trim() ? { referralCode: referralCode.trim().toUpperCase() } : {}),
-      };
-      const user = await createUser(payload);
-      setCreatedUser(user);
-      setStep('location');
-      toast.success(t('register.profile_saved', 'Profile saved'));
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleLocationContinue = async () => {
-    if (!formStateId || !formCityId) {
-      toast.error(t('register.select_location', 'Please select state and city'));
-      return;
-    }
-
-    if (isAgentPortal && user?.id && createdUser) {
-      setSubmitting(true);
-      try {
-        const result = await assignAgent(createdUser.id, {
-          agentId: user.id,
-          stateId: Number(formStateId),
-          cityId: Number(formCityId),
-        });
-        setAssignedUser(result);
-        setStep('success');
-        toast.success(t('register.success', 'Registration completed successfully'));
-      } catch (error) {
-        toast.error(formatApiError(error as ApiError));
-      } finally {
-        setSubmitting(false);
-      }
-      return;
-    }
-
-    setStep('agent');
-    setLoadingAgents(true);
-    setSelectedAgentId('');
-    try {
-      const data = await listAgentsByLocation(Number(formStateId), Number(formCityId));
-      setAgents(data);
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
-      setAgents([]);
-    } finally {
-      setLoadingAgents(false);
-    }
-  };
-
-  const handleAssignAgent = async () => {
-    if (!createdUser || !selectedAgentId || !formStateId || !formCityId) return;
-
-    setSubmitting(true);
-    try {
-      const result = await assignAgent(createdUser.id, {
-        agentId: selectedAgentId,
-        stateId: Number(formStateId),
-        cityId: Number(formCityId),
-      });
-      setAssignedUser(result);
-      setStep('success');
-      toast.success(t('register.success', 'Registration completed successfully'));
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const selectedState = states.find((s) => s.id === Number(formStateId));
-  const selectedCity = cities.find((c) => c.id === Number(formCityId));
-  const selectedAgent = agents.find((a) => a.id === selectedAgentId);
-  const assignedAgentDisplay = isAgentPortal ? agentProfile : selectedAgent;
+  const {
+    step,
+    setStep,
+    submitting,
+    loadingAgents,
+    sendingOtp,
+    otpSent,
+    assignedUser,
+    fieldErrors,
+    firstName,
+    setFirstName,
+    middleName,
+    setMiddleName,
+    lastName,
+    setLastName,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    referralCode,
+    setReferralCode,
+    dateOfBirth,
+    setDateOfBirth,
+    isMarriedChoice,
+    marriageDate,
+    setMarriageDate,
+    handleMarriedChange,
+    addressLine1,
+    setAddressLine1,
+    addressLine2,
+    setAddressLine2,
+    landmark,
+    setLandmark,
+    postalCode,
+    setPostalCode,
+    formStateId,
+    setFormStateId,
+    formCityId,
+    setFormCityId,
+    accountHolderName,
+    setAccountHolderName,
+    accountNumber,
+    setAccountNumber,
+    confirmAccountNumber,
+    setConfirmAccountNumber,
+    ifscCode,
+    setIfscCode,
+    phoneNumber,
+    setPhoneNumber,
+    otp,
+    setOtp,
+    states,
+    cities,
+    loadingCities,
+    agents,
+    selectedAgentId,
+    setSelectedAgentId,
+    agentProfile,
+    loadingAgentProfile,
+    locationLocked,
+    selectedState,
+    selectedCity,
+    selectedAgent,
+    validatePersonal,
+    validateAddress,
+    validateBank,
+    handleSendOtp,
+    completeRegistration,
+    handleAssignAgent,
+    goBack,
+  } = form;
 
   const visibleSteps = isAgentPortal ? AGENT_PORTAL_STEPS : STEPS;
   const stepIndex = visibleSteps.findIndex((s) => s.id === step);
-
-  const goBack = () => {
-    if (step === 'location') setStep('profile');
-    else if (step === 'agent') setStep('location');
-  };
-
   const exitPath = isAgentPortal ? '/agent/dashboard' : '/choose-login';
+  const assignedAgentDisplay = isAgentPortal ? agentProfile : selectedAgent;
 
   return (
     <div className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8">
@@ -298,7 +146,7 @@ const RegisterUser = () => {
           <p className="mt-2 text-sm text-text-secondary">
             {t(
               'register.subtitle',
-              'Complete your profile, choose your location, and connect with a referral agent.',
+              'Complete your profile, address, bank details, and connect with a referral agent.',
             )}
           </p>
         </div>
@@ -338,164 +186,112 @@ const RegisterUser = () => {
           </div>
         )}
 
-        {step === 'profile' && (
+        {step === 'personal' && (
           <Card>
             <CardContent className="space-y-4 pt-2">
-              <form onSubmit={handleProfileSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Input
-                    label={t('register.first_name', 'First name')}
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    error={fieldErrors.firstName}
-                    required
-                    disabled={submitting}
-                  />
-                  <Input
-                    label={t('register.last_name', 'Last name')}
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    error={fieldErrors.lastName}
-                    required
-                    disabled={submitting}
-                  />
-                </div>
-                <Input
-                  label={t('register.phone', 'Phone number')}
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(normalizePhone(e.target.value))}
-                  placeholder="9876543210"
-                  inputMode="numeric"
-                  maxLength={10}
-                  error={fieldErrors.phoneNumber}
-                  required
-                  disabled={submitting}
-                />
-                <Input
-                  label={t('register.email', 'Email')}
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  error={fieldErrors.email}
-                  required
-                  disabled={submitting}
-                />
-                <Input
-                  label={t('register.password', 'Password')}
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={t(
-                    'register.password_hint',
-                    'Minimum 8 characters with letters and numbers',
-                  )}
-                  error={fieldErrors.password}
-                  required
-                  disabled={submitting}
-                />
-                {!isAgentPortal ? (
-                  <Input
-                    label={t('register.referral_code', 'Referral code')}
-                    value={referralCode}
-                    onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
-                    placeholder={t('register.referral_code_hint', 'Optional — enter a referrer code')}
-                    disabled={submitting}
-                  />
-                ) : null}
-                <div className="flex justify-end pt-2">
-                  <Button type="submit" isLoading={submitting} className="gap-2">
-                    {t('register.continue', 'Continue')}
-                    <ArrowRight size={16} />
-                  </Button>
-                </div>
-              </form>
+              <RegisterPersonalStep
+                isAgentPortal={isAgentPortal}
+                submitting={submitting}
+                firstName={firstName}
+                setFirstName={setFirstName}
+                middleName={middleName}
+                setMiddleName={setMiddleName}
+                lastName={lastName}
+                setLastName={setLastName}
+                email={email}
+                setEmail={setEmail}
+                password={password}
+                setPassword={setPassword}
+                referralCode={referralCode}
+                setReferralCode={setReferralCode}
+                dateOfBirth={dateOfBirth}
+                setDateOfBirth={setDateOfBirth}
+                isMarriedChoice={isMarriedChoice}
+                marriageDate={marriageDate}
+                setMarriageDate={setMarriageDate}
+                handleMarriedChange={handleMarriedChange}
+                fieldErrors={fieldErrors}
+                onContinue={() => {
+                  if (validatePersonal()) setStep('address');
+                }}
+              />
             </CardContent>
           </Card>
         )}
 
-        {step === 'location' && (
+        {step === 'address' && (
           <Card>
             <CardContent className="space-y-4 pt-2">
-              {createdUser && (
-                <div className="rounded-lg border border-border bg-surface/50 p-3 text-sm">
-                  <p className="text-text-secondary">{t('register.registered_as', 'Registered as')}</p>
-                  <p className="font-medium text-text mt-0.5">
-                    {createdUser.firstName} {createdUser.lastName} · {createdUser.phoneNumber}
-                  </p>
-                </div>
-              )}
-              {isAgentPortal && agentProfile && (
-                <p className="text-sm text-text-secondary bg-surface/50 border border-border rounded-lg px-3 py-2">
-                  {t('register.agent_self_assign', 'You will be assigned as the referral agent')}:{' '}
-                  <span className="text-text font-medium">{formatAgentName(agentProfile)}</span>
-                </p>
-              )}
-              {locationLocked && (
-                <p className="text-sm text-text-secondary bg-primary/5 border border-primary/20 rounded-lg px-3 py-2">
-                  {t(
-                    'register.agent_location_locked',
-                    'Location is set to your registered service area.',
-                  )}
-                </p>
-              )}
-              <Select
-                label={t('register.state', 'State')}
-                value={formStateId}
-                onChange={(e) => {
-                  setFormStateId(e.target.value);
-                  setFormCityId('');
+              <RegisterAddressStep
+                isAgentPortal={isAgentPortal}
+                submitting={submitting}
+                addressLine1={addressLine1}
+                setAddressLine1={setAddressLine1}
+                addressLine2={addressLine2}
+                setAddressLine2={setAddressLine2}
+                landmark={landmark}
+                setLandmark={setLandmark}
+                postalCode={postalCode}
+                setPostalCode={setPostalCode}
+                formStateId={formStateId}
+                setFormStateId={setFormStateId}
+                formCityId={formCityId}
+                setFormCityId={setFormCityId}
+                states={states}
+                cities={cities}
+                loadingCities={loadingCities}
+                loadingAgentProfile={loadingAgentProfile}
+                locationLocked={locationLocked}
+                agentProfile={agentProfile}
+                fieldErrors={fieldErrors}
+                onBack={goBack}
+                onContinue={() => {
+                  if (validateAddress()) setStep('bank');
                 }}
-                options={[
-                  {
-                    value: '',
-                    label:
-                      loadingAgentProfile
-                        ? t('common.loading', 'Loading...')
-                        : states.length === 0
-                          ? t('register.no_states', 'No states available')
-                          : t('register.select_state', 'Select state'),
-                  },
-                  ...states.map((s) => ({ value: s.id, label: `${s.name} (${s.stateCode})` })),
-                ]}
-                disabled={locationLocked || loadingAgentProfile || states.length === 0}
-                required
               />
-              <Select
-                label={t('register.city', 'City')}
-                value={formCityId}
-                onChange={(e) => setFormCityId(e.target.value)}
-                options={[
-                  {
-                    value: '',
-                    label: !formStateId
-                      ? t('register.select_state_first', 'Select state first')
-                      : loadingCities
-                        ? t('common.loading', 'Loading...')
-                        : cities.length === 0
-                          ? t('register.no_cities', 'No cities available')
-                          : t('register.select_city', 'Select city'),
-                  },
-                  ...cities.map((c) => ({ value: c.id, label: c.name })),
-                ]}
-                disabled={locationLocked || !formStateId || loadingCities}
-                required
+            </CardContent>
+          </Card>
+        )}
+
+        {step === 'bank' && (
+          <Card>
+            <CardContent className="space-y-4 pt-2">
+              <RegisterBankStep
+                submitting={submitting}
+                accountHolderName={accountHolderName}
+                setAccountHolderName={setAccountHolderName}
+                accountNumber={accountNumber}
+                setAccountNumber={setAccountNumber}
+                confirmAccountNumber={confirmAccountNumber}
+                setConfirmAccountNumber={setConfirmAccountNumber}
+                ifscCode={ifscCode}
+                setIfscCode={setIfscCode}
+                fieldErrors={fieldErrors}
+                onBack={goBack}
+                onContinue={() => {
+                  if (validateBank()) setStep('otp');
+                }}
               />
-              <div className="flex justify-between pt-2">
-                <Button type="button" variant="secondary" onClick={goBack}>
-                  {t('register.back_step', 'Back')}
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleLocationContinue}
-                  isLoading={submitting}
-                  className="gap-2"
-                >
-                  {isAgentPortal
-                    ? t('register.complete', 'Complete registration')
-                    : t('register.continue', 'Continue')}
-                  <ArrowRight size={16} />
-                </Button>
-              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {step === 'otp' && (
+          <Card>
+            <CardContent className="space-y-4 pt-2">
+              <RegisterOtpStep
+                submitting={submitting}
+                sendingOtp={sendingOtp}
+                otpSent={otpSent}
+                phoneNumber={phoneNumber}
+                setPhoneNumber={setPhoneNumber}
+                otp={otp}
+                setOtp={setOtp}
+                fieldErrors={fieldErrors}
+                onBack={goBack}
+                onSendOtp={handleSendOtp}
+                onSubmit={completeRegistration}
+              />
             </CardContent>
           </Card>
         )}
@@ -527,7 +323,7 @@ const RegisterUser = () => {
                     type="button"
                     variant="secondary"
                     className="mt-4"
-                    onClick={() => setStep('location')}
+                    onClick={() => setStep('address')}
                   >
                     {t('register.change_location', 'Change location')}
                   </Button>
@@ -612,7 +408,7 @@ const RegisterUser = () => {
                 <div className="flex justify-between gap-4">
                   <span className="text-text-secondary">{t('register.name', 'Name')}</span>
                   <span className="text-text font-medium">
-                    {assignedUser.firstName} {assignedUser.lastName}
+                    {formatUserName(assignedUser)}
                   </span>
                 </div>
                 <div className="flex justify-between gap-4">
@@ -620,7 +416,9 @@ const RegisterUser = () => {
                   <span className="text-text font-medium">{assignedUser.phoneNumber}</span>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <span className="text-text-secondary">{t('register.location_summary', 'Location')}</span>
+                  <span className="text-text-secondary">
+                    {t('register.location_summary', 'Location')}
+                  </span>
                   <span className="text-text font-medium text-right">
                     {selectedCity?.name}, {selectedState?.name}
                   </span>

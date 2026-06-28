@@ -63,6 +63,15 @@ export function resetAgentPassword(id: string) {
   });
 }
 
+export function sendAgentRegistrationOtp(phoneNumber: string) {
+  return api<{ message: string }>('/agents/register/send-otp', {
+    method: 'POST',
+    body: JSON.stringify({ phoneNumber }),
+    token: null,
+    skipAuthHandler: true,
+  });
+}
+
 export function agentSignUp(payload: SignUpAgentPayload) {
   return api<AgentLoginResponse>('/agents/sign-up', {
     method: 'POST',

@@ -9,6 +9,7 @@ import {
   Select,
   Textarea,
 } from '../form'
+import { getEffectiveDateBounds } from '../../../lib/forms/dateBounds'
 import type { FormAnswerValue, FormAnswers, FormField } from '../../../types/form'
 
 type DynamicFormRendererProps = {
@@ -64,6 +65,24 @@ export default function DynamicFormRenderer({
                 onBlur={() => onBlur(field.id)}
               />
             )
+          case 'date': {
+            const { min, max } = getEffectiveDateBounds(field.validation)
+            return (
+              <Input
+                key={field.id}
+                id={field.id}
+                type="date"
+                label={field.label}
+                required={required}
+                error={error}
+                min={min}
+                max={max}
+                value={(answers[field.id] as string) ?? ''}
+                onChange={(e) => onChange(field.id, e.target.value)}
+                onBlur={() => onBlur(field.id)}
+              />
+            )
+          }
           case 'dropdown':
             return (
               <Select

@@ -17,6 +17,7 @@ export interface Agent {
   id: string;
   agentLoginId: string;
   firstName: string;
+  middleName: string | null;
   lastName: string;
   phoneNumber: string | null;
   email: string | null;
@@ -29,8 +30,10 @@ export interface Agent {
   updatedAt: string;
 }
 
-export function formatAgentName(agent: Pick<Agent, 'firstName' | 'lastName'>): string {
-  return `${agent.firstName} ${agent.lastName}`.trim();
+export function formatAgentName(
+  agent: Pick<Agent, 'firstName' | 'middleName' | 'lastName'>,
+): string {
+  return [agent.firstName, agent.middleName, agent.lastName].filter(Boolean).join(' ').trim();
 }
 
 export interface AgentCredentials {
@@ -75,6 +78,7 @@ export interface ResetAgentPasswordResponse {
 
 export interface CreateAgentPayload {
   firstName: string;
+  middleName?: string;
   lastName: string;
   phoneNumber?: string;
   email?: string;
@@ -84,6 +88,7 @@ export interface CreateAgentPayload {
 
 export interface UpdateAgentPayload {
   firstName?: string;
+  middleName?: string;
   lastName?: string;
   phoneNumber?: string;
   email?: string;
@@ -93,16 +98,23 @@ export interface UpdateAgentPayload {
 
 export interface SignUpAgentPayload {
   firstName: string;
+  middleName?: string;
   lastName: string;
   phoneNumber: string;
   email: string;
   state: string;
   city: string;
   password: string;
+  accountHolderName: string;
+  accountNumber: string;
+  confirmAccountNumber: string;
+  ifscCode: string;
+  otp: string;
 }
 
 export interface UpdateAgentProfilePayload {
   firstName?: string;
+  middleName?: string;
   lastName?: string;
   phoneNumber?: string;
   email?: string;
@@ -125,6 +137,7 @@ export interface City {
   id: number;
   name: string;
   stateId: number;
+  shortCode: string | null;
 }
 
 export type UserStatus = 'pending' | 'approved' | 'rejected';
@@ -132,6 +145,7 @@ export type UserStatus = 'pending' | 'approved' | 'rejected';
 export interface ReferralUser {
   id: string;
   firstName: string;
+  middleName: string | null;
   lastName: string;
   phoneNumber: string;
   email: string;
@@ -159,12 +173,15 @@ export interface ApprovalInfo {
   chains: Chain[];
 }
 
-export function formatUserName(user: Pick<ReferralUser, 'firstName' | 'lastName'>): string {
-  return `${user.firstName} ${user.lastName}`.trim();
+export function formatUserName(
+  user: Pick<ReferralUser, 'firstName' | 'middleName' | 'lastName'>,
+): string {
+  return [user.firstName, user.middleName, user.lastName].filter(Boolean).join(' ').trim();
 }
 
 export interface UpdateUserPayload {
   firstName?: string;
+  middleName?: string;
   lastName?: string;
   phoneNumber?: string;
   email?: string;
@@ -172,11 +189,24 @@ export interface UpdateUserPayload {
 
 export interface CreateUserPayload {
   firstName: string;
+  middleName?: string;
   lastName: string;
   phoneNumber: string;
   email: string;
   password: string;
   referralCode?: string;
+  dateOfBirth: string;
+  addressLine1: string;
+  addressLine2?: string;
+  landmark?: string;
+  postalCode: string;
+  isMarried: boolean;
+  marriageDate?: string | null;
+  accountHolderName: string;
+  accountNumber: string;
+  confirmAccountNumber: string;
+  ifscCode: string;
+  otp: string;
 }
 
 export interface AssignAgentPayload {
@@ -328,6 +358,7 @@ export interface UpdateChainPayload {
 export interface ChainReferralUser {
   id: string;
   firstName: string;
+  middleName: string | null;
   lastName: string;
   position: number;
   assignType: 'auto' | 'manual';

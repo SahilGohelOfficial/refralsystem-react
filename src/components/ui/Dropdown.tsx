@@ -120,7 +120,10 @@ export const Dropdown = ({ trigger, children, align = 'right' }: DropdownProps) 
     <>
       <div
         ref={triggerRef}
-        onClick={() => setIsOpen((open) => !open)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen((open) => !open);
+        }}
         className="cursor-pointer inline-block"
         aria-haspopup="menu"
         aria-expanded={isOpen}

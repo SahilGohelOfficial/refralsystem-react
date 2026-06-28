@@ -3,6 +3,7 @@ export type SubmissionUserType = 'agent' | 'user'
 export type FieldType =
   | 'text'
   | 'textarea'
+  | 'date'
   | 'dropdown'
   | 'multi_dropdown'
   | 'radio'
@@ -16,6 +17,10 @@ export type FieldValidation = {
   minLength?: number
   maxLength?: number
   pattern?: string
+  minDate?: string
+  maxDate?: string
+  onlyFuture?: boolean
+  onlyPast?: boolean
   allowedFileTypes?: string[]
   maxFileSizeMB?: number
   errorMessage?: string
@@ -70,6 +75,7 @@ export const FIELD_TYPES_WITH_OPTIONS: FieldType[] = [
 export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
   text: 'Text',
   textarea: 'Textarea',
+  date: 'Date',
   dropdown: 'Dropdown',
   multi_dropdown: 'Multi Dropdown',
   radio: 'Radio',

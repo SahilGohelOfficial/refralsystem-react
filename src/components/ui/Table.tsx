@@ -50,8 +50,8 @@ interface TableCellProps extends TdHTMLAttributes<HTMLTableCellElement> {
   children: ReactNode;
 }
 
-export const TableCell = ({ children, className = '' }: TableCellProps) => (
-  <td className={`px-4 py-3 text-sm text-text ${className}`}>
+export const TableCell = ({ children, className = '', ...props }: TableCellProps) => (
+  <td className={`px-4 py-3 text-sm text-text ${className}`} {...props}>
     {children}
   </td>
 );

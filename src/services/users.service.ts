@@ -16,6 +16,14 @@ export function createUser(payload: CreateUserPayload) {
   });
 }
 
+export function sendRegistrationOtp(phoneNumber: string) {
+  return api<{ message: string }>('/users/register/send-otp', {
+    method: 'POST',
+    body: JSON.stringify({ phoneNumber }),
+    ...publicOpts,
+  });
+}
+
 export function listAgentsByLocation(stateId: number, cityId: number) {
   const params = new URLSearchParams({
     stateId: String(stateId),

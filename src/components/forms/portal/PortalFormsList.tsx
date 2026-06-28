@@ -63,7 +63,7 @@ export default function PortalFormsList({
     return forms.filter(
       (form) =>
         form.title.toLowerCase().includes(query) ||
-        form.id.toLowerCase().includes(query),
+        (form.description?.toLowerCase().includes(query) ?? false),
     );
   }, [forms, search]);
 
@@ -88,7 +88,7 @@ export default function PortalFormsList({
           <div className="w-full sm:w-96">
             <Input
               icon={Search}
-              placeholder={t('forms.search_placeholder', 'Search by title or ID...')}
+              placeholder={t('forms.search_placeholder', 'Search by title...')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -123,9 +123,11 @@ export default function PortalFormsList({
                   <TableCell>
                     <div>
                       <div className="font-medium text-text">{form.title}</div>
-                      <div className="text-xs text-text-secondary font-mono truncate max-w-[200px] sm:max-w-xs">
-                        {form.id}
-                      </div>
+                      {form.description ? (
+                        <div className="text-xs text-text-secondary truncate max-w-[200px] sm:max-w-xs">
+                          {form.description}
+                        </div>
+                      ) : null}
                     </div>
                   </TableCell>
                   <TableCell>

@@ -15,6 +15,7 @@ import {
   getUserForm,
 } from '../../../services/agents.service';
 import type { ApiError, Form, FormResponse, StoredFileMeta } from '../../../types/api';
+import { resolveFieldLabel } from '../../../lib/labels';
 
 type PortalFormViewModalProps = {
   isOpen: boolean;
@@ -174,7 +175,11 @@ export default function PortalFormViewModal({
                     className="rounded-xl border border-border bg-surface/40 p-4 space-y-2"
                   >
                     <p className="text-sm font-medium text-text">
-                      {fieldLabelMap.get(fieldId) ?? fieldId}
+                      {resolveFieldLabel(
+                        fieldId,
+                        fieldLabelMap,
+                        t('forms.responses.unknown_field', 'Unknown field'),
+                      )}
                     </p>
                     {isStoredFileMeta(value) ? (
                       <div className="space-y-2">

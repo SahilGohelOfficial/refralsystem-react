@@ -96,7 +96,7 @@ const AgentUserDetail = () => {
     return forms.filter(
       (form) =>
         form.title.toLowerCase().includes(query) ||
-        form.id.toLowerCase().includes(query),
+        (form.description?.toLowerCase().includes(query) ?? false),
     );
   }, [forms, search]);
 
@@ -250,6 +250,12 @@ const AgentUserDetail = () => {
             </div>
             <div>
               <dt className="text-xs text-text-secondary">
+                {t('agent.user_request_detail.middle_name', 'Middle name')}
+              </dt>
+              <dd className="text-sm font-medium text-text mt-0.5">{user.middleName ?? '—'}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-text-secondary">
                 {t('agent.user_request_detail.last_name', 'Last name')}
               </dt>
               <dd className="text-sm font-medium text-text mt-0.5">{user.lastName}</dd>
@@ -320,7 +326,7 @@ const AgentUserDetail = () => {
           <div className="w-full sm:w-72">
             <Input
               icon={Search}
-              placeholder={t('forms.search_placeholder', 'Search by title or ID...')}
+              placeholder={t('forms.search_placeholder', 'Search by title...')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -351,9 +357,11 @@ const AgentUserDetail = () => {
                   <TableCell>
                     <div>
                       <div className="font-medium text-text">{form.title}</div>
-                      <div className="text-xs text-text-secondary font-mono truncate max-w-[200px] sm:max-w-xs">
-                        {form.id}
-                      </div>
+                      {form.description ? (
+                        <div className="text-xs text-text-secondary truncate max-w-[200px] sm:max-w-xs">
+                          {form.description}
+                        </div>
+                      ) : null}
                     </div>
                   </TableCell>
                   <TableCell>

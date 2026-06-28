@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { ChainReferralUser } from '../../types/api';
+import { formatUserName } from '../../types/api';
 
 interface ChainUserCardProps {
   user: ChainReferralUser;
@@ -16,7 +17,7 @@ const ChainUserCard = ({ user }: ChainUserCardProps) => {
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-text truncate">
-            {user.firstName} {user.lastName}
+            {formatUserName(user)}
           </p>
           {user.referredByName ? (
             <p className="text-[11px] text-text-secondary truncate">

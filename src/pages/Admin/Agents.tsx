@@ -32,6 +32,17 @@ import { formatApiError } from '../../lib/api';
 import type { Agent, AgentCredentials, ApiError, City, State } from '../../types/api';
 import { formatAgentName } from '../../types/api';
 
+function formatDateTime(iso: string | null): string {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 const Agents = () => {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [states, setStates] = useState<State[]>([]);
@@ -39,12 +50,14 @@ const Agents = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [viewingAgent, setViewingAgent] = useState<Agent | null>(null);
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
   const [credentials, setCredentials] = useState<AgentCredentials | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [loadingCities, setLoadingCities] = useState(false);
 
   const [formFirstName, setFormFirstName] = useState('');
+  const [formMiddleName, setFormMiddleName] = useState('');
   const [formLastName, setFormLastName] = useState('');
   const [formEmail, setFormEmail] = useState('');
   const [formPhoneNumber, setFormPhoneNumber] = useState('');
@@ -101,8 +114,15 @@ const Agents = () => {
     void loadCitiesForState(Number(formStateId));
   }, [formStateId, loadCitiesForState]);
 
+  useEffect(() => {
+    if (!viewingAgent) return;
+    const updated = agents.find((agent) => agent.id === viewingAgent.id);
+    if (updated) setViewingAgent(updated);
+  }, [agents, viewingAgent?.id]);
+
   const resetForm = () => {
     setFormFirstName('');
+    setFormMiddleName('');
     setFormLastName('');
     setFormEmail('');
     setFormPhoneNumber('');
@@ -126,6 +146,7 @@ const Agents = () => {
 
   const openEdit = async (agent: Agent) => {
     setFormFirstName(agent.firstName);
+    setFormMiddleName(agent.middleName ?? '');
     setFormLastName(agent.lastName);
     setFormEmail(agent.email ?? '');
     setFormPhoneNumber(agent.phoneNumber ?? '');
@@ -146,6 +167,13 @@ const Agents = () => {
     setEditingAgent(agent);
   };
 
+  const openEditFromDetail = () => {
+    if (!viewingAgent) return;
+    const agent = viewingAgent;
+    setViewingAgent(null);
+    void openEdit(agent);
+  };
+
   const handleCreate = async (e: FormEvent) => {
     e.preventDefault();
     const { state, city } = resolveLocationNames();
@@ -158,6 +186,7 @@ const Agents = () => {
     try {
       const result = await createAgent({
         firstName: formFirstName.trim(),
+        middleName: formMiddleName.trim() || undefined,
         lastName: formLastName.trim(),
         email: formEmail || undefined,
         phoneNumber: formPhoneNumber || undefined,
@@ -190,6 +219,7 @@ const Agents = () => {
     try {
       await updateAgent(editingAgent.id, {
         firstName: formFirstName.trim(),
+        middleName: formMiddleName.trim(),
         lastName: formLastName.trim(),
         email: formEmail || undefined,
         phoneNumber: formPhoneNumber || undefined,
@@ -264,6 +294,7 @@ const Agents = () => {
     return (
       fullName.includes(query) ||
       agent.firstName.toLowerCase().includes(query) ||
+      (agent.middleName?.toLowerCase().includes(query) ?? false) ||
       agent.lastName.toLowerCase().includes(query) ||
       agent.agentLoginId.toLowerCase().includes(query) ||
       (agent.email?.toLowerCase().includes(query) ?? false) ||
@@ -277,12 +308,18 @@ const Agents = () => {
 
   const agentForm = (onSubmit: (e: FormEvent) => void, submitLabel: string) => (
     <form onSubmit={onSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Input
           label="First name"
           value={formFirstName}
           onChange={(e) => setFormFirstName(e.target.value)}
           required
+          disabled={submitting}
+        />
+        <Input
+          label="Middle name"
+          value={formMiddleName}
+          onChange={(e) => setFormMiddleName(e.target.value)}
           disabled={submitting}
         />
         <Input
@@ -415,7 +452,7 @@ const Agents = () => {
             </TableHeader>
             <tbody>
               {filteredAgents.map((agent) => (
-                <TableRow key={agent.id}>
+                <TableRow key={agent.id} onClick={() => setViewingAgent(agent)}>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
@@ -439,7 +476,7 @@ const Agents = () => {
                       {agent.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                     <Dropdown
                       align="right"
                       trigger={
@@ -476,6 +513,99 @@ const Agents = () => {
           </Table>
         )}
       </Card>
+
+      <Modal
+        isOpen={!!viewingAgent}
+        onClose={() => setViewingAgent(null)}
+        title="Agent Details"
+        maxWidth="lg"
+      >
+        {viewingAgent && (
+          <div className="space-y-5">
+            <div className="flex items-start gap-4">
+              <div className="w-14 h-14 rounded-full bg-primary/15 flex items-center justify-center text-primary text-xl font-bold shrink-0">
+                {viewingAgent.firstName.charAt(0)}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-lg font-semibold text-text truncate">
+                    {formatAgentName(viewingAgent)}
+                  </h2>
+                  <Badge variant={viewingAgent.isActive ? 'success' : 'neutral'}>
+                    {viewingAgent.isActive ? 'Active' : 'Inactive'}
+                  </Badge>
+                </div>
+                <p className="text-sm text-text-secondary font-mono mt-0.5">
+                  {viewingAgent.agentLoginId}
+                </p>
+              </div>
+            </div>
+
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <dt className="text-xs text-text-secondary">First name</dt>
+                <dd className="text-sm font-medium text-text mt-0.5">{viewingAgent.firstName}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-text-secondary">Middle name</dt>
+                <dd className="text-sm font-medium text-text mt-0.5">
+                  {viewingAgent.middleName ?? '—'}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-text-secondary">Last name</dt>
+                <dd className="text-sm font-medium text-text mt-0.5">{viewingAgent.lastName}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-text-secondary">Email</dt>
+                <dd className="text-sm font-medium text-text break-all mt-0.5">
+                  {viewingAgent.email ?? '—'}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-text-secondary">Phone</dt>
+                <dd className="text-sm font-medium text-text mt-0.5">
+                  {viewingAgent.phoneNumber ?? '—'}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-text-secondary">Location</dt>
+                <dd className="text-sm font-medium text-text mt-0.5">
+                  {formatLocation(viewingAgent)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-text-secondary">Last login</dt>
+                <dd className="text-sm font-medium text-text mt-0.5">
+                  {formatDateTime(viewingAgent.lastLogin)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-text-secondary">Created</dt>
+                <dd className="text-sm font-medium text-text mt-0.5">
+                  {formatDateTime(viewingAgent.createdAt)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-text-secondary">Updated</dt>
+                <dd className="text-sm font-medium text-text mt-0.5">
+                  {formatDateTime(viewingAgent.updatedAt)}
+                </dd>
+              </div>
+            </dl>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-border">
+              <Button variant="secondary" onClick={() => setViewingAgent(null)}>
+                Close
+              </Button>
+              <Button className="gap-2" onClick={openEditFromDetail}>
+                <Edit2 size={16} />
+                Edit Agent
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       <Modal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} title="Add New Agent">
         {agentForm(handleCreate, 'Create Agent')}

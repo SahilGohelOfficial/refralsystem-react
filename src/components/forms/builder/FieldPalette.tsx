@@ -5,6 +5,7 @@ import { FIELD_TYPE_LABELS } from '../../../types/form'
 const PALETTE_TYPES: FieldType[] = [
   'text',
   'textarea',
+  'date',
   'dropdown',
   'multi_dropdown',
   'radio',
