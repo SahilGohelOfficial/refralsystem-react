@@ -4,9 +4,10 @@ import ChainUserCard from './ChainUserCard';
 
 interface ChainColumnProps {
   chain: ChainWithUsers;
+  onUserClick?: (userId: string) => void;
 }
 
-const ChainColumn = ({ chain }: ChainColumnProps) => {
+const ChainColumn = ({ chain, onUserClick }: ChainColumnProps) => {
   const { t } = useTranslation();
 
   return (
@@ -31,7 +32,11 @@ const ChainColumn = ({ chain }: ChainColumnProps) => {
           </p>
         ) : (
           chain.users.map((user) => (
-            <ChainUserCard key={user.id} user={user} />
+            <ChainUserCard
+              key={user.id}
+              user={user}
+              onClick={onUserClick ? () => onUserClick(user.id) : undefined}
+            />
           ))
         )}
       </div>

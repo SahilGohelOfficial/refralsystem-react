@@ -37,6 +37,7 @@ const AgentChainReferrals = lazy(() => import('../pages/Agent/AgentChainReferral
 
 // User Portal Pages
 const UserDashboard = lazy(() => import('../pages/User/UserDashboard'));
+const UserProfile = lazy(() => import('../pages/User/UserProfile'));
 const UserSettings = lazy(() => import('../pages/User/UserSettings'));
 const UserForms = lazy(() => import('../pages/User/UserForms'));
 const UserFormSubmit = lazy(() => import('../pages/User/UserFormSubmit'));
@@ -158,6 +159,8 @@ const AppRoutes = () => {
           <Route path="dashboard" element={<UserDashboard />} />
           <Route path="forms" element={<UserForms />} />
           <Route path="forms/:formId" element={<UserFormSubmit />} />
+          <Route path="profile" element={<UserProfile />} />
+          <Route path="change-password" element={<ChangePassword />} />
           <Route path="settings" element={<UserSettings />} />
         </Route>
 

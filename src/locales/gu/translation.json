@@ -404,6 +404,12 @@
       "submit_subtitle": "ફોર્મ પૂર્ણ કરો અને તમારો પ્રતિસાદ સબમિટ કરો."
     }
   },
+  "admin": {
+    "agent_detail": {
+      "chain_view": "ચેઇન દૃશ્ય",
+      "chain_view_desc": "બધી ચેઇન અને દરેકમાં આ એજન્ટની રેફરલ સ્થિતિ."
+    }
+  },
   "chains": {
     "title": "ચેઇન મેનેજમેન્ટ",
     "subtitle": "ચેઇન બનાવો અને મેનેજ કરો. ફક્ત સુપર એડમિન.",
@@ -425,6 +431,32 @@
     "actions": "ક્રિયાઓ"
   },
   "user_portal": {
+    "profile": {
+      "subtitle": "તમારા એકાઉન્ટની વિગતો જુઓ. ફેરફાર માટે તમારા એજન્ટનો સંપર્ક કરો.",
+      "account_info": "એકાઉન્ટ માહિતી",
+      "account_info_desc": "તમારા એકાઉન્ટ સાથે જોડાયેલ વાંચન-યોગ્ય વિગતો.",
+      "personal_info": "વ્યક્તિગત વિગતો",
+      "contact_info": "સંપર્ક વિગતો",
+      "address_info": "સરનામું",
+      "security": "સુરક્ષા",
+      "registered": "નોંધાયેલ",
+      "referral_code": "રેફરલ કોડ",
+      "referred_by": "રેફર કરનાર",
+      "first_name": "પ્રથમ નામ",
+      "middle_name": "મધ્ય નામ",
+      "last_name": "છેલ્લું નામ",
+      "date_of_birth": "જન્મ તારીખ",
+      "married": "વિવાહિત",
+      "marriage_date": "લગ્ન તારીખ",
+      "phone": "ફોન નંબર",
+      "email": "ઈમેલ",
+      "address": "સંપૂર્ણ સરનામું",
+      "postal_code": "પિન કોડ",
+      "rejection_note": "નકારણ નોંધ",
+      "status_approved": "મંજૂર",
+      "status_pending": "બાકી",
+      "status_rejected": "નકારેલ"
+    },
     "status": {
       "pending": "તમારી વિનંતી બાકી છે",
       "pending_desc": "તમારી નોંધણી વિનંતી તમારા સોંપેલ એજન્ટની સમીક્ષાની રાહ જોઈ રહી છે.",

@@ -408,6 +408,12 @@
       "submit_subtitle": "Complete the form and submit your response."
     }
   },
+  "admin": {
+    "agent_detail": {
+      "chain_view": "Chain View",
+      "chain_view_desc": "All chains and this agent's referral positions within each."
+    }
+  },
   "chains": {
     "title": "Chain Management",
     "subtitle": "Create and manage chains. Super Admin only.",
@@ -429,6 +435,32 @@
     "actions": "Actions"
   },
   "user_portal": {
+    "profile": {
+      "subtitle": "View your account details. Contact your agent to request changes.",
+      "account_info": "Account information",
+      "account_info_desc": "Read-only details tied to your account.",
+      "personal_info": "Personal details",
+      "contact_info": "Contact details",
+      "address_info": "Address",
+      "security": "Security",
+      "registered": "Registered",
+      "referral_code": "Referral code",
+      "referred_by": "Referred by",
+      "first_name": "First name",
+      "middle_name": "Middle name",
+      "last_name": "Last name",
+      "date_of_birth": "Date of birth",
+      "married": "Married",
+      "marriage_date": "Marriage date",
+      "phone": "Phone number",
+      "email": "Email",
+      "address": "Full address",
+      "postal_code": "PIN code",
+      "rejection_note": "Rejection note",
+      "status_approved": "Approved",
+      "status_pending": "Pending",
+      "status_rejected": "Rejected"
+    },
     "status": {
       "pending": "Your request is pending",
       "pending_desc": "Your registration request is awaiting review by your assigned agent.",

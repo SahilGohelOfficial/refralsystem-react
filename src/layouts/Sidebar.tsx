@@ -37,6 +37,7 @@ const agentNavItems = [
 const userNavItems = [
   { path: '/user/dashboard', labelKey: 'nav.user_portal.dashboard', icon: LayoutDashboard },
   { path: '/user/forms', labelKey: 'nav.user_portal.forms', icon: FileText },
+  { path: '/user/profile', labelKey: 'nav.user_portal.profile', icon: Users },
   { path: '/user/settings', labelKey: 'nav.user_portal.settings', icon: Settings },
 ];
 

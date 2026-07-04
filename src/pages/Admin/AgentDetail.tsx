@@ -1,18 +1,22 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Search } from 'lucide-react';
+import AgentActionsMenu from '../../components/admin/AgentActionsMenu';
+import ChainReferralBoard from '../../components/chains/ChainReferralBoard';
 import toast from 'react-hot-toast';
 import { Card } from '../../components/ui/Card';
 import { Table, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
-import { getAgent, listAgentUsers } from '../../services/agents.service';
+import { getAgent, getAgentChainReferrals, listAgentUsers } from '../../services/agents.service';
 import { formatApiError } from '../../lib/api';
-import type { Agent, ApiError, ReferralUser, UserStatus } from '../../types/api';
+import type { Agent, ApiError, ChainWithUsers, ReferralUser, UserStatus } from '../../types/api';
 import { formatAgentName, formatUserName } from '../../types/api';
 
 type UserTab = 'approved' | 'pending' | 'rejected';
+type DetailTab = UserTab | 'chains';
 
 function formatDateTime(iso: string | null): string {
   if (!iso) return '—';
@@ -42,11 +46,14 @@ const statusVariant = (status: UserStatus) => {
 const AgentDetail = () => {
   const { agentId = '' } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [agent, setAgent] = useState<Agent | null>(null);
-  const [activeTab, setActiveTab] = useState<UserTab>('approved');
+  const [activeTab, setActiveTab] = useState<DetailTab>('approved');
   const [users, setUsers] = useState<ReferralUser[]>([]);
+  const [chains, setChains] = useState<ChainWithUsers[]>([]);
   const [loadingAgent, setLoadingAgent] = useState(true);
   const [loadingUsers, setLoadingUsers] = useState(true);
+  const [loadingChains, setLoadingChains] = useState(false);
   const [search, setSearch] = useState('');
 
   const fetchAgent = useCallback(async () => {
@@ -78,9 +85,28 @@ const AgentDetail = () => {
     void fetchAgent();
   }, [fetchAgent]);
 
+  const fetchChains = useCallback(async () => {
+    if (!agentId) return;
+    setLoadingChains(true);
+    try {
+      const data = await getAgentChainReferrals(agentId);
+      setChains(data.chains);
+    } catch (error) {
+      toast.error(formatApiError(error as ApiError));
+    } finally {
+      setLoadingChains(false);
+    }
+  }, [agentId]);
+
   useEffect(() => {
+    if (activeTab === 'chains') return;
     void fetchUsers(activeTab);
   }, [activeTab, fetchUsers]);
+
+  useEffect(() => {
+    if (activeTab !== 'chains') return;
+    void fetchChains();
+  }, [activeTab, fetchChains]);
 
   const formatLocation = (value: Agent) => {
     if (value.city && value.state) return `${value.city}, ${value.state}`;
@@ -99,10 +125,14 @@ const AgentDetail = () => {
     );
   });
 
-  const tabs: { id: UserTab; label: string }[] = [
+  const tabs: { id: DetailTab; label: string }[] = [
     { id: 'approved', label: 'Accepted Users' },
     { id: 'pending', label: 'Pending Users' },
     { id: 'rejected', label: 'Rejected Users' },
+    {
+      id: 'chains',
+      label: t('admin.agent_detail.chain_view', 'Chain View'),
+    },
   ];
 
   const emptyMessage = () => {
@@ -153,6 +183,17 @@ const AgentDetail = () => {
             </div>
           </div>
         </div>
+
+        <AgentActionsMenu
+          agent={agent}
+          onAgentChange={fetchAgent}
+          onDeleted={() => navigate('/admin/agents')}
+          trigger={
+            <Button variant="secondary" className="gap-2 shrink-0">
+              Actions
+            </Button>
+          }
+        />
       </div>
 
       <Card>
@@ -263,69 +304,87 @@ const AgentDetail = () => {
           ))}
         </div>
 
-        <Card className="p-0">
-          <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-4 justify-between items-center bg-surface/50 rounded-t-[20px]">
-            <div className="w-full sm:w-96">
-              <Input
-                icon={Search}
-                placeholder="Search by name, phone, or email..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
+        {activeTab === 'chains' ? (
+          <div className="space-y-3">
+            <p className="text-sm text-text-secondary">
+              {t(
+                'admin.agent_detail.chain_view_desc',
+                'All chains and this agent’s referral positions within each.',
+              )}
+            </p>
+            <ChainReferralBoard
+              chains={chains}
+              loading={loadingChains}
+              onUserClick={(userId) =>
+                navigate(`/admin/agents/${agentId}/users/${userId}`)
+              }
+            />
           </div>
-
-          {loadingUsers ? (
-            <div className="p-12 flex justify-center">
-              <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+        ) : (
+          <Card className="p-0">
+            <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-4 justify-between items-center bg-surface/50 rounded-t-[20px]">
+              <div className="w-full sm:w-96">
+                <Input
+                  icon={Search}
+                  placeholder="Search by name, phone, or email..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
             </div>
-          ) : filteredUsers.length === 0 ? (
-            <div className="p-12 text-center text-text-secondary">{emptyMessage()}</div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Registered</TableHead>
-                  <TableHead>Forms</TableHead>
-                </TableRow>
-              </TableHeader>
-              <tbody>
-                {filteredUsers.map((user) => (
-                  <TableRow
-                    key={user.id}
-                    className="cursor-pointer hover:bg-surface/50"
-                    onClick={() => navigate(`/admin/agents/${agentId}/users/${user.id}`)}
-                  >
-                    <TableCell>
-                      <div className="font-medium text-text">{formatUserName(user)}</div>
-                    </TableCell>
-                    <TableCell>{user.phoneNumber}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>
-                      <Badge variant={statusVariant(user.status)}>
-                        {user.status === 'pending'
-                          ? 'Pending'
-                          : user.status === 'rejected'
-                            ? 'Rejected'
-                            : 'Accepted'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{formatDate(user.createdAt)}</TableCell>
-                    <TableCell>
-                      <span className="font-medium text-text">
-                        {user.filledFormsCount ?? 0}/{user.totalFormsCount ?? 0}
-                      </span>
-                    </TableCell>
+
+            {loadingUsers ? (
+              <div className="p-12 flex justify-center">
+                <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div className="p-12 text-center text-text-secondary">{emptyMessage()}</div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Registered</TableHead>
+                    <TableHead>Forms</TableHead>
                   </TableRow>
-                ))}
-              </tbody>
-            </Table>
-          )}
-        </Card>
+                </TableHeader>
+                <tbody>
+                  {filteredUsers.map((user) => (
+                    <TableRow
+                      key={user.id}
+                      className="cursor-pointer hover:bg-surface/50"
+                      onClick={() => navigate(`/admin/agents/${agentId}/users/${user.id}`)}
+                    >
+                      <TableCell>
+                        <div className="font-medium text-text">{formatUserName(user)}</div>
+                      </TableCell>
+                      <TableCell>{user.phoneNumber}</TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell>
+                        <Badge variant={statusVariant(user.status)}>
+                          {user.status === 'pending'
+                            ? 'Pending'
+                            : user.status === 'rejected'
+                              ? 'Rejected'
+                              : 'Accepted'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{formatDate(user.createdAt)}</TableCell>
+                      <TableCell>
+                        <span className="font-medium text-text">
+                          {user.filledFormsCount ?? 0}/{user.totalFormsCount ?? 0}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </tbody>
+              </Table>
+            )}
+          </Card>
+        )}
       </div>
     </div>
   );

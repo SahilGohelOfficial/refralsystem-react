@@ -9,13 +9,14 @@ import type { PortalRole } from '../types/api';
 const getProfilePath = (role: PortalRole): string | null => {
   if (isAdminPortalRole(role)) return '/admin/profile';
   if (role === 'agent') return '/agent/profile';
-  if (role === 'user') return '/user/settings';
+  if (role === 'user') return '/user/profile';
   return null;
 };
 
 const getChangePasswordPath = (role: PortalRole): string | null => {
   if (isAdminPortalRole(role)) return '/admin/change-password';
   if (role === 'agent') return '/agent/change-password';
+  if (role === 'user') return '/user/change-password';
   return null;
 };
 
@@ -105,7 +106,9 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
                   <User size={15} />
                   {user?.role === 'agent'
                     ? t('nav.agent.profile', 'Profile')
-                    : t('nav.admin.profile', 'Profile')}
+                    : user?.role === 'user'
+                      ? t('nav.user_portal.profile', 'Profile')
+                      : t('nav.admin.profile', 'Profile')}
                 </button>
               )}
               {changePasswordPath && (

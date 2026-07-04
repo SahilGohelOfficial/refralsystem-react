@@ -5,7 +5,11 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
-import { changeAdminPassword, changeAgentPassword } from '../../services/auth.service';
+import {
+  changeAdminPassword,
+  changeAgentPassword,
+  changeUserPassword,
+} from '../../services/auth.service';
 import { formatApiError } from '../../lib/api';
 import { isAdminPortalRole } from '../../lib/roles';
 import type { ApiError } from '../../types/api';
@@ -34,6 +38,8 @@ const ChangePassword = () => {
     try {
       if (user?.role === 'agent') {
         await changeAgentPassword(currentPassword, newPassword);
+      } else if (user?.role === 'user') {
+        await changeUserPassword(currentPassword, newPassword);
       } else if (user && isAdminPortalRole(user.role)) {
         await changeAdminPassword(currentPassword, newPassword);
       } else {

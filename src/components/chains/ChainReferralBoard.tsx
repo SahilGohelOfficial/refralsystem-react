@@ -5,9 +5,10 @@ import ChainColumn from './ChainColumn';
 interface ChainReferralBoardProps {
   chains: ChainWithUsers[];
   loading?: boolean;
+  onUserClick?: (userId: string) => void;
 }
 
-const ChainReferralBoard = ({ chains, loading }: ChainReferralBoardProps) => {
+const ChainReferralBoard = ({ chains, loading, onUserClick }: ChainReferralBoardProps) => {
   const { t } = useTranslation();
 
   if (loading) {
@@ -29,7 +30,7 @@ const ChainReferralBoard = ({ chains, loading }: ChainReferralBoardProps) => {
   return (
     <div className="flex gap-4 overflow-x-auto pb-4">
       {chains.map((chain) => (
-        <ChainColumn key={chain.id} chain={chain} />
+        <ChainColumn key={chain.id} chain={chain} onUserClick={onUserClick} />
       ))}
     </div>
   );

@@ -404,6 +404,12 @@
       "submit_subtitle": "फॉर्म पूरा करें और अपना उत्तर जमा करें।"
     }
   },
+  "admin": {
+    "agent_detail": {
+      "chain_view": "चेन दृश्य",
+      "chain_view_desc": "सभी चेन और प्रत्येक में इस एजेंट की रेफरल स्थिति।"
+    }
+  },
   "chains": {
     "title": "चेन प्रबंधन",
     "subtitle": "चेन बनाएं और प्रबंधित करें। केवल सुपर एडमिन।",
@@ -425,6 +431,32 @@
     "actions": "कार्रवाई"
   },
   "user_portal": {
+    "profile": {
+      "subtitle": "अपने खाते का विवरण देखें। बदलाव के लिए अपने एजेंट से संपर्क करें।",
+      "account_info": "खाता जानकारी",
+      "account_info_desc": "आपके खाते से जुड़े केवल-पढ़ने योग्य विवरण।",
+      "personal_info": "व्यक्तिगत विवरण",
+      "contact_info": "संपर्क विवरण",
+      "address_info": "पता",
+      "security": "सुरक्षा",
+      "registered": "पंजीकृत",
+      "referral_code": "रेफरल कोड",
+      "referred_by": "रेफर किया गया",
+      "first_name": "पहला नाम",
+      "middle_name": "मध्य नाम",
+      "last_name": "अंतिम नाम",
+      "date_of_birth": "जन्म तिथि",
+      "married": "विवाहित",
+      "marriage_date": "विवाह तिथि",
+      "phone": "फ़ोन नंबर",
+      "email": "ईमेल",
+      "address": "पूरा पता",
+      "postal_code": "पिन कोड",
+      "rejection_note": "अस्वीकृति नोट",
+      "status_approved": "स्वीकृत",
+      "status_pending": "लंबित",
+      "status_rejected": "अस्वीकृत"
+    },
     "status": {
       "pending": "आपका अनुरोध लंबित है",
       "pending_desc": "आपका पंजीकरण अनुरोध आपके नियुक्त एजेंट की समीक्षा की प्रतीक्षा में है।",

@@ -166,6 +166,10 @@ export function getMyChainReferrals() {
   return api<{ chains: ChainWithUsers[] }>('/agents/me/chain-referrals');
 }
 
+export function getAgentChainReferrals(agentId: string) {
+  return api<{ chains: ChainWithUsers[] }>(`/agents/${agentId}/chain-referrals`);
+}
+
 export function listUserForms(userId: string) {
   return api<FormSummary[]>(`/agents/me/users/${userId}/forms`);
 }

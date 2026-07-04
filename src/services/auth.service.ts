@@ -58,3 +58,10 @@ export function changeAgentPassword(currentPassword: string, newPassword: string
     body: JSON.stringify({ currentPassword, newPassword }),
   });
 }
+
+export function changeUserPassword(currentPassword: string, newPassword: string) {
+  return api<MessageResponse>('/users/me/change-password', {
+    method: 'PATCH',
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+}
