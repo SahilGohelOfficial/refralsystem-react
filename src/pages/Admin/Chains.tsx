@@ -17,19 +17,7 @@ import {
 import { useConfirm } from '../../context/ConfirmContext';
 import { formatApiError } from '../../lib/api';
 import type { ApiError, Chain } from '../../types/api';
-
-function formatDate(iso?: string): string {
-  if (!iso) return '—';
-  try {
-    return new Date(iso).toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  } catch {
-    return '—';
-  }
-}
+import { formatLocalDate } from '../../lib/dates';
 
 const Chains = () => {
   const { t } = useTranslation();
@@ -211,8 +199,8 @@ const Chains = () => {
                   <TableCell>
                     <div className="font-medium text-text">{chain.name}</div>
                   </TableCell>
-                  <TableCell>{formatDate(chain.createdAt)}</TableCell>
-                  <TableCell>{formatDate(chain.updatedAt)}</TableCell>
+                  <TableCell>{formatLocalDate(chain.createdAt)}</TableCell>
+                  <TableCell>{formatLocalDate(chain.updatedAt)}</TableCell>
                   <TableCell className="text-right">
                     <Dropdown
                       align="right"

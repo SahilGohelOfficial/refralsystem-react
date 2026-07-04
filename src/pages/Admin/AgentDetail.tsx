@@ -14,28 +14,10 @@ import { getAgent, getAgentChainReferrals, listAgentUsers } from '../../services
 import { formatApiError } from '../../lib/api';
 import type { Agent, ApiError, ChainWithUsers, ReferralUser, UserStatus } from '../../types/api';
 import { formatAgentName, formatUserName } from '../../types/api';
+import { formatLocalDate, formatLocalDateTime } from '../../lib/dates';
 
 type UserTab = 'approved' | 'pending' | 'rejected';
 type DetailTab = UserTab | 'chains';
-
-function formatDateTime(iso: string | null): string {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
 
 const statusVariant = (status: UserStatus) => {
   if (status === 'pending') return 'warning';
@@ -233,19 +215,19 @@ const AgentDetail = () => {
             <div>
               <dt className="text-xs text-text-secondary">Last login</dt>
               <dd className="text-sm font-medium text-text mt-0.5">
-                {formatDateTime(agent.lastLogin)}
+                {formatLocalDateTime(agent.lastLogin)}
               </dd>
             </div>
             <div>
               <dt className="text-xs text-text-secondary">Created</dt>
               <dd className="text-sm font-medium text-text mt-0.5">
-                {formatDateTime(agent.createdAt)}
+                {formatLocalDateTime(agent.createdAt)}
               </dd>
             </div>
             <div>
               <dt className="text-xs text-text-secondary">Updated</dt>
               <dd className="text-sm font-medium text-text mt-0.5">
-                {formatDateTime(agent.updatedAt)}
+                {formatLocalDateTime(agent.updatedAt)}
               </dd>
             </div>
           </dl>
@@ -277,7 +259,7 @@ const AgentDetail = () => {
                 <div>
                   <dt className="text-xs text-text-secondary">Submitted</dt>
                   <dd className="text-sm font-medium text-text mt-0.5">
-                    {formatDateTime(agent.bankDetails.createdAt)}
+                    {formatLocalDateTime(agent.bankDetails.createdAt)}
                   </dd>
                 </div>
               </dl>
@@ -372,7 +354,7 @@ const AgentDetail = () => {
                               : 'Accepted'}
                         </Badge>
                       </TableCell>
-                      <TableCell>{formatDate(user.createdAt)}</TableCell>
+                      <TableCell>{formatLocalDate(user.createdAt)}</TableCell>
                       <TableCell>
                         <span className="font-medium text-text">
                           {user.filledFormsCount ?? 0}/{user.totalFormsCount ?? 0}

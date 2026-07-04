@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import { RadioGroup } from '../../components/forms/form/Radio';
+import { todayUtcDateString } from '../../lib/dates';
 
 type RegisterPersonalStepProps = {
   isAgentPortal: boolean;
@@ -117,7 +118,7 @@ export default function RegisterPersonalStep({
         error={fieldErrors.dateOfBirth}
         required
         disabled={submitting}
-        max={new Date().toISOString().slice(0, 10)}
+        max={todayUtcDateString()}
       />
       <RadioGroup
         name="isMarried"
@@ -137,7 +138,7 @@ export default function RegisterPersonalStep({
           error={fieldErrors.marriageDate}
           required
           disabled={submitting}
-          max={new Date().toISOString().slice(0, 10)}
+          max={todayUtcDateString()}
         />
       )}
       {!isAgentPortal ? (

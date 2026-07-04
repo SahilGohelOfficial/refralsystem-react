@@ -31,6 +31,7 @@ import {
 import { useConfirm } from '../../context/ConfirmContext';
 import { formatApiError } from '../../lib/api';
 import type { Admin, AdminRole, ApiError } from '../../types/api';
+import { formatLocalDateTime } from '../../lib/dates';
 
 const roleOptions = [
   { value: 'admin', label: 'Admin' },
@@ -423,7 +424,7 @@ const Admins = () => {
                   </TableCell>
                   <TableCell>
                     {admin.lastLogin
-                      ? new Date(admin.lastLogin).toLocaleString()
+                      ? formatLocalDateTime(admin.lastLogin)
                       : 'Never'}
                   </TableCell>
                   <TableCell>

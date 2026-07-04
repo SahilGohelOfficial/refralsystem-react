@@ -22,29 +22,7 @@ import { getMyProfile } from '../../services/users.service';
 import { formatApiError } from '../../lib/api';
 import { formatUserName } from '../../types/api';
 import type { ApiError, ReferralUser, UserStatus } from '../../types/api';
-
-function formatDate(iso?: string | null): string {
-  if (!iso) return '—';
-  try {
-    return new Date(iso).toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  } catch {
-    return '—';
-  }
-}
-
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
+import { formatCalendarDate, formatLocalDateTime } from '../../lib/dates';
 
 const statusVariant = (status: UserStatus) => {
   if (status === 'approved') return 'success' as const;
@@ -191,7 +169,7 @@ const UserProfile = () => {
                 <InfoRow
                   icon={Calendar}
                   label={t('user_portal.profile.registered', 'Registered')}
-                  value={formatDateTime(profile.createdAt)}
+                  value={formatLocalDateTime(profile.createdAt)}
                 />
                 <InfoRow
                   icon={Fingerprint}
@@ -265,7 +243,7 @@ const UserProfile = () => {
                     {t('user_portal.profile.date_of_birth', 'Date of birth')}
                   </dt>
                   <dd className="text-sm font-medium text-text mt-0.5">
-                    {formatDate(profile.dateOfBirth)}
+                    {formatCalendarDate(profile.dateOfBirth)}
                   </dd>
                 </div>
                 <div>
@@ -286,7 +264,7 @@ const UserProfile = () => {
                       {t('user_portal.profile.marriage_date', 'Marriage date')}
                     </dt>
                     <dd className="text-sm font-medium text-text mt-0.5">
-                      {formatDate(profile.marriageDate)}
+                      {formatCalendarDate(profile.marriageDate)}
                     </dd>
                   </div>
                 ) : null}

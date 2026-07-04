@@ -1,36 +1,40 @@
+import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
+import customParseFormat from 'dayjs/plugin/customParseFormat'
 import type { FieldValidation } from '../../types/form'
+import { todayUtcDateString } from '../dates'
 
+dayjs.extend(utc)
+dayjs.extend(customParseFormat)
+
+const ISO_DATE_FORMAT = 'YYYY-MM-DD'
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
+function parseIsoDayjs(value: string): dayjs.Dayjs | null {
+  if (!ISO_DATE_PATTERN.test(value)) return null
+  const parsed = dayjs.utc(value, ISO_DATE_FORMAT, true)
+  return parsed.isValid() ? parsed : null
+}
+
 export function formatLocalDate(date: Date): string {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
+  return dayjs.utc(date).format(ISO_DATE_FORMAT)
 }
 
 export function isValidIsoDateString(value: string): boolean {
-  if (!ISO_DATE_PATTERN.test(value)) return false
-  const [year, month, day] = value.split('-').map(Number)
-  const parsed = new Date(year, month - 1, day)
-  return (
-    parsed.getFullYear() === year &&
-    parsed.getMonth() === month - 1 &&
-    parsed.getDate() === day
-  )
+  return parseIsoDayjs(value) !== null
 }
 
 function laterDate(a: string, b: string): string {
-  return a >= b ? a : b
+  return dayjs.utc(a).isAfter(dayjs.utc(b)) ? a : b
 }
 
 function earlierDate(a: string, b: string): string {
-  return a <= b ? a : b
+  return dayjs.utc(a).isBefore(dayjs.utc(b)) ? a : b
 }
 
 export function getEffectiveDateBounds(
   validation?: FieldValidation,
-  today = formatLocalDate(new Date()),
+  today = todayUtcDateString(),
 ): { min?: string; max?: string } {
   let min = validation?.minDate
   let max = validation?.maxDate
@@ -50,7 +54,7 @@ export function validateDateValue(
   value: string,
   validation?: FieldValidation,
   errorMessage?: string,
-  today = formatLocalDate(new Date()),
+  today = todayUtcDateString(),
 ): string | undefined {
   if (validation?.onlyFuture && validation?.onlyPast) {
     return 'Invalid date field configuration.'
@@ -62,11 +66,11 @@ export function validateDateValue(
 
   const { min, max } = getEffectiveDateBounds(validation, today)
 
-  if (min && value < min) {
+  if (min && dayjs.utc(value).isBefore(dayjs.utc(min), 'day')) {
     return errorMessage ?? `Date must be on or after ${min}.`
   }
 
-  if (max && value > max) {
+  if (max && dayjs.utc(value).isAfter(dayjs.utc(max), 'day')) {
     return errorMessage ?? `Date must be on or before ${max}.`
   }
 

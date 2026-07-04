@@ -21,15 +21,7 @@ import {
 } from '../../services/forms.service'
 import type { ApiError, Form, FormResponse, StoredFileMeta } from '../../types/api'
 import { resolveFieldLabel } from '../../lib/labels'
-
-function formatDateTime(iso?: string): string {
-  if (!iso) return '—'
-  try {
-    return new Date(iso).toLocaleString()
-  } catch {
-    return '—'
-  }
-}
+import { formatLocalDateTime } from '../../lib/dates'
 
 function isStoredFileMeta(value: unknown): value is StoredFileMeta {
   return (
@@ -212,7 +204,7 @@ export default function FormResponses() {
                     </TableCell>
                     <TableCell>{response.submitter.name ?? '—'}</TableCell>
                     <TableCell>{response.submitter.phoneNumber ?? '—'}</TableCell>
-                    <TableCell>{formatDateTime(response.submittedAt)}</TableCell>
+                    <TableCell>{formatLocalDateTime(response.submittedAt)}</TableCell>
                   </TableRow>
                   {isExpanded ? (
                     <TableRow className="bg-surface/30">

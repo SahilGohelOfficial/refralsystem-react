@@ -19,6 +19,7 @@ import {
 } from '../../../services/agents.service';
 import type { ApiError, Form, FormResponse, StoredFileMeta } from '../../../types/api';
 import { resolveFieldLabel } from '../../../lib/labels';
+import { formatLocalDateTime } from '../../../lib/dates';
 
 type PortalFormViewModalProps = {
   isOpen: boolean;
@@ -27,21 +28,6 @@ type PortalFormViewModalProps = {
   userId?: string;
   agentId?: string;
 };
-
-function formatDateTime(iso?: string): string {
-  if (!iso) return '—';
-  try {
-    return new Date(iso).toLocaleString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  } catch {
-    return '—';
-  }
-}
 
 function isStoredFileMeta(value: unknown): value is StoredFileMeta {
   return (
@@ -179,7 +165,7 @@ export default function PortalFormViewModal({
 
             <p className="text-xs text-text-secondary">
               {t('forms.portal.view_submitted_at', 'Submitted at')}:{' '}
-              <span className="text-text">{formatDateTime(response.submittedAt)}</span>
+              <span className="text-text">{formatLocalDateTime(response.submittedAt)}</span>
             </p>
 
             <div className="space-y-4 pt-2">

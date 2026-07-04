@@ -11,16 +11,9 @@ import { listMyUsers } from '../../services/agents.service';
 import { formatApiError } from '../../lib/api';
 import type { ApiError, ReferralUser, UserStatus } from '../../types/api';
 import { formatUserName } from '../../types/api';
+import { formatLocalDate } from '../../lib/dates';
 
 type RequestTab = 'pending' | 'rejected';
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
 
 const statusVariant = (status: UserStatus) => {
   if (status === 'pending') return 'warning';
@@ -153,7 +146,7 @@ const UserRequests = () => {
                         : t('agent.user_requests.status_rejected', 'Rejected')}
                     </Badge>
                   </TableCell>
-                  <TableCell>{formatDate(user.createdAt)}</TableCell>
+                  <TableCell>{formatLocalDate(user.createdAt)}</TableCell>
                   <TableCell>
                     <span className="font-medium text-text">
                       {user.filledFormsCount ?? 0}/{user.totalFormsCount ?? 0}

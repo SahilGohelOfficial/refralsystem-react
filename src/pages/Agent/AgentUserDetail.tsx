@@ -25,29 +25,7 @@ import {
 } from '../../services/agents.service';
 import type { ApiError, ApprovalInfo, FormSummary, ReferralUser, UserStatus } from '../../types/api';
 import { formatUserName } from '../../types/api';
-
-function formatDate(iso?: string): string {
-  if (!iso) return '—';
-  try {
-    return new Date(iso).toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  } catch {
-    return '—';
-  }
-}
-
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
+import { formatCalendarDate, formatLocalDate, formatLocalDateTime } from '../../lib/dates';
 
 const statusVariant = (status: UserStatus) => {
   if (status === 'pending') return 'warning';
@@ -341,7 +319,7 @@ const AgentUserDetail = () => {
                 {t('register.date_of_birth', 'Date of Birth')}
               </dt>
               <dd className="text-sm font-medium text-text mt-0.5">
-                {user.dateOfBirth ? formatDate(user.dateOfBirth) : '—'}
+                {user.dateOfBirth ? formatCalendarDate(user.dateOfBirth) : '—'}
               </dd>
             </div>
             <div>
@@ -358,7 +336,7 @@ const AgentUserDetail = () => {
                   {t('register.marriage_date', 'Marriage Date')}
                 </dt>
                 <dd className="text-sm font-medium text-text mt-0.5">
-                  {user.marriageDate ? formatDate(user.marriageDate) : '—'}
+                  {user.marriageDate ? formatCalendarDate(user.marriageDate) : '—'}
                 </dd>
               </div>
             )}
@@ -394,7 +372,7 @@ const AgentUserDetail = () => {
               <dt className="text-xs text-text-secondary">
                 {t('agent.user_request_detail.submitted', 'Submitted')}
               </dt>
-              <dd className="text-sm font-medium text-text mt-0.5">{formatDateTime(user.createdAt)}</dd>
+              <dd className="text-sm font-medium text-text mt-0.5">{formatLocalDateTime(user.createdAt)}</dd>
             </div>
             <div>
               <dt className="text-xs text-text-secondary">
@@ -497,7 +475,7 @@ const AgentUserDetail = () => {
                       </Badge>
                     )}
                   </TableCell>
-                  <TableCell>{formatDate(form.updatedAt)}</TableCell>
+                  <TableCell>{formatLocalDate(form.updatedAt)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end items-center gap-2">
                       {form.isSubmitted === true ? (

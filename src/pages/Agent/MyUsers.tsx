@@ -16,14 +16,7 @@ import { useConfirm } from '../../context/ConfirmContext';
 import { formatApiError } from '../../lib/api';
 import type { ApiError, ReferralUser } from '../../types/api';
 import { formatUserName } from '../../types/api';
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
+import { formatLocalDate } from '../../lib/dates';
 
 const MyUsers = () => {
   const { t } = useTranslation();
@@ -171,7 +164,7 @@ const MyUsers = () => {
                   </TableCell>
                   <TableCell>{user.phoneNumber}</TableCell>
                   <TableCell>{user.email}</TableCell>
-                  <TableCell>{formatDate(user.createdAt)}</TableCell>
+                  <TableCell>{formatLocalDate(user.createdAt)}</TableCell>
                   <TableCell>
                     <span className="font-medium text-text">
                       {user.filledFormsCount ?? 0}/{user.totalFormsCount ?? 0}

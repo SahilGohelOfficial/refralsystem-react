@@ -12,29 +12,7 @@ import { formatApiError } from '../../lib/api';
 import { getAgentUser, listAgentUserForms } from '../../services/agents.service';
 import type { ApiError, FormSummary, ReferralUser, UserStatus } from '../../types/api';
 import { formatUserName } from '../../types/api';
-
-function formatDate(iso?: string): string {
-  if (!iso) return '—';
-  try {
-    return new Date(iso).toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  } catch {
-    return '—';
-  }
-}
-
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
+import { formatLocalDate, formatLocalDateTime } from '../../lib/dates';
 
 const statusVariant = (status: UserStatus) => {
   if (status === 'pending') return 'warning';
@@ -160,7 +138,7 @@ const AdminAgentUserDetail = () => {
             </div>
             <div>
               <dt className="text-xs text-text-secondary">Submitted</dt>
-              <dd className="text-sm font-medium text-text mt-0.5">{formatDateTime(user.createdAt)}</dd>
+              <dd className="text-sm font-medium text-text mt-0.5">{formatLocalDateTime(user.createdAt)}</dd>
             </div>
             <div>
               <dt className="text-xs text-text-secondary">Referral by</dt>
@@ -239,7 +217,7 @@ const AdminAgentUserDetail = () => {
                       <Badge variant="neutral">N/A</Badge>
                     )}
                   </TableCell>
-                  <TableCell>{formatDate(form.updatedAt)}</TableCell>
+                  <TableCell>{formatLocalDate(form.updatedAt)}</TableCell>
                   <TableCell className="text-right">
                     {form.isSubmitted === true ? (
                       <Button

@@ -18,27 +18,12 @@ import type {
   ReferralUser,
   State,
 } from '../../types/api';
+import { isPastOrTodayUtc } from '../../lib/dates';
 
 export type RegisterStep = 'personal' | 'address' | 'bank' | 'otp' | 'agent' | 'success';
 
 export function normalizePhone(value: string): string {
   return value.replace(/\D/g, '').slice(0, 10);
-}
-
-function isPastOrToday(value: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const [year, month, day] = value.split('-').map(Number);
-  const parsed = new Date(year, month - 1, day);
-  if (
-    parsed.getFullYear() !== year ||
-    parsed.getMonth() !== month - 1 ||
-    parsed.getDate() !== day
-  ) {
-    return false;
-  }
-  const today = new Date();
-  today.setHours(23, 59, 59, 999);
-  return parsed <= today;
 }
 
 const IFSC_PATTERN = /^[A-Z]{4}0[A-Z0-9]{6}$/i;
@@ -187,7 +172,7 @@ export function useRegisterForm({ t, isAgentPortal, agentUserId }: UseRegisterFo
     }
     if (!dateOfBirth) {
       errors.dateOfBirth = t('register.err_dob_required', 'Date of birth is required');
-    } else if (!isPastOrToday(dateOfBirth)) {
+    } else if (!isPastOrTodayUtc(dateOfBirth)) {
       errors.dateOfBirth = t('register.err_dob_invalid', 'Enter a valid date of birth');
     }
     if (!isMarriedChoice) {
@@ -197,7 +182,7 @@ export function useRegisterForm({ t, isAgentPortal, agentUserId }: UseRegisterFo
         'register.err_marriage_date_required',
         'Marriage date is required when married',
       );
-    } else if (isMarriedChoice === 'Yes' && marriageDate && !isPastOrToday(marriageDate)) {
+    } else if (isMarriedChoice === 'Yes' && marriageDate && !isPastOrTodayUtc(marriageDate)) {
       errors.marriageDate = t('register.err_marriage_date_invalid', 'Enter a valid marriage date');
     }
     setFieldErrors(errors);

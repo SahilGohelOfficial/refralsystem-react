@@ -12,24 +12,12 @@ import { formatApiError } from '../../../lib/api';
 import { listForms } from '../../../services/forms.service';
 import PortalFormViewModal from './PortalFormViewModal';
 import type { ApiError, FormSummary, SubmissionUserType } from '../../../types/api';
+import { formatLocalDate } from '../../../lib/dates';
 
 type PortalFormsListProps = {
   userType: SubmissionUserType;
   detailsPathPrefix: string;
 };
-
-function formatDate(iso?: string): string {
-  if (!iso) return '—';
-  try {
-    return new Date(iso).toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  } catch {
-    return '—';
-  }
-}
 
 export default function PortalFormsList({
   userType,
@@ -143,7 +131,7 @@ export default function PortalFormsList({
                       <Badge variant="neutral">{t('forms.portal.submitted_na', 'N/A')}</Badge>
                     )}
                   </TableCell>
-                  <TableCell>{formatDate(form.updatedAt)}</TableCell>
+                  <TableCell>{formatLocalDate(form.updatedAt)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end items-center gap-2">
                       {form.isSubmitted === true ? (

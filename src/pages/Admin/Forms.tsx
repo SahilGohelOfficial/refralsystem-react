@@ -17,19 +17,7 @@ import { useAuth } from '../../context/AuthContext'
 import { formatApiError } from '../../lib/api'
 import { deleteForm, listForms } from '../../services/forms.service'
 import type { ApiError, FormSummary } from '../../types/api'
-
-function formatDate(iso?: string): string {
-  if (!iso) return '—'
-  try {
-    return new Date(iso).toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
-  } catch {
-    return '—'
-  }
-}
+import { formatLocalDate } from '../../lib/dates'
 
 const Forms = () => {
   const navigate = useNavigate()
@@ -171,7 +159,7 @@ const Forms = () => {
                       : t('forms.submitter_user', 'Users')}
                   </TableCell>
                   <TableCell>{form.submittedCount ?? 0}</TableCell>
-                  <TableCell>{formatDate(form.updatedAt)}</TableCell>
+                  <TableCell>{formatLocalDate(form.updatedAt)}</TableCell>
                   <TableCell className="text-right">
                     <Button
                       size="sm"

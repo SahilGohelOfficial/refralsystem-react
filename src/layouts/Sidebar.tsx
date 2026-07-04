@@ -54,7 +54,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
 
   let navItems = adminNavItems;
-  let title = 'AdminPro';
+  let title = 'Admin';
 
   if (user?.role === 'agent') {
     navItems = agentNavItems;

@@ -9,34 +9,13 @@ import { getMyUser, updateMyUser } from '../../services/agents.service';
 import { useConfirm } from '../../context/ConfirmContext';
 import { formatApiError } from '../../lib/api';
 import type { ApiError, ReferralUser } from '../../types/api';
+import { isPastOrTodayUtc, todayUtcDateString, toDateInputValue } from '../../lib/dates';
 
 interface AgentUserEditModalProps {
   user: ReferralUser | null;
   isOpen: boolean;
   onClose: () => void;
   onSaved: (user: ReferralUser) => void;
-}
-
-function toDateInputValue(value: string | null | undefined): string {
-  if (!value) return '';
-  const datePart = value.slice(0, 10);
-  return /^\d{4}-\d{2}-\d{2}$/.test(datePart) ? datePart : '';
-}
-
-function isPastOrToday(value: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const [year, month, day] = value.split('-').map(Number);
-  const parsed = new Date(year, month - 1, day);
-  if (
-    parsed.getFullYear() !== year ||
-    parsed.getMonth() !== month - 1 ||
-    parsed.getDate() !== day
-  ) {
-    return false;
-  }
-  const today = new Date();
-  today.setHours(23, 59, 59, 999);
-  return parsed <= today;
 }
 
 const SectionTitle = ({ children }: { children: ReactNode }) => (
@@ -117,7 +96,7 @@ const AgentUserEditModal = ({ user, isOpen, onClose, onSaved }: AgentUserEditMod
       toast.error(t('register.err_dob_required', 'Date of birth is required'));
       return;
     }
-    if (!isPastOrToday(dateOfBirth)) {
+    if (!isPastOrTodayUtc(dateOfBirth)) {
       toast.error(t('register.err_dob_invalid', 'Enter a valid date of birth'));
       return;
     }
@@ -131,7 +110,7 @@ const AgentUserEditModal = ({ user, isOpen, onClose, onSaved }: AgentUserEditMod
       );
       return;
     }
-    if (isMarriedChoice === 'Yes' && marriageDate && !isPastOrToday(marriageDate)) {
+    if (isMarriedChoice === 'Yes' && marriageDate && !isPastOrTodayUtc(marriageDate)) {
       toast.error(t('register.err_marriage_date_invalid', 'Enter a valid marriage date'));
       return;
     }
@@ -245,7 +224,7 @@ const AgentUserEditModal = ({ user, isOpen, onClose, onSaved }: AgentUserEditMod
               onChange={(e) => setDateOfBirth(e.target.value)}
               required
               disabled={submitting}
-              max={new Date().toISOString().slice(0, 10)}
+              max={todayUtcDateString()}
             />
             <RadioGroup
               name="isMarried"
@@ -263,7 +242,7 @@ const AgentUserEditModal = ({ user, isOpen, onClose, onSaved }: AgentUserEditMod
                 onChange={(e) => setMarriageDate(e.target.value)}
                 required
                 disabled={submitting}
-                max={new Date().toISOString().slice(0, 10)}
+                max={todayUtcDateString()}
               />
             )}
           </div>

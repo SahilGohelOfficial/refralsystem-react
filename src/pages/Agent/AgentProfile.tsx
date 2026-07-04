@@ -27,28 +27,10 @@ import { listCities, listStates } from '../../services/location.service';
 import { formatApiError } from '../../lib/api';
 import { formatAgentName } from '../../types/api';
 import type { Agent, ApiError, City, State } from '../../types/api';
+import { formatLocalDate, formatLocalDateTime } from '../../lib/dates';
 
 function normalizePhone(value: string): string {
   return value.replace(/\D/g, '').slice(0, 10);
-}
-
-function formatDateTime(iso: string | null): string {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
 }
 
 function formatLocation(agent: Pick<Agent, 'city' | 'state'>): string {
@@ -300,7 +282,7 @@ const AgentProfile = () => {
                   <span className="inline-flex items-center gap-1.5">
                     <Clock size={12} />
                     {t('agent.profile.last_login', 'Last login')}:{' '}
-                    {formatDateTime(profile.lastLogin)}
+                    {formatLocalDateTime(profile.lastLogin)}
                   </span>
                 )}
               </div>
@@ -330,12 +312,12 @@ const AgentProfile = () => {
                 <InfoRow
                   icon={Calendar}
                   label={t('agent.profile.member_since', 'Member since')}
-                  value={formatDate(profile.createdAt)}
+                  value={formatLocalDate(profile.createdAt)}
                 />
                 <InfoRow
                   icon={Clock}
                   label={t('agent.profile.last_login', 'Last login')}
-                  value={formatDateTime(profile.lastLogin)}
+                  value={formatLocalDateTime(profile.lastLogin)}
                 />
                 <InfoRow
                   icon={MapPin}
