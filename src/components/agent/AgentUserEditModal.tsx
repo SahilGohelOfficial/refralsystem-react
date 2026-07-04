@@ -5,10 +5,10 @@ import Modal from '../ui/Modal';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import { RadioGroup } from '../forms/form/Radio';
-import { getMyUser, updateMyUser } from '../../services/agents.service';
+import { useMyUser, useUpdateMyUser } from '../../hooks/queries';
 import { useConfirm } from '../../context/ConfirmContext';
-import { formatApiError } from '../../lib/api';
-import type { ApiError, ReferralUser } from '../../types/api';
+import { useToastOnError } from '../../hooks/useToastOnError';
+import type { ReferralUser } from '../../types/api';
 import { isPastOrTodayUtc, todayUtcDateString, toDateInputValue } from '../../lib/dates';
 
 interface AgentUserEditModalProps {
@@ -25,9 +25,9 @@ const SectionTitle = ({ children }: { children: ReactNode }) => (
 const AgentUserEditModal = ({ user, isOpen, onClose, onSaved }: AgentUserEditModalProps) => {
   const { t } = useTranslation();
   const confirm = useConfirm();
-  const [loading, setLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [profile, setProfile] = useState<ReferralUser | null>(null);
+  const updateUserMutation = useUpdateMyUser();
+  const { data: fetchedProfile, isLoading, error } = useMyUser(user?.id ?? '', isOpen && !!user?.id);
+  useToastOnError(error, isOpen);
 
   const [firstName, setFirstName] = useState('');
   const [middleName, setMiddleName] = useState('');
@@ -54,30 +54,8 @@ const AgentUserEditModal = ({ user, isOpen, onClose, onSaved }: AgentUserEditMod
   }, []);
 
   useEffect(() => {
-    if (!isOpen || !user?.id) {
-      setProfile(null);
-      return;
-    }
-
-    let cancelled = false;
-    setLoading(true);
-    getMyUser(user.id)
-      .then((data) => {
-        if (cancelled) return;
-        setProfile(data);
-        hydrateForm(data);
-      })
-      .catch((error) => {
-        if (!cancelled) toast.error(formatApiError(error as ApiError));
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isOpen, user?.id, hydrateForm]);
+    if (fetchedProfile) hydrateForm(fetchedProfile);
+  }, [fetchedProfile, hydrateForm]);
 
   const handleMarriedChange = (value: string) => {
     setIsMarriedChoice(value);
@@ -86,7 +64,7 @@ const AgentUserEditModal = ({ user, isOpen, onClose, onSaved }: AgentUserEditMod
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!profile) return;
+    if (!fetchedProfile) return;
 
     if (!firstName.trim() || !lastName.trim()) {
       toast.error(t('agent.my_users.err_name_required', 'First and last name are required'));
@@ -130,29 +108,31 @@ const AgentUserEditModal = ({ user, isOpen, onClose, onSaved }: AgentUserEditMod
     });
     if (!confirmed) return;
 
-    setSubmitting(true);
     try {
-      const updated = await updateMyUser(profile.id, {
-        firstName: firstName.trim(),
-        middleName: middleName.trim(),
-        lastName: lastName.trim(),
-        dateOfBirth,
-        isMarried: isMarriedChoice === 'Yes',
-        marriageDate: isMarriedChoice === 'Yes' ? marriageDate : null,
-        addressLine1: addressLine1.trim(),
-        addressLine2: addressLine2.trim() || undefined,
-        landmark: landmark.trim() || undefined,
-        postalCode,
+      const updated = await updateUserMutation.mutateAsync({
+        id: fetchedProfile.id,
+        payload: {
+          firstName: firstName.trim(),
+          middleName: middleName.trim(),
+          lastName: lastName.trim(),
+          dateOfBirth,
+          isMarried: isMarriedChoice === 'Yes',
+          marriageDate: isMarriedChoice === 'Yes' ? marriageDate : null,
+          addressLine1: addressLine1.trim(),
+          addressLine2: addressLine2.trim() || undefined,
+          landmark: landmark.trim() || undefined,
+          postalCode,
+        },
       });
       toast.success(t('agent.my_users.updated_success', 'User updated successfully'));
       onSaved(updated);
       onClose();
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
-    } finally {
-      setSubmitting(false);
+    } catch {
+      // Errors handled by mutation hooks
     }
   };
+
+  const submitting = updateUserMutation.isPending;
 
   return (
     <Modal
@@ -165,11 +145,11 @@ const AgentUserEditModal = ({ user, isOpen, onClose, onSaved }: AgentUserEditMod
       )}
       maxWidth="2xl"
     >
-      {loading ? (
+      {isLoading ? (
         <div className="flex justify-center py-12">
           <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
         </div>
-      ) : profile ? (
+      ) : fetchedProfile ? (
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="rounded-lg border border-border bg-surface/50 p-3 space-y-2 text-sm">
             <p className="text-xs font-medium text-text-muted uppercase tracking-wide">
@@ -180,13 +160,13 @@ const AgentUserEditModal = ({ user, isOpen, onClose, onSaved }: AgentUserEditMod
                 <span className="text-text-secondary block text-xs">
                   {t('agent.my_users.phone', 'Phone number')}
                 </span>
-                <span className="font-medium text-text">{profile.phoneNumber}</span>
+                <span className="font-medium text-text">{fetchedProfile.phoneNumber}</span>
               </div>
               <div>
                 <span className="text-text-secondary block text-xs">
                   {t('agent.my_users.email', 'Email')}
                 </span>
-                <span className="font-medium text-text break-all">{profile.email}</span>
+                <span className="font-medium text-text break-all">{fetchedProfile.email}</span>
               </div>
             </div>
           </div>

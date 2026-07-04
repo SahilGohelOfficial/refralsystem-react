@@ -14,20 +14,18 @@ import IconButton from '../ui/IconButton';
 import AgentFormFields from './AgentFormFields';
 import CredentialsModal from './CredentialsModal';
 import {
-  deleteAgent,
-  resetAgentPassword,
-  updateAgent,
-  updateAgentStatus,
-} from '../../services/agents.service';
+  useDeleteAgent,
+  useResetAgentPassword,
+  useUpdateAgent,
+  useUpdateAgentStatus,
+} from '../../hooks/queries';
 import { useLocationSelect } from '../../hooks/useLocationSelect';
 import { useConfirm } from '../../context/ConfirmContext';
-import { formatApiError } from '../../lib/api';
-import type { Agent, AgentCredentials, ApiError } from '../../types/api';
+import type { Agent, AgentCredentials } from '../../types/api';
 import { formatAgentName } from '../../types/api';
 
 interface AgentActionsMenuProps {
   agent: Agent;
-  onAgentChange?: () => void | Promise<void>;
   onDeleted?: () => void;
   align?: 'left' | 'right';
   trigger?: ReactNode;
@@ -35,21 +33,26 @@ interface AgentActionsMenuProps {
 
 const AgentActionsMenu = ({
   agent,
-  onAgentChange,
   onDeleted,
   align = 'right',
   trigger,
 }: AgentActionsMenuProps) => {
   const confirm = useConfirm();
   const location = useLocationSelect();
+  const updateAgentMutation = useUpdateAgent();
+  const updateStatusMutation = useUpdateAgentStatus();
+  const resetPasswordMutation = useResetAgentPassword();
+  const deleteAgentMutation = useDeleteAgent();
+
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [credentials, setCredentials] = useState<AgentCredentials | null>(null);
-  const [submitting, setSubmitting] = useState(false);
   const [formFirstName, setFormFirstName] = useState('');
   const [formMiddleName, setFormMiddleName] = useState('');
   const [formLastName, setFormLastName] = useState('');
   const [formEmail, setFormEmail] = useState('');
   const [formPhoneNumber, setFormPhoneNumber] = useState('');
+
+  const submitting = updateAgentMutation.isPending;
 
   const resetForm = () => {
     setFormFirstName('');
@@ -91,24 +94,23 @@ const AgentActionsMenu = ({
       return;
     }
 
-    setSubmitting(true);
     try {
-      await updateAgent(agent.id, {
-        firstName: formFirstName.trim(),
-        middleName: formMiddleName.trim() || undefined,
-        lastName: formLastName.trim(),
-        email: formEmail || undefined,
-        phoneNumber: formPhoneNumber || undefined,
-        state,
-        city,
+      await updateAgentMutation.mutateAsync({
+        id: agent.id,
+        payload: {
+          firstName: formFirstName.trim(),
+          middleName: formMiddleName.trim() || undefined,
+          lastName: formLastName.trim(),
+          email: formEmail || undefined,
+          phoneNumber: formPhoneNumber || undefined,
+          state,
+          city,
+        },
       });
       toast.success('Agent updated successfully');
       closeEdit();
-      await onAgentChange?.();
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
-    } finally {
-      setSubmitting(false);
+    } catch {
+      // Errors handled by mutation hooks
     }
   };
 
@@ -125,11 +127,10 @@ const AgentActionsMenu = ({
     if (!confirmed) return;
 
     try {
-      await updateAgentStatus(agent.id, !agent.isActive);
+      await updateStatusMutation.mutateAsync({ id: agent.id, isActive: !agent.isActive });
       toast.success(agent.isActive ? 'Agent deactivated' : 'Agent activated');
-      await onAgentChange?.();
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
+    } catch {
+      // Errors handled by mutation hooks
     }
   };
 
@@ -143,11 +144,11 @@ const AgentActionsMenu = ({
     if (!confirmed) return;
 
     try {
-      const result = await resetAgentPassword(agent.id);
+      const result = await resetPasswordMutation.mutateAsync(agent.id);
       setCredentials(result.credentials);
       toast.success('Password reset successfully');
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
+    } catch {
+      // Errors handled by mutation hooks
     }
   };
 
@@ -161,12 +162,11 @@ const AgentActionsMenu = ({
     if (!confirmed) return;
 
     try {
-      await deleteAgent(agent.id);
+      await deleteAgentMutation.mutateAsync(agent.id);
       toast.success('Agent deleted successfully');
       onDeleted?.();
-      await onAgentChange?.();
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
+    } catch {
+      // Errors handled by mutation hooks
     }
   };
 

@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ChevronDown, ChevronRight } from 'lucide-react'
@@ -13,13 +13,12 @@ import {
   TableRow,
 } from '../../components/ui/Table'
 import Badge from '../../components/ui/Badge'
+import Loader from '../../components/ui/Loader'
 import { formatApiError } from '../../lib/api'
-import {
-  getForm,
-  getFormResponseFileDownloadUrl,
-  listFormResponses,
-} from '../../services/forms.service'
-import type { ApiError, Form, FormResponse, StoredFileMeta } from '../../types/api'
+import { getFormResponseFileDownloadUrl } from '../../services/forms.service'
+import { useForm, useFormResponses } from '../../hooks/queries'
+import { useToastOnError } from '../../hooks/useToastOnError'
+import type { ApiError, FormResponse, StoredFileMeta } from '../../types/api'
 import { resolveFieldLabel } from '../../lib/labels'
 import { formatLocalDateTime } from '../../lib/dates'
 
@@ -47,115 +46,76 @@ export default function FormResponses() {
   const navigate = useNavigate()
   const { formId = '' } = useParams<{ formId: string }>()
 
-  const [form, setForm] = useState<Form | null>(null)
-  const [responses, setResponses] = useState<FormResponse[]>([])
-  const [loading, setLoading] = useState(true)
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
-  const [downloadingFields, setDownloadingFields] = useState<Set<string>>(new Set())
-
-  const fetchData = useCallback(async () => {
-    if (!formId) return
-    setLoading(true)
-    try {
-      const [formData, responseData] = await Promise.all([
-        getForm(formId),
-        listFormResponses(formId),
-      ])
-      setForm(formData)
-      setResponses(responseData)
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError))
-      navigate('/admin/forms', { replace: true })
-    } finally {
-      setLoading(false)
-    }
-  }, [formId, navigate])
+  const { data: form, error: formError } = useForm(formId)
+  const { data: responses = [], isLoading, error: responsesError } = useFormResponses(formId)
+  useToastOnError(formError)
+  useToastOnError(responsesError)
 
   useEffect(() => {
-    void fetchData()
-  }, [fetchData])
+    if (formError || responsesError) {
+      navigate('/admin/forms', { replace: true })
+    }
+  }, [formError, responsesError, navigate])
+
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+  const [downloadingFields, setDownloadingFields] = useState<Set<string>>(new Set())
 
   const rows = useMemo(
     () =>
       responses.map((response) => {
-        const isExpanded = expandedIds.has(response.id)
-        return { response, isExpanded }
+        const labelMap = new Map(
+          (form?.fields ?? []).map((field) => [field.id, field.label]),
+        )
+        const answers = Object.entries(response.answers ?? {}).map(([fieldId, value]) => ({
+          fieldId,
+          label: resolveFieldLabel(fieldId, labelMap),
+          value,
+        }))
+        return { response, answers }
       }),
-    [expandedIds, responses],
+    [responses, form?.fields],
   )
 
-  const fieldLabelMap = useMemo(() => {
-    const map = new Map<string, string>()
-    for (const field of form?.fields ?? []) {
-      map.set(field.id, field.label)
-    }
-    return map
-  }, [form])
-
-  const toggleExpanded = (responseId: string) => {
+  const toggleExpanded = (id: string) => {
     setExpandedIds((prev) => {
       const next = new Set(prev)
-      if (next.has(responseId)) {
-        next.delete(responseId)
-      } else {
-        next.add(responseId)
-      }
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
       return next
     })
   }
 
-  const handleDownloadFile = useCallback(
-    async (responseId: string, fieldId: string) => {
-      if (!formId) return
-
-      const key = `${responseId}:${fieldId}`
+  const handleDownload = async (response: FormResponse, fieldId: string) => {
+    const key = `${response.id}:${fieldId}`
+    if (downloadingFields.has(key)) return
+    setDownloadingFields((prev) => new Set(prev).add(key))
+    try {
+      const { downloadUrl } = await getFormResponseFileDownloadUrl(formId, response.id, fieldId)
+      window.open(downloadUrl, '_blank', 'noopener,noreferrer')
+    } catch (error) {
+      toast.error(formatApiError(error as ApiError))
+    } finally {
       setDownloadingFields((prev) => {
         const next = new Set(prev)
-        next.add(key)
+        next.delete(key)
         return next
       })
+    }
+  }
 
-      try {
-        const { downloadUrl } = await getFormResponseFileDownloadUrl(
-          formId,
-          responseId,
-          fieldId,
-        )
-        window.open(downloadUrl, '_blank', 'noopener,noreferrer')
-      } catch (error) {
-        toast.error(formatApiError(error as ApiError))
-      } finally {
-        setDownloadingFields((prev) => {
-          const next = new Set(prev)
-          next.delete(key)
-          return next
-        })
-      }
-    },
-    [formId],
-  )
-
-  if (loading) {
-    return (
-      <div className="flex justify-center py-24">
-        <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-      </div>
-    )
+  if (isLoading) {
+    return <Loader text={t('common.loading', 'Loading...')} />
   }
 
   return (
-    <div className="space-y-6">
+    <div className="page-shell space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-text">
-            {t('forms.responses.title', 'Form Responses')}
+            {form?.title ?? t('forms.responses_title', 'Form Responses')}
           </h1>
           <p className="text-sm text-text-secondary mt-1">
-            {form
-              ? t('forms.responses.subtitle_with_form', 'Responses for "{{title}}"', {
-                  title: form.title,
-                })
-              : t('forms.responses.subtitle', 'Review submitted responses.')}
+            {t('forms.responses_subtitle', '{{count}} responses', { count: responses.length })}
           </p>
         </div>
         <Button variant="secondary" onClick={() => navigate('/admin/forms')}>
@@ -163,99 +123,79 @@ export default function FormResponses() {
         </Button>
       </div>
 
-      <Card className="p-0">
-        {rows.length === 0 ? (
-          <div className="p-12 text-center text-text-secondary">
-            {t('forms.responses.empty', 'No responses submitted yet.')}
-          </div>
-        ) : (
+      {rows.length === 0 ? (
+        <Card className="p-12 text-center text-text-secondary">
+          {t('forms.no_responses', 'No responses yet.')}
+        </Card>
+      ) : (
+        <Card padding="none" className="data-card overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t('forms.responses.col_expand', 'Details')}</TableHead>
-                <TableHead>{t('forms.responses.col_submitter_type', 'Type')}</TableHead>
-                <TableHead>{t('forms.responses.col_submitter_name', 'Name')}</TableHead>
-                <TableHead>{t('forms.responses.col_submitter_phone', 'Phone')}</TableHead>
-                <TableHead>{t('forms.responses.col_submitted_at', 'Submitted At')}</TableHead>
+                <TableHead className="w-10" />
+                <TableHead>{t('forms.response_submitted', 'Submitted')}</TableHead>
+                <TableHead>{t('forms.response_submitter', 'Submitter')}</TableHead>
+                <TableHead>{t('forms.response_answers', 'Answers')}</TableHead>
               </TableRow>
             </TableHeader>
             <tbody>
-              {rows.map(({ response, isExpanded }) => (
-                <Fragment key={response.id}>
-                  <TableRow>
-                    <TableCell>
-                      <button
-                        type="button"
-                        className="inline-flex items-center gap-1 text-primary hover:text-primary-hover"
-                        onClick={() => toggleExpanded(response.id)}
-                      >
-                        {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                        {isExpanded
-                          ? t('forms.responses.collapse', 'Collapse')
-                          : t('forms.responses.expand', 'Expand')}
-                      </button>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="neutral">
-                        {response.submitter.type
-                          ? t(`forms.submitter_${response.submitter.type}`, response.submitter.type)
-                          : t('forms.responses.unknown', 'Unknown')}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{response.submitter.name ?? '—'}</TableCell>
-                    <TableCell>{response.submitter.phoneNumber ?? '—'}</TableCell>
-                    <TableCell>{formatLocalDateTime(response.submittedAt)}</TableCell>
-                  </TableRow>
-                  {isExpanded ? (
-                    <TableRow className="bg-surface/30">
-                      <TableCell colSpan={5}>
-                        <div className="space-y-3 py-2">
-                          <div className="space-y-2">
-                            {Object.keys(response.answers).length === 0 ? (
-                              <p className="text-sm text-text-secondary">
-                                {t('forms.responses.no_answers', 'No answers available.')}
-                              </p>
-                            ) : (
-                              Object.entries(response.answers).map(([fieldId, value]) => (
-                                <div key={`${response.id}-${fieldId}`} className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-2">
-                                  <div className="text-xs text-text-secondary break-all">
-                                    {resolveFieldLabel(
-                                      fieldId,
-                                      fieldLabelMap,
-                                      t('forms.responses.unknown_field', 'Unknown field'),
-                                    )}
-                                  </div>
-                                  {isStoredFileMeta(value) ? (
-                                    <div className="text-sm text-text break-words space-y-1">
-                                      <div>{`${value.name} (${value.type}, ${value.size} bytes)`}</div>
-                                      <Button
-                                        size="sm"
-                                        variant="secondary"
-                                        onClick={() => void handleDownloadFile(response.id, fieldId)}
-                                        isLoading={downloadingFields.has(`${response.id}:${fieldId}`)}
-                                      >
-                                        {t('forms.responses.download', 'Download')}
-                                      </Button>
-                                    </div>
-                                  ) : (
-                                    <div className="text-sm text-text break-words">
-                                      {formatAnswerValue(value)}
-                                    </div>
-                                  )}
-                                </div>
-                              ))
-                            )}
-                          </div>
-                        </div>
+              {rows.map(({ response, answers }) => {
+                const expanded = expandedIds.has(response.id)
+                return (
+                  <Fragment key={response.id}>
+                    <TableRow>
+                      <TableCell>
+                        <button
+                          type="button"
+                          onClick={() => toggleExpanded(response.id)}
+                          className="p-1 text-text-secondary hover:text-text"
+                          aria-expanded={expanded}
+                        >
+                          {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                        </button>
+                      </TableCell>
+                      <TableCell>{formatLocalDateTime(response.submittedAt)}</TableCell>
+                      <TableCell>
+                        <Badge variant="neutral">{response.submitterType}</Badge>
+                      </TableCell>
+                      <TableCell className="text-text-secondary">
+                        {answers.length} {t('forms.fields', 'fields')}
                       </TableCell>
                     </TableRow>
-                  ) : null}
-                </Fragment>
-              ))}
+                    {expanded && (
+                      <TableRow>
+                        <TableCell colSpan={4} className="bg-surface/50">
+                          <div className="grid gap-3 py-2">
+                            {answers.map(({ fieldId, label, value }) => (
+                              <div key={fieldId} className="flex flex-col sm:flex-row sm:gap-4 text-sm">
+                                <span className="font-medium text-text min-w-[140px]">{label}</span>
+                                <span className="text-text-secondary flex-1">
+                                  {isStoredFileMeta(value) ? (
+                                    <Button
+                                      size="sm"
+                                      variant="secondary"
+                                      isLoading={downloadingFields.has(`${response.id}:${fieldId}`)}
+                                      onClick={() => void handleDownload(response, fieldId)}
+                                    >
+                                      {value.originalName ?? t('forms.download_file', 'Download file')}
+                                    </Button>
+                                  ) : (
+                                    formatAnswerValue(value)
+                                  )}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </Fragment>
+                )
+              })}
             </tbody>
           </Table>
-        )}
-      </Card>
+        </Card>
+      )}
     </div>
   )
 }

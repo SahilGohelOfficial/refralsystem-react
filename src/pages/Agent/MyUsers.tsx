@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, type MouseEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, type MouseEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Search, Edit2, Trash2, UserPlus, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -7,14 +7,12 @@ import { Card } from '../../components/ui/Card';
 import { Table, TableHeader, TableRow, TableHead, TableCell } from '../../components/ui/Table';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import Loader from '../../components/ui/Loader';
 import AgentUserEditModal from '../../components/agent/AgentUserEditModal';
-import {
-  deleteMyUser,
-  listMyUsers,
-} from '../../services/agents.service';
+import { useDeleteMyUser, useMyUsers } from '../../hooks/queries';
 import { useConfirm } from '../../context/ConfirmContext';
-import { formatApiError } from '../../lib/api';
-import type { ApiError, ReferralUser } from '../../types/api';
+import { useToastOnError } from '../../hooks/useToastOnError';
+import type { ReferralUser } from '../../types/api';
 import { formatUserName } from '../../types/api';
 import { formatLocalDate } from '../../lib/dates';
 
@@ -22,26 +20,12 @@ const MyUsers = () => {
   const { t } = useTranslation();
   const confirm = useConfirm();
   const navigate = useNavigate();
-  const [users, setUsers] = useState<ReferralUser[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: users = [], isLoading, error } = useMyUsers('approved');
+  const deleteUserMutation = useDeleteMyUser();
+  useToastOnError(error);
+
   const [search, setSearch] = useState('');
   const [editingUser, setEditingUser] = useState<ReferralUser | null>(null);
-
-  const fetchUsers = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await listMyUsers('approved');
-      setUsers(data);
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void fetchUsers();
-  }, [fetchUsers]);
 
   const handleDelete = async (user: ReferralUser) => {
     const name = formatUserName(user);
@@ -58,11 +42,10 @@ const MyUsers = () => {
     if (!confirmed) return;
 
     try {
-      await deleteMyUser(user.id);
+      await deleteUserMutation.mutateAsync(user.id);
       toast.success(t('agent.my_users.deleted_success', 'User deleted successfully'));
-      await fetchUsers();
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
+    } catch {
+      // Errors handled by mutation hooks
     }
   };
 
@@ -81,67 +64,49 @@ const MyUsers = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="page-shell space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-text">
             {t('agent.my_users.title', 'My Users')}
           </h1>
           <p className="text-sm text-text-secondary mt-1">
-            {t('agent.my_users.subtitle', 'View and manage users assigned to you.')}
+            {t('agent.my_users.subtitle', 'Manage users you have registered.')}
           </p>
         </div>
-        <Button
-          type="button"
-          className="shrink-0 gap-2"
-          onClick={() => navigate('/agent/register-user')}
-        >
+        <Button type="button" className="shrink-0 gap-2" onClick={() => navigate('/agent/register-user')}>
           <UserPlus size={16} />
           {t('nav.agent.register_user', 'Register User')}
         </Button>
       </div>
 
-      <Card className="p-0">
-        <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-4 justify-between items-center bg-surface/50 rounded-t-[20px]">
-          <div className="w-full sm:w-96">
+      <Card padding="none" className="data-card">
+        <div className="table-toolbar">
+          <div className="w-full sm:max-w-md">
             <Input
               icon={Search}
-              placeholder={t('agent.my_users.search_placeholder', 'Search by name, phone, or email...')}
+              placeholder={t('agent.my_users.search', 'Search users...')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
         </div>
 
-        {loading ? (
-          <div className="p-12 flex justify-center">
-            <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-          </div>
+        {isLoading ? (
+          <Loader text={t('common.loading', 'Loading...')} />
         ) : filteredUsers.length === 0 ? (
-          <div className="p-12 text-center text-text-secondary">
-            <p>
-              {search
-                ? t('agent.my_users.no_results', 'No users match your search.')
-                : t('agent.my_users.empty', 'No users yet.')}
-            </p>
-            {!search && (
-              <Link
-                to="/agent/register-user"
-                className="inline-block mt-3 text-primary hover:underline text-sm font-medium"
-              >
-                {t('agent.my_users.empty_action', 'Register your first user')}
-              </Link>
-            )}
+          <div className="py-16 text-center text-sm text-text-secondary">
+            {search
+              ? t('agent.my_users.no_results', 'No users match your search.')
+              : t('agent.my_users.empty', 'No approved users yet.')}
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t('agent.my_users.col_name', 'Name')}</TableHead>
+                <TableHead>{t('agent.my_users.col_user', 'User')}</TableHead>
                 <TableHead>{t('agent.my_users.col_phone', 'Phone')}</TableHead>
-                <TableHead>{t('agent.my_users.col_email', 'Email')}</TableHead>
                 <TableHead>{t('agent.my_users.col_registered', 'Registered')}</TableHead>
-                <TableHead>{t('agent.my_users.col_forms', 'Forms')}</TableHead>
                 <TableHead className="text-right">{t('agent.my_users.col_actions', 'Actions')}</TableHead>
               </TableRow>
             </TableHeader>
@@ -149,56 +114,38 @@ const MyUsers = () => {
               {filteredUsers.map((user) => (
                 <TableRow
                   key={user.id}
-                  className="cursor-pointer hover:bg-surface/50"
+                  className="cursor-pointer"
                   onClick={() => navigate(`/agent/users/${user.id}`)}
                 >
                   <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-                        {user.firstName.charAt(0)}
-                      </div>
-                      <div>
-                        <div className="font-medium text-text">{formatUserName(user)}</div>
-                      </div>
-                    </div>
+                    <div className="font-medium text-text">{formatUserName(user)}</div>
+                    <div className="text-xs text-text-secondary">{user.email}</div>
                   </TableCell>
                   <TableCell>{user.phoneNumber}</TableCell>
-                  <TableCell>{user.email}</TableCell>
                   <TableCell>{formatLocalDate(user.createdAt)}</TableCell>
-                  <TableCell>
-                    <span className="font-medium text-text">
-                      {user.filledFormsCount ?? 0}/{user.totalFormsCount ?? 0}
-                    </span>
-                  </TableCell>
                   <TableCell className="text-right" onClick={stopRowNavigation}>
-                    <div className="flex justify-end items-center gap-1">
-                      <button
-                        type="button"
-                        className="icon-btn-sm"
-                        title={t('agent.my_users.view', 'View details')}
-                        aria-label={t('agent.my_users.view', 'View details')}
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="secondary"
                         onClick={() => navigate(`/agent/users/${user.id}`)}
                       >
-                        <Eye size={16} />
-                      </button>
-                      <button
-                        type="button"
-                        className="icon-btn-sm"
-                        title={t('agent.my_users.edit', 'Edit')}
-                        aria-label={t('agent.my_users.edit', 'Edit')}
-                        onClick={() => setEditingUser(user)}
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button
-                        type="button"
-                        className="icon-btn-sm text-error hover:text-error hover:bg-error-muted"
-                        title={t('agent.my_users.delete', 'Delete')}
-                        aria-label={t('agent.my_users.delete', 'Delete')}
+                        <Eye size={14} />
+                        {t('common.view', 'View')}
+                      </Button>
+                      <Button size="sm" variant="secondary" onClick={() => setEditingUser(user)}>
+                        <Edit2 size={14} />
+                        {t('common.edit', 'Edit')}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="danger"
                         onClick={() => void handleDelete(user)}
+                        isLoading={deleteUserMutation.isPending}
                       >
-                        <Trash2 size={16} />
-                      </button>
+                        <Trash2 size={14} />
+                        {t('common.delete', 'Delete')}
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -212,7 +159,7 @@ const MyUsers = () => {
         user={editingUser}
         isOpen={!!editingUser}
         onClose={() => setEditingUser(null)}
-        onSaved={() => void fetchUsers()}
+        onSaved={() => setEditingUser(null)}
       />
     </div>
   );

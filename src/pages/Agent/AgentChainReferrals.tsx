@@ -1,31 +1,12 @@
-import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import toast from 'react-hot-toast';
-import { formatApiError } from '../../lib/api';
-import { getMyChainReferrals } from '../../services/agents.service';
 import ChainReferralBoard from '../../components/chains/ChainReferralBoard';
-import type { ApiError, ChainWithUsers } from '../../types/api';
+import { useMyChainReferrals } from '../../hooks/queries';
+import { useToastOnError } from '../../hooks/useToastOnError';
 
 const AgentChainReferrals = () => {
   const { t } = useTranslation();
-  const [chains, setChains] = useState<ChainWithUsers[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await getMyChainReferrals();
-      setChains(data.chains);
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void fetchData();
-  }, [fetchData]);
+  const { data: chains = [], isLoading, error } = useMyChainReferrals();
+  useToastOnError(error);
 
   return (
     <div className="space-y-6">
@@ -40,7 +21,7 @@ const AgentChainReferrals = () => {
           )}
         </p>
       </div>
-      <ChainReferralBoard chains={chains} loading={loading} />
+      <ChainReferralBoard chains={chains} loading={isLoading} />
     </div>
   );
 };

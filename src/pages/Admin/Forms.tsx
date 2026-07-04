@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Search, Plus, MoreVertical, Edit2, Trash2 } from 'lucide-react'
@@ -14,9 +14,9 @@ import { useConfirm } from '../../context/ConfirmContext'
 import IconButton from '../../components/ui/IconButton'
 import Loader from '../../components/ui/Loader'
 import { useAuth } from '../../context/AuthContext'
-import { formatApiError } from '../../lib/api'
-import { deleteForm, listForms } from '../../services/forms.service'
-import type { ApiError, FormSummary } from '../../types/api'
+import { useDeleteForm, useForms } from '../../hooks/queries'
+import { useToastOnError } from '../../hooks/useToastOnError'
+import type { FormSummary } from '../../types/api'
 import { formatLocalDate } from '../../lib/dates'
 
 const Forms = () => {
@@ -25,27 +25,11 @@ const Forms = () => {
   const confirm = useConfirm()
   const { user } = useAuth()
   const isSuperAdmin = user?.role === 'superAdmin'
+  const { data: forms = [], isLoading, error } = useForms()
+  const deleteFormMutation = useDeleteForm()
+  useToastOnError(error)
 
-  const [forms, setForms] = useState<FormSummary[]>([])
-  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [deleting, setDeleting] = useState(false)
-
-  const fetchForms = useCallback(async () => {
-    setLoading(true)
-    try {
-      const data = await listForms()
-      setForms(data)
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError))
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchForms()
-  }, [fetchForms])
 
   const filteredForms = useMemo(() => {
     const query = search.toLowerCase()
@@ -57,7 +41,7 @@ const Forms = () => {
   }, [forms, search])
 
   const handleDelete = async (form: FormSummary) => {
-    if (deleting) return
+    if (deleteFormMutation.isPending) return
 
     const confirmed = await confirm({
       title: t('forms.delete_title', 'Delete Form'),
@@ -71,15 +55,11 @@ const Forms = () => {
     })
     if (!confirmed) return
 
-    setDeleting(true)
     try {
-      await deleteForm(form.id)
+      await deleteFormMutation.mutateAsync(form.id)
       toast.success(t('forms.deleted_success', 'Form deleted successfully'))
-      await fetchForms()
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError))
-    } finally {
-      setDeleting(false)
+    } catch {
+      // Errors handled by mutation hooks
     }
   }
 
@@ -110,7 +90,7 @@ const Forms = () => {
           </div>
         </div>
 
-        {loading ? (
+        {isLoading ? (
           <Loader text={t('common.loading', 'Loading...')} />
         ) : filteredForms.length === 0 ? (
           <div className="py-16 text-center text-sm text-text-secondary">
@@ -196,7 +176,6 @@ const Forms = () => {
           </Table>
         )}
       </Card>
-
     </div>
   )
 }

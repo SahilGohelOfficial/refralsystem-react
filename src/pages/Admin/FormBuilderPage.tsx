@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 import FormBuilder from '../../components/forms/builder/FormBuilder'
+import Loader from '../../components/ui/Loader'
 import { createEmptySchema } from '../../lib/forms/createField'
 import { DuplicateFieldLabelError, validateFormSchema } from '../../lib/forms/fieldId'
 import {
@@ -12,11 +13,8 @@ import {
 } from '../../lib/forms/formMappers'
 import { useConfirm } from '../../context/ConfirmContext'
 import { formatApiError } from '../../lib/api'
-import {
-  createForm,
-  getForm,
-  updateForm,
-} from '../../services/forms.service'
+import { useCreateForm, useForm, useUpdateForm } from '../../hooks/queries'
+import { useToastOnError } from '../../hooks/useToastOnError'
 import type { ApiError } from '../../types/api'
 import type { FormSchema } from '../../types/form'
 
@@ -25,44 +23,25 @@ const FormBuilderPage = () => {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const confirm = useConfirm()
-  const [isSaving, setIsSaving] = useState(false)
-  const [loading, setLoading] = useState(Boolean(formId))
-  const [loadedSchema, setLoadedSchema] = useState<FormSchema | null>(null)
+  const isEditMode = Boolean(formId)
+  const { data: form, isLoading, error } = useForm(formId ?? '', isEditMode)
+  const createFormMutation = useCreateForm()
+  const updateFormMutation = useUpdateForm()
+  useToastOnError(error, isEditMode)
+
   const [notFound, setNotFound] = useState(false)
 
-  const isEditMode = Boolean(formId)
-
   const emptySchema = useMemo(() => createEmptySchema(), [])
+  const loadedSchema = useMemo(
+    () => (form ? toFormSchema(form) : null),
+    [form],
+  )
 
   useEffect(() => {
-    if (!isEditMode || !formId) return
-
-    let cancelled = false
-    setLoading(true)
-    setNotFound(false)
-
-    getForm(formId)
-      .then((form) => {
-        if (!cancelled) setLoadedSchema(toFormSchema(form))
-      })
-      .catch((error) => {
-        if (!cancelled) {
-          const apiError = error as ApiError
-          if (apiError.statusCode === 404) {
-            setNotFound(true)
-          } else {
-            toast.error(formatApiError(apiError))
-          }
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [formId, isEditMode])
+    if (!error || !isEditMode) return
+    const apiError = error as ApiError
+    if (apiError.statusCode === 404) setNotFound(true)
+  }, [error, isEditMode])
 
   const handleSave = useCallback(
     async (schema: FormSchema) => {
@@ -75,14 +54,13 @@ const FormBuilderPage = () => {
         if (!confirmed) return
       }
 
-      setIsSaving(true)
       try {
         validateFormSchema(schema)
         if (isEditMode && formId) {
-          await updateForm(formId, toUpdatePayload(schema))
+          await updateFormMutation.mutateAsync({ id: formId, payload: toUpdatePayload(schema) })
           toast.success(t('forms.updated_success', 'Form updated successfully'))
         } else {
-          await createForm(toCreatePayload(schema))
+          await createFormMutation.mutateAsync(toCreatePayload(schema))
           toast.success(t('forms.created_success', 'Form created successfully'))
         }
         navigate('/admin/forms')
@@ -92,23 +70,17 @@ const FormBuilderPage = () => {
         } else {
           toast.error(formatApiError(e as ApiError))
         }
-      } finally {
-        setIsSaving(false)
       }
     },
-    [confirm, isEditMode, formId, navigate, t],
+    [confirm, createFormMutation, formId, isEditMode, navigate, t, updateFormMutation],
   )
 
   const handleCancel = useCallback(() => {
     navigate('/admin/forms')
   }, [navigate])
 
-  if (loading) {
-    return (
-      <div className="flex justify-center py-24">
-        <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-      </div>
-    )
+  if (isEditMode && isLoading) {
+    return <Loader size="lg" className="min-h-[50vh]" />
   }
 
   if (isEditMode && notFound) {
@@ -133,6 +105,8 @@ const FormBuilderPage = () => {
 
   const initialSchema = isEditMode ? loadedSchema : emptySchema
   if (!initialSchema) return null
+
+  const isSaving = createFormMutation.isPending || updateFormMutation.isPending
 
   return (
     <FormBuilder

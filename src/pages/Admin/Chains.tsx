@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, FormEvent } from 'react';
+import { useState, FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search, Plus, MoreVertical, Edit2, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -12,14 +12,14 @@ import PageHeader from '../../components/ui/PageHeader';
 import IconButton from '../../components/ui/IconButton';
 import Loader from '../../components/ui/Loader';
 import {
-  createChain,
-  deleteChain,
-  listChains,
-  updateChain,
-} from '../../services/chains.service';
+  useChains,
+  useCreateChain,
+  useDeleteChain,
+  useUpdateChain,
+} from '../../hooks/queries';
 import { useConfirm } from '../../context/ConfirmContext';
-import { formatApiError } from '../../lib/api';
-import type { ApiError, Chain } from '../../types/api';
+import { useToastOnError } from '../../hooks/useToastOnError';
+import type { Chain } from '../../types/api';
 import { formatLocalDate } from '../../lib/dates';
 
 type ChainModal = { mode: 'create' } | { mode: 'edit'; chain: Chain };
@@ -27,27 +27,17 @@ type ChainModal = { mode: 'create' } | { mode: 'edit'; chain: Chain };
 const Chains = () => {
   const { t } = useTranslation();
   const confirm = useConfirm();
-  const [chains, setChains] = useState<Chain[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: chains = [], isLoading, error } = useChains();
+  const createChainMutation = useCreateChain();
+  const updateChainMutation = useUpdateChain();
+  const deleteChainMutation = useDeleteChain();
+  useToastOnError(error);
+
   const [search, setSearch] = useState('');
   const [modal, setModal] = useState<ChainModal | null>(null);
   const [formName, setFormName] = useState('');
-  const [submitting, setSubmitting] = useState(false);
 
-  const fetchChains = useCallback(async () => {
-    setLoading(true);
-    try {
-      setChains(await listChains());
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void fetchChains();
-  }, [fetchChains]);
+  const submitting = createChainMutation.isPending || updateChainMutation.isPending;
 
   const openCreate = () => {
     setFormName('');
@@ -79,21 +69,17 @@ const Chains = () => {
       if (!confirmed) return;
     }
 
-    setSubmitting(true);
     try {
       if (modal.mode === 'create') {
-        await createChain({ name: formName });
+        await createChainMutation.mutateAsync({ name: formName });
         toast.success(t('chains.createSuccess'));
       } else {
-        await updateChain(modal.chain.id, { name: formName });
+        await updateChainMutation.mutateAsync({ id: modal.chain.id, payload: { name: formName } });
         toast.success(t('chains.updateSuccess'));
       }
       closeModal();
-      await fetchChains();
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
-    } finally {
-      setSubmitting(false);
+    } catch {
+      // Errors handled by mutation hooks
     }
   };
 
@@ -107,11 +93,10 @@ const Chains = () => {
     if (!confirmed) return;
 
     try {
-      await deleteChain(chain.id);
+      await deleteChainMutation.mutateAsync(chain.id);
       toast.success(t('chains.deleteSuccess'));
-      await fetchChains();
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
+    } catch {
+      // Errors handled by mutation hooks
     }
   };
 
@@ -143,7 +128,7 @@ const Chains = () => {
           </div>
         </div>
 
-        {loading ? (
+        {isLoading ? (
           <Loader text={t('common.loading', 'Loading...')} />
         ) : filteredChains.length === 0 ? (
           <div className="py-16 text-center text-sm text-text-secondary">

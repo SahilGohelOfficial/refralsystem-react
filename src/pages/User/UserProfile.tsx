@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ElementType } from 'react';
+import { type ElementType } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -13,15 +13,14 @@ import {
   Shield,
   User,
 } from 'lucide-react';
-import toast from 'react-hot-toast';
 import { Card, CardContent } from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import PageHeader from '../../components/ui/PageHeader';
 import Skeleton from '../../components/ui/Skeleton';
-import { getMyProfile } from '../../services/users.service';
-import { formatApiError } from '../../lib/api';
+import { useMyProfile } from '../../hooks/queries';
+import { useToastOnError } from '../../hooks/useToastOnError';
 import { formatUserName } from '../../types/api';
-import type { ApiError, ReferralUser, UserStatus } from '../../types/api';
+import type { UserStatus } from '../../types/api';
 import { formatCalendarDate, formatLocalDateTime } from '../../lib/dates';
 
 const statusVariant = (status: UserStatus) => {
@@ -81,25 +80,10 @@ const InfoRow = ({
 const UserProfile = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<ReferralUser | null>(null);
+  const { data: profile, isLoading, error } = useMyProfile();
+  useToastOnError(error);
 
-  const fetchProfile = useCallback(async () => {
-    setLoading(true);
-    try {
-      setProfile(await getMyProfile());
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void fetchProfile();
-  }, [fetchProfile]);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="page-shell space-y-6">
         <Skeleton className="h-10 w-64" />

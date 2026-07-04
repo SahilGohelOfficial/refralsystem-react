@@ -14,6 +14,8 @@ import {
   setAccessToken,
   setUnauthorizedHandler,
 } from '../lib/api';
+import { queryClient } from '../lib/queryClient';
+import { queryKeys } from '../lib/queryKeys';
 import { isAdminPortalRole } from '../lib/roles';
 import { getMyProfile } from '../services/users.service';
 import type { ApiError, PortalRole, Agent, UserStatus } from '../types/api';
@@ -157,6 +159,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     setUser(null);
     clearSession();
+    queryClient.clear();
 
     if (!token || !currentUser) {
       return;
@@ -193,7 +196,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     if (!token) return;
 
     try {
-      const profile = await getMyProfile();
+      const profile = await queryClient.fetchQuery({
+        queryKey: queryKeys.users.me,
+        queryFn: getMyProfile,
+      });
       setUser((current) => {
         if (!current || current.role !== 'user') return current;
         const updated: User = {

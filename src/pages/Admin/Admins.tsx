@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, FormEvent } from 'react';
+import { useState, FormEvent } from 'react';
 import {
   Search,
   Plus,
@@ -22,16 +22,16 @@ import PageHeader from '../../components/ui/PageHeader';
 import IconButton from '../../components/ui/IconButton';
 import Loader from '../../components/ui/Loader';
 import {
-  createAdmin,
-  listAdmins,
-  resetAdminPassword,
-  updateAdmin,
-  updateAdminStatus,
-} from '../../services/admins.service';
+  useAdmins,
+  useCreateAdmin,
+  useResetAdminPassword,
+  useUpdateAdmin,
+  useUpdateAdminStatus,
+} from '../../hooks/queries';
 import { useConfirm } from '../../context/ConfirmContext';
-import { formatApiError } from '../../lib/api';
+import { useToastOnError } from '../../hooks/useToastOnError';
 import { formatRoleLabel } from '../../lib/roles';
-import type { Admin, AdminRole, ApiError } from '../../types/api';
+import type { Admin, AdminRole } from '../../types/api';
 import { formatLocalDateTime } from '../../lib/dates';
 
 const roleOptions = [
@@ -61,31 +61,25 @@ const emptyForm = () => ({
 
 const Admins = () => {
   const confirm = useConfirm();
-  const [admins, setAdmins] = useState<Admin[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: admins = [], isLoading, error } = useAdmins();
+  const createAdminMutation = useCreateAdmin();
+  const updateAdminMutation = useUpdateAdmin();
+  const resetPasswordMutation = useResetAdminPassword();
+  const updateStatusMutation = useUpdateAdminStatus();
+  useToastOnError(error);
+
   const [search, setSearch] = useState('');
   const [modal, setModal] = useState<AdminModal | null>(null);
   const [resetTarget, setResetTarget] = useState<Admin | null>(null);
-  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState(emptyForm());
   const [resetPassword, setResetPassword] = useState('');
   const [resetConfirmPassword, setResetConfirmPassword] = useState('');
   const [resetErrors, setResetErrors] = useState<{ newPassword?: string; confirmPassword?: string }>({});
 
-  const fetchAdmins = useCallback(async () => {
-    setLoading(true);
-    try {
-      setAdmins(await listAdmins());
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void fetchAdmins();
-  }, [fetchAdmins]);
+  const submitting =
+    createAdminMutation.isPending ||
+    updateAdminMutation.isPending ||
+    resetPasswordMutation.isPending;
 
   const openCreate = () => {
     setForm(emptyForm());
@@ -121,10 +115,9 @@ const Admins = () => {
       if (!confirmed) return;
     }
 
-    setSubmitting(true);
     try {
       if (modal.mode === 'create') {
-        await createAdmin({
+        await createAdminMutation.mutateAsync({
           name: form.name,
           email: form.email,
           phoneNumber: form.phoneNumber,
@@ -133,30 +126,29 @@ const Admins = () => {
         });
         toast.success('Admin created successfully');
       } else {
-        await updateAdmin(modal.admin.id, {
-          name: form.name,
-          email: form.email,
-          phoneNumber: form.phoneNumber,
-          role: form.role,
+        await updateAdminMutation.mutateAsync({
+          id: modal.admin.id,
+          payload: {
+            name: form.name,
+            email: form.email,
+            phoneNumber: form.phoneNumber,
+            role: form.role,
+          },
         });
         toast.success('Admin updated successfully');
       }
       closeModal();
-      await fetchAdmins();
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
-    } finally {
-      setSubmitting(false);
+    } catch {
+      // Errors handled by mutation hooks
     }
   };
 
   const handleToggleStatus = async (admin: Admin) => {
     try {
-      await updateAdminStatus(admin.id, !admin.isActive);
+      await updateStatusMutation.mutateAsync({ id: admin.id, isActive: !admin.isActive });
       toast.success(admin.isActive ? 'Admin deactivated' : 'Admin activated');
-      await fetchAdmins();
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
+    } catch {
+      // Errors handled by mutation hooks
     }
   };
 
@@ -185,18 +177,15 @@ const Admins = () => {
     });
     if (!confirmed) return;
 
-    setSubmitting(true);
     try {
-      await resetAdminPassword(resetTarget.id, resetPassword);
+      await resetPasswordMutation.mutateAsync({ id: resetTarget.id, newPassword: resetPassword });
       toast.success('Password reset successfully');
       setResetTarget(null);
       setResetPassword('');
       setResetConfirmPassword('');
       setResetErrors({});
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
-    } finally {
-      setSubmitting(false);
+    } catch {
+      // Errors handled by mutation hooks
     }
   };
 
@@ -236,7 +225,7 @@ const Admins = () => {
           </div>
         </div>
 
-        {loading ? (
+        {isLoading ? (
           <Loader text="Loading admins..." />
         ) : filteredAdmins.length === 0 ? (
           <div className="py-16 text-center text-sm text-text-secondary">

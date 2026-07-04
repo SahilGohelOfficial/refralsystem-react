@@ -1,18 +1,23 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Search } from 'lucide-react';
+import toast from 'react-hot-toast';
 import AgentActionsMenu from '../../components/admin/AgentActionsMenu';
 import ChainReferralBoard from '../../components/chains/ChainReferralBoard';
-import toast from 'react-hot-toast';
 import { Card } from '../../components/ui/Card';
 import { Table, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
-import { getAgent, getAgentChainReferrals, listAgentUsers } from '../../services/agents.service';
+import {
+  useAgent,
+  useAgentChainReferrals,
+  useAgentUsers,
+} from '../../hooks/queries';
+import { useToastOnError } from '../../hooks/useToastOnError';
 import { formatApiError } from '../../lib/api';
-import type { Agent, ApiError, ChainWithUsers, ReferralUser, UserStatus } from '../../types/api';
+import type { ApiError, ReferralUser, UserStatus } from '../../types/api';
 import { formatAgentName, formatUserName } from '../../types/api';
 import { formatLocation } from '../../lib/location';
 import { formatLocalDate, formatLocalDateTime } from '../../lib/dates';
@@ -30,66 +35,33 @@ const AgentDetail = () => {
   const { agentId = '' } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [agent, setAgent] = useState<Agent | null>(null);
   const [activeTab, setActiveTab] = useState<DetailTab>('approved');
-  const [users, setUsers] = useState<ReferralUser[]>([]);
-  const [chains, setChains] = useState<ChainWithUsers[]>([]);
-  const [loadingAgent, setLoadingAgent] = useState(true);
-  const [loadingUsers, setLoadingUsers] = useState(true);
-  const [loadingChains, setLoadingChains] = useState(false);
   const [search, setSearch] = useState('');
 
-  const fetchAgent = useCallback(async () => {
-    if (!agentId) return;
-    setLoadingAgent(true);
-    try {
-      setAgent(await getAgent(agentId));
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
-      navigate('/admin/agents');
-    } finally {
-      setLoadingAgent(false);
-    }
-  }, [agentId, navigate]);
+  const {
+    data: agent,
+    isLoading: loadingAgent,
+    error: agentError,
+  } = useAgent(agentId);
+  const isUserTab = activeTab !== 'chains';
+  const {
+    data: users = [],
+    isLoading: loadingUsers,
+    error: usersError,
+  } = useAgentUsers(agentId, isUserTab ? activeTab : undefined, isUserTab);
+  const {
+    data: chains = [],
+    isLoading: loadingChains,
+    error: chainsError,
+  } = useAgentChainReferrals(agentId, activeTab === 'chains');
 
-  const fetchUsers = useCallback(async (tab: UserTab) => {
-    if (!agentId) return;
-    setLoadingUsers(true);
-    try {
-      setUsers(await listAgentUsers(agentId, tab));
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
-    } finally {
-      setLoadingUsers(false);
-    }
-  }, [agentId]);
-
+  useToastOnError(usersError);
+  useToastOnError(chainsError);
   useEffect(() => {
-    void fetchAgent();
-  }, [fetchAgent]);
-
-  const fetchChains = useCallback(async () => {
-    if (!agentId) return;
-    setLoadingChains(true);
-    try {
-      const data = await getAgentChainReferrals(agentId);
-      setChains(data.chains);
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
-    } finally {
-      setLoadingChains(false);
-    }
-  }, [agentId]);
-
-  useEffect(() => {
-    if (activeTab === 'chains') return;
-    void fetchUsers(activeTab);
-  }, [activeTab, fetchUsers]);
-
-  useEffect(() => {
-    if (activeTab !== 'chains') return;
-    void fetchChains();
-  }, [activeTab, fetchChains]);
+    if (!agentError) return;
+    toast.error(formatApiError(agentError as ApiError));
+    navigate('/admin/agents');
+  }, [agentError, navigate]);
 
   const filteredUsers = users.filter((user) => {
     const query = search.toLowerCase();
@@ -162,7 +134,6 @@ const AgentDetail = () => {
 
         <AgentActionsMenu
           agent={agent}
-          onAgentChange={fetchAgent}
           onDeleted={() => navigate('/admin/agents')}
           trigger={
             <Button variant="secondary" className="gap-2 shrink-0">

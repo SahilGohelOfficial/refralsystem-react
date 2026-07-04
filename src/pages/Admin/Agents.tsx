@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, FormEvent } from 'react';
+import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -13,42 +13,28 @@ import Input from '../../components/ui/Input';
 import Modal from '../../components/ui/Modal';
 import PageHeader from '../../components/ui/PageHeader';
 import Loader from '../../components/ui/Loader';
-import { createAgent, listAgents } from '../../services/agents.service';
+import { useAgents, useCreateAgent } from '../../hooks/queries';
 import { useLocationSelect } from '../../hooks/useLocationSelect';
-import { formatApiError } from '../../lib/api';
+import { useToastOnError } from '../../hooks/useToastOnError';
 import { formatLocation } from '../../lib/location';
-import type { Agent, AgentCredentials, ApiError } from '../../types/api';
+import type { AgentCredentials } from '../../types/api';
 import { formatAgentName } from '../../types/api';
 
 const Agents = () => {
   const navigate = useNavigate();
-  const [agents, setAgents] = useState<Agent[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: agents = [], isLoading, error } = useAgents();
+  const createAgentMutation = useCreateAgent();
+  useToastOnError(error);
+
   const [search, setSearch] = useState('');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [credentials, setCredentials] = useState<AgentCredentials | null>(null);
-  const [submitting, setSubmitting] = useState(false);
   const [formFirstName, setFormFirstName] = useState('');
   const [formMiddleName, setFormMiddleName] = useState('');
   const [formLastName, setFormLastName] = useState('');
   const [formEmail, setFormEmail] = useState('');
   const [formPhoneNumber, setFormPhoneNumber] = useState('');
   const location = useLocationSelect();
-
-  const fetchAgents = useCallback(async () => {
-    setLoading(true);
-    try {
-      setAgents(await listAgents());
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void fetchAgents();
-  }, [fetchAgents]);
 
   const resetForm = () => {
     setFormFirstName('');
@@ -72,9 +58,8 @@ const Agents = () => {
       return;
     }
 
-    setSubmitting(true);
     try {
-      const result = await createAgent({
+      const result = await createAgentMutation.mutateAsync({
         firstName: formFirstName.trim(),
         middleName: formMiddleName.trim() || undefined,
         lastName: formLastName.trim(),
@@ -87,11 +72,8 @@ const Agents = () => {
       setIsCreateOpen(false);
       setCredentials(result.credentials);
       resetForm();
-      await fetchAgents();
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
-    } finally {
-      setSubmitting(false);
+    } catch {
+      // Errors handled by mutation hooks
     }
   };
 
@@ -135,7 +117,7 @@ const Agents = () => {
           </div>
         </div>
 
-        {loading ? (
+        {isLoading ? (
           <Loader text="Loading agents..." />
         ) : filteredAgents.length === 0 ? (
           <div className="py-16 text-center text-sm text-text-secondary">
@@ -176,7 +158,7 @@ const Agents = () => {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                    <AgentActionsMenu agent={agent} onAgentChange={fetchAgents} />
+                    <AgentActionsMenu agent={agent} />
                   </TableCell>
                 </TableRow>
               ))}
@@ -204,7 +186,7 @@ const Agents = () => {
           stateOptions={location.stateOptions}
           cityOptions={location.cityOptions}
           loadingCities={location.loadingCities}
-          submitting={submitting}
+          submitting={createAgentMutation.isPending}
           submitLabel="Create Agent"
           onSubmit={handleCreate}
           onCancel={() => {
