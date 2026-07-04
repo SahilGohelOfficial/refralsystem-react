@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, FormEvent } from 'react';
+import { useState, useEffect, useCallback, FormEvent } from 'react';
 import {
   Search,
   Plus,
@@ -30,6 +30,7 @@ import {
 } from '../../services/admins.service';
 import { useConfirm } from '../../context/ConfirmContext';
 import { formatApiError } from '../../lib/api';
+import { formatRoleLabel } from '../../lib/roles';
 import type { Admin, AdminRole, ApiError } from '../../types/api';
 import { formatLocalDateTime } from '../../lib/dates';
 
@@ -38,48 +39,43 @@ const roleOptions = [
   { value: 'superAdmin', label: 'Super Admin' },
 ];
 
-const formatRole = (role: AdminRole) =>
-  role === 'superAdmin' ? 'Super Admin' : 'Admin';
-
-type ResetFieldErrors = {
-  newPassword?: string;
-  confirmPassword?: string;
-};
+const normalizePhone = (value: string) => value.replace(/\D/g, '').slice(0, 10);
 
 function validatePassword(value: string): string | undefined {
-  if (!value.trim()) {
-    return 'Password is required';
-  }
+  if (!value.trim()) return 'Password is required';
   if (value.length < 8 || !/[a-zA-Z]/.test(value) || !/[0-9]/.test(value)) {
     return 'Password must be at least 8 characters with one letter and one number';
   }
   return undefined;
 }
 
+type AdminModal = { mode: 'create' } | { mode: 'edit'; admin: Admin };
+
+const emptyForm = () => ({
+  name: '',
+  email: '',
+  phoneNumber: '',
+  password: '',
+  role: 'admin' as AdminRole,
+});
+
 const Admins = () => {
   const confirm = useConfirm();
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [editingAdmin, setEditingAdmin] = useState<Admin | null>(null);
+  const [modal, setModal] = useState<AdminModal | null>(null);
   const [resetTarget, setResetTarget] = useState<Admin | null>(null);
   const [submitting, setSubmitting] = useState(false);
-
-  const [formName, setFormName] = useState('');
-  const [formEmail, setFormEmail] = useState('');
-  const [formPhoneNumber, setFormPhoneNumber] = useState('');
-  const [formPassword, setFormPassword] = useState('');
-  const [formRole, setFormRole] = useState<AdminRole>('admin');
+  const [form, setForm] = useState(emptyForm());
   const [resetPassword, setResetPassword] = useState('');
   const [resetConfirmPassword, setResetConfirmPassword] = useState('');
-  const [resetFieldErrors, setResetFieldErrors] = useState<ResetFieldErrors>({});
+  const [resetErrors, setResetErrors] = useState<{ newPassword?: string; confirmPassword?: string }>({});
 
   const fetchAdmins = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await listAdmins();
-      setAdmins(data);
+      setAdmins(await listAdmins());
     } catch (error) {
       toast.error(formatApiError(error as ApiError));
     } finally {
@@ -88,84 +84,64 @@ const Admins = () => {
   }, []);
 
   useEffect(() => {
-    fetchAdmins();
+    void fetchAdmins();
   }, [fetchAdmins]);
 
-  const resetForm = () => {
-    setFormName('');
-    setFormEmail('');
-    setFormPhoneNumber('');
-    setFormPassword('');
-    setFormRole('admin');
-    setResetPassword('');
-    setResetConfirmPassword('');
-    setResetFieldErrors({});
-  };
-
-  const openResetPassword = (admin: Admin) => {
-    setResetTarget(admin);
-    setResetPassword('');
-    setResetConfirmPassword('');
-    setResetFieldErrors({});
-  };
-
   const openCreate = () => {
-    resetForm();
-    setIsCreateOpen(true);
+    setForm(emptyForm());
+    setModal({ mode: 'create' });
   };
 
   const openEdit = (admin: Admin) => {
-    setFormName(admin.name);
-    setFormEmail(admin.email);
-    setFormPhoneNumber(admin.phoneNumber ?? '');
-    setFormRole(admin.role);
-    setEditingAdmin(admin);
-  };
-
-  const handleCreate = async (e: FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    try {
-      await createAdmin({
-        name: formName,
-        email: formEmail,
-        phoneNumber: formPhoneNumber,
-        password: formPassword,
-        role: formRole,
-      });
-      toast.success('Admin created successfully');
-      setIsCreateOpen(false);
-      resetForm();
-      await fetchAdmins();
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleUpdate = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!editingAdmin) return;
-
-    const confirmed = await confirm({
-      title: 'Edit Admin',
-      message: `Save changes to "${editingAdmin.name}"?`,
-      confirmLabel: 'Save Changes',
+    setForm({
+      name: admin.name,
+      email: admin.email,
+      phoneNumber: admin.phoneNumber ?? '',
+      password: '',
+      role: admin.role,
     });
-    if (!confirmed) return;
+    setModal({ mode: 'edit', admin });
+  };
+
+  const closeModal = () => {
+    setModal(null);
+    setForm(emptyForm());
+  };
+
+  const handleSave = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!modal) return;
+
+    if (modal.mode === 'edit') {
+      const confirmed = await confirm({
+        title: 'Edit Admin',
+        message: `Save changes to "${modal.admin.name}"?`,
+        confirmLabel: 'Save Changes',
+      });
+      if (!confirmed) return;
+    }
 
     setSubmitting(true);
     try {
-      await updateAdmin(editingAdmin.id, {
-        name: formName,
-        email: formEmail,
-        phoneNumber: formPhoneNumber,
-        role: formRole,
-      });
-      toast.success('Admin updated successfully');
-      setEditingAdmin(null);
-      resetForm();
+      if (modal.mode === 'create') {
+        await createAdmin({
+          name: form.name,
+          email: form.email,
+          phoneNumber: form.phoneNumber,
+          password: form.password,
+          role: form.role,
+        });
+        toast.success('Admin created successfully');
+      } else {
+        await updateAdmin(modal.admin.id, {
+          name: form.name,
+          email: form.email,
+          phoneNumber: form.phoneNumber,
+          role: form.role,
+        });
+        toast.success('Admin updated successfully');
+      }
+      closeModal();
       await fetchAdmins();
     } catch (error) {
       toast.error(formatApiError(error as ApiError));
@@ -188,23 +164,18 @@ const Admins = () => {
     e.preventDefault();
     if (!resetTarget) return;
 
-    const errors: ResetFieldErrors = {};
+    const errors: { newPassword?: string; confirmPassword?: string } = {};
     const passwordError = validatePassword(resetPassword);
-    if (passwordError) {
-      errors.newPassword = passwordError;
-    }
+    if (passwordError) errors.newPassword = passwordError;
     if (!resetConfirmPassword.trim()) {
       errors.confirmPassword = 'Please confirm the new password';
     } else if (resetPassword !== resetConfirmPassword) {
       errors.confirmPassword = 'Passwords do not match';
     }
-
     if (Object.keys(errors).length > 0) {
-      setResetFieldErrors(errors);
+      setResetErrors(errors);
       return;
     }
-
-    setResetFieldErrors({});
 
     const confirmed = await confirm({
       title: 'Reset Password',
@@ -221,6 +192,7 @@ const Admins = () => {
       setResetTarget(null);
       setResetPassword('');
       setResetConfirmPassword('');
+      setResetErrors({});
     } catch (error) {
       toast.error(formatApiError(error as ApiError));
     } finally {
@@ -228,132 +200,16 @@ const Admins = () => {
     }
   };
 
-  const filteredAdmins = admins.filter((admin) => {
-    const query = search.toLowerCase();
-    return (
+  const query = search.toLowerCase();
+  const filteredAdmins = admins.filter(
+    (admin) =>
       admin.name.toLowerCase().includes(query) ||
       admin.email.toLowerCase().includes(query) ||
       (admin.phoneNumber?.includes(query) ?? false) ||
-      admin.role.toLowerCase().includes(query)
-    );
-  });
-
-  const createForm = (
-    <form onSubmit={handleCreate} className="space-y-4">
-      <Input
-        label="Name"
-        value={formName}
-        onChange={(e) => setFormName(e.target.value)}
-        required
-        disabled={submitting}
-      />
-      <Input
-        label="Email"
-        type="email"
-        value={formEmail}
-        onChange={(e) => setFormEmail(e.target.value)}
-        required
-        disabled={submitting}
-      />
-      <Input
-        label="Phone Number"
-        type="tel"
-        value={formPhoneNumber}
-        onChange={(e) => setFormPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
-        required
-        disabled={submitting}
-        maxLength={10}
-        placeholder="10-digit mobile number"
-      />
-      <Input
-        label="Password"
-        type="password"
-        value={formPassword}
-        onChange={(e) => setFormPassword(e.target.value)}
-        required
-        disabled={submitting}
-      />
-      <p className="text-xs text-text-secondary -mt-2">
-        At least 8 characters with one letter and one number.
-      </p>
-      <Select
-        label="Role"
-        value={formRole}
-        onChange={(e) => setFormRole(e.target.value as AdminRole)}
-        options={roleOptions}
-        disabled={submitting}
-      />
-      <div className="flex justify-end gap-2 pt-2">
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => {
-            setIsCreateOpen(false);
-            resetForm();
-          }}
-          disabled={submitting}
-        >
-          Cancel
-        </Button>
-        <Button type="submit" isLoading={submitting}>
-          Create Admin
-        </Button>
-      </div>
-    </form>
+      admin.role.toLowerCase().includes(query),
   );
 
-  const editForm = (
-    <form onSubmit={handleUpdate} className="space-y-4">
-      <Input
-        label="Name"
-        value={formName}
-        onChange={(e) => setFormName(e.target.value)}
-        required
-        disabled={submitting}
-      />
-      <Input
-        label="Email"
-        type="email"
-        value={formEmail}
-        onChange={(e) => setFormEmail(e.target.value)}
-        required
-        disabled={submitting}
-      />
-      <Input
-        label="Phone Number"
-        type="tel"
-        value={formPhoneNumber}
-        onChange={(e) => setFormPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
-        required
-        disabled={submitting}
-        maxLength={10}
-        placeholder="10-digit mobile number"
-      />
-      <Select
-        label="Role"
-        value={formRole}
-        onChange={(e) => setFormRole(e.target.value as AdminRole)}
-        options={roleOptions}
-        disabled={submitting}
-      />
-      <div className="flex justify-end gap-2 pt-2">
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => {
-            setEditingAdmin(null);
-            resetForm();
-          }}
-          disabled={submitting}
-        >
-          Cancel
-        </Button>
-        <Button type="submit" isLoading={submitting}>
-          Save Changes
-        </Button>
-      </div>
-    </form>
-  );
+  const isCreate = modal?.mode === 'create';
 
   return (
     <div className="page-shell">
@@ -402,9 +258,7 @@ const Admins = () => {
                 <TableRow key={admin.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className="avatar w-10 h-10 text-sm">
-                        {admin.name.charAt(0)}
-                      </div>
+                      <div className="avatar w-10 h-10 text-sm">{admin.name.charAt(0)}</div>
                       <div>
                         <div className="font-medium text-text">{admin.name}</div>
                         <div className="text-xs text-text-secondary">
@@ -418,14 +272,12 @@ const Admins = () => {
                     <Badge variant={admin.role === 'superAdmin' ? 'warning' : 'neutral'}>
                       <span className="flex items-center gap-1">
                         {admin.role === 'superAdmin' && <Shield size={12} />}
-                        {formatRole(admin.role)}
+                        {formatRoleLabel(admin.role)}
                       </span>
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {admin.lastLogin
-                      ? formatLocalDateTime(admin.lastLogin)
-                      : 'Never'}
+                    {admin.lastLogin ? formatLocalDateTime(admin.lastLogin) : 'Never'}
                   </TableCell>
                   <TableCell>
                     <Badge variant={admin.isActive ? 'success' : 'neutral'} dot>
@@ -444,10 +296,17 @@ const Admins = () => {
                       <DropdownItem onClick={() => openEdit(admin)}>
                         <Edit2 size={14} /> Edit Admin
                       </DropdownItem>
-                      <DropdownItem onClick={() => openResetPassword(admin)}>
+                      <DropdownItem
+                        onClick={() => {
+                          setResetTarget(admin);
+                          setResetPassword('');
+                          setResetConfirmPassword('');
+                          setResetErrors({});
+                        }}
+                      >
                         <KeyRound size={14} /> Reset Password
                       </DropdownItem>
-                      <DropdownItem onClick={() => handleToggleStatus(admin)}>
+                      <DropdownItem onClick={() => void handleToggleStatus(admin)}>
                         {admin.isActive ? (
                           <>
                             <UserX size={14} /> Deactivate
@@ -467,19 +326,68 @@ const Admins = () => {
         )}
       </Card>
 
-      <Modal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} title="Add New Admin">
-        {createForm}
-      </Modal>
-
       <Modal
-        isOpen={!!editingAdmin}
-        onClose={() => {
-          setEditingAdmin(null);
-          resetForm();
-        }}
-        title="Edit Admin"
+        isOpen={!!modal}
+        onClose={closeModal}
+        title={isCreate ? 'Add New Admin' : 'Edit Admin'}
       >
-        {editForm}
+        <form onSubmit={handleSave} className="space-y-4">
+          <Input
+            label="Name"
+            value={form.name}
+            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+            required
+            disabled={submitting}
+          />
+          <Input
+            label="Email"
+            type="email"
+            value={form.email}
+            onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+            required
+            disabled={submitting}
+          />
+          <Input
+            label="Phone Number"
+            type="tel"
+            value={form.phoneNumber}
+            onChange={(e) => setForm((f) => ({ ...f, phoneNumber: normalizePhone(e.target.value) }))}
+            required
+            disabled={submitting}
+            maxLength={10}
+            placeholder="10-digit mobile number"
+          />
+          {isCreate && (
+            <>
+              <Input
+                label="Password"
+                type="password"
+                value={form.password}
+                onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                required
+                disabled={submitting}
+              />
+              <p className="text-xs text-text-secondary -mt-2">
+                At least 8 characters with one letter and one number.
+              </p>
+            </>
+          )}
+          <Select
+            label="Role"
+            value={form.role}
+            onChange={(e) => setForm((f) => ({ ...f, role: e.target.value as AdminRole }))}
+            options={roleOptions}
+            disabled={submitting}
+          />
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="secondary" onClick={closeModal} disabled={submitting}>
+              Cancel
+            </Button>
+            <Button type="submit" isLoading={submitting}>
+              {isCreate ? 'Create Admin' : 'Save Changes'}
+            </Button>
+          </div>
+        </form>
       </Modal>
 
       <Modal
@@ -489,7 +397,7 @@ const Admins = () => {
           setResetTarget(null);
           setResetPassword('');
           setResetConfirmPassword('');
-          setResetFieldErrors({});
+          setResetErrors({});
         }}
         title={`Reset Password — ${resetTarget?.name ?? ''}`}
       >
@@ -503,11 +411,9 @@ const Admins = () => {
             value={resetPassword}
             onChange={(e) => {
               setResetPassword(e.target.value);
-              if (resetFieldErrors.newPassword) {
-                setResetFieldErrors((prev) => ({ ...prev, newPassword: undefined }));
-              }
+              if (resetErrors.newPassword) setResetErrors((p) => ({ ...p, newPassword: undefined }));
             }}
-            error={resetFieldErrors.newPassword}
+            error={resetErrors.newPassword}
             required
             disabled={submitting}
             autoComplete="new-password"
@@ -518,11 +424,9 @@ const Admins = () => {
             value={resetConfirmPassword}
             onChange={(e) => {
               setResetConfirmPassword(e.target.value);
-              if (resetFieldErrors.confirmPassword) {
-                setResetFieldErrors((prev) => ({ ...prev, confirmPassword: undefined }));
-              }
+              if (resetErrors.confirmPassword) setResetErrors((p) => ({ ...p, confirmPassword: undefined }));
             }}
-            error={resetFieldErrors.confirmPassword}
+            error={resetErrors.confirmPassword}
             required
             disabled={submitting}
             autoComplete="new-password"
@@ -538,7 +442,7 @@ const Admins = () => {
                 setResetTarget(null);
                 setResetPassword('');
                 setResetConfirmPassword('');
-                setResetFieldErrors({});
+                setResetErrors({});
               }}
               disabled={submitting}
             >

@@ -5,18 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import Button from '../../components/ui/Button';
 import PageHeader from '../../components/ui/PageHeader';
 import { useAuth } from '../../context/AuthContext';
+import { formatRoleLabel } from '../../lib/roles';
 
 const AdminProfile = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user } = useAuth();
-
-  const roleLabel =
-    user?.role === 'superAdmin'
-      ? 'Super Admin'
-      : user?.role
-        ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
-        : 'Admin';
 
   return (
     <div className="page-shell space-y-6">
@@ -45,7 +39,7 @@ const AdminProfile = () => {
               </div>
               <div className="flex justify-between gap-4">
                 <span className="text-text-secondary">Role</span>
-                <span className="text-text font-medium">{roleLabel}</span>
+                <span className="text-text font-medium">{formatRoleLabel(user.role)}</span>
               </div>
             </div>
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, FormEvent } from 'react';
+import { useState, useEffect, useCallback, FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search, Plus, MoreVertical, Edit2, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -8,6 +8,9 @@ import { Dropdown, DropdownItem } from '../../components/ui/Dropdown';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Modal from '../../components/ui/Modal';
+import PageHeader from '../../components/ui/PageHeader';
+import IconButton from '../../components/ui/IconButton';
+import Loader from '../../components/ui/Loader';
 import {
   createChain,
   deleteChain,
@@ -19,22 +22,22 @@ import { formatApiError } from '../../lib/api';
 import type { ApiError, Chain } from '../../types/api';
 import { formatLocalDate } from '../../lib/dates';
 
+type ChainModal = { mode: 'create' } | { mode: 'edit'; chain: Chain };
+
 const Chains = () => {
   const { t } = useTranslation();
   const confirm = useConfirm();
   const [chains, setChains] = useState<Chain[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [editingChain, setEditingChain] = useState<Chain | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [modal, setModal] = useState<ChainModal | null>(null);
   const [formName, setFormName] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchChains = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await listChains();
-      setChains(data);
+      setChains(await listChains());
     } catch (error) {
       toast.error(formatApiError(error as ApiError));
     } finally {
@@ -43,60 +46,49 @@ const Chains = () => {
   }, []);
 
   useEffect(() => {
-    fetchChains();
+    void fetchChains();
   }, [fetchChains]);
 
-  const resetForm = () => {
-    setFormName('');
-  };
-
   const openCreate = () => {
-    resetForm();
-    setIsCreateOpen(true);
+    setFormName('');
+    setModal({ mode: 'create' });
   };
 
   const openEdit = (chain: Chain) => {
     setFormName(chain.name);
-    setEditingChain(chain);
+    setModal({ mode: 'edit', chain });
   };
 
-  const handleCreate = async (e: FormEvent) => {
+  const closeModal = () => {
+    setModal(null);
+    setFormName('');
+  };
+
+  const handleSave = async (e: FormEvent) => {
     e.preventDefault();
-    setSubmitting(true);
-    try {
-      await createChain({ name: formName });
-      toast.success(t('chains.createSuccess'));
-      setIsCreateOpen(false);
-      resetForm();
-      await fetchChains();
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
-    } finally {
-      setSubmitting(false);
+    if (!modal) return;
+
+    if (modal.mode === 'edit') {
+      const confirmed = await confirm({
+        title: t('chains.edit', 'Edit Chain'),
+        message: t('chains.update_confirm', 'Save changes to "{{name}}"?', {
+          name: modal.chain.name,
+        }),
+        confirmLabel: t('common.save', 'Save Changes'),
+      });
+      if (!confirmed) return;
     }
-  };
-
-  const handleUpdate = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!editingChain) return;
-
-    const confirmed = await confirm({
-      title: t('chains.edit', 'Edit Chain'),
-      message: t(
-        'chains.update_confirm',
-        'Save changes to "{{name}}"?',
-        { name: editingChain.name },
-      ),
-      confirmLabel: t('common.save', 'Save Changes'),
-    });
-    if (!confirmed) return;
 
     setSubmitting(true);
     try {
-      await updateChain(editingChain.id, { name: formName });
-      toast.success(t('chains.updateSuccess'));
-      setEditingChain(null);
-      resetForm();
+      if (modal.mode === 'create') {
+        await createChain({ name: formName });
+        toast.success(t('chains.createSuccess'));
+      } else {
+        await updateChain(modal.chain.id, { name: formName });
+        toast.success(t('chains.updateSuccess'));
+      }
+      closeModal();
       await fetchChains();
     } catch (error) {
       toast.error(formatApiError(error as ApiError));
@@ -123,47 +115,25 @@ const Chains = () => {
     }
   };
 
-  const filteredChains = chains.filter((chain) => {
-    const query = search.toLowerCase();
-    return chain.name.toLowerCase().includes(query);
-  });
-
-  const chainForm = (onSubmit: (e: FormEvent) => void, submitLabel: string, onCancel: () => void) => (
-    <form onSubmit={onSubmit} className="space-y-4">
-      <Input
-        label={t('chains.name')}
-        value={formName}
-        onChange={(e) => setFormName(e.target.value)}
-        required
-        disabled={submitting}
-      />
-      <div className="flex justify-end gap-2 pt-2">
-        <Button type="button" variant="secondary" onClick={onCancel} disabled={submitting}>
-          {t('common.cancel')}
-        </Button>
-        <Button type="submit" isLoading={submitting}>
-          {submitLabel}
-        </Button>
-      </div>
-    </form>
-  );
+  const query = search.toLowerCase();
+  const filteredChains = chains.filter((chain) => chain.name.toLowerCase().includes(query));
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-text">{t('chains.title')}</h1>
-          <p className="text-sm text-text-secondary mt-1">{t('chains.subtitle')}</p>
-        </div>
-        <Button className="shrink-0 gap-2" onClick={openCreate}>
-          <Plus size={16} />
-          {t('chains.create')}
-        </Button>
-      </div>
+    <div className="page-shell">
+      <PageHeader
+        title={t('chains.title')}
+        description={t('chains.subtitle')}
+        actions={
+          <Button onClick={openCreate}>
+            <Plus size={16} />
+            {t('chains.create')}
+          </Button>
+        }
+      />
 
-      <Card className="p-0">
-        <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-4 justify-between items-center bg-surface/50 rounded-t-[20px]">
-          <div className="w-full sm:w-96">
+      <Card padding="none" className="data-card">
+        <div className="table-toolbar">
+          <div className="w-full sm:max-w-md">
             <Input
               icon={Search}
               placeholder={t('chains.search')}
@@ -174,11 +144,9 @@ const Chains = () => {
         </div>
 
         {loading ? (
-          <div className="p-12 flex justify-center">
-            <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-          </div>
+          <Loader text={t('common.loading', 'Loading...')} />
         ) : filteredChains.length === 0 ? (
-          <div className="p-12 text-center text-text-secondary">
+          <div className="py-16 text-center text-sm text-text-secondary">
             {search ? t('chains.noResults') : t('chains.empty')}
           </div>
         ) : (
@@ -205,15 +173,15 @@ const Chains = () => {
                     <Dropdown
                       align="right"
                       trigger={
-                        <button className="p-1 text-text-secondary hover:text-text hover:bg-surface rounded-md transition-colors">
+                        <IconButton size="sm" aria-label={t('chains.actions')}>
                           <MoreVertical size={16} />
-                        </button>
+                        </IconButton>
                       }
                     >
                       <DropdownItem onClick={() => openEdit(chain)}>
                         <Edit2 size={14} /> {t('chains.edit')}
                       </DropdownItem>
-                      <DropdownItem onClick={() => handleDelete(chain)}>
+                      <DropdownItem danger onClick={() => void handleDelete(chain)}>
                         <Trash2 size={14} /> {t('chains.delete')}
                       </DropdownItem>
                     </Dropdown>
@@ -225,33 +193,28 @@ const Chains = () => {
         )}
       </Card>
 
-      <Modal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} title={t('chains.create')}>
-        {chainForm(
-          handleCreate,
-          t('chains.create'),
-          () => {
-            setIsCreateOpen(false);
-            resetForm();
-          },
-        )}
-      </Modal>
-
       <Modal
-        isOpen={!!editingChain}
-        onClose={() => {
-          setEditingChain(null);
-          resetForm();
-        }}
-        title={t('chains.edit')}
+        isOpen={!!modal}
+        onClose={closeModal}
+        title={modal?.mode === 'create' ? t('chains.create') : t('chains.edit')}
       >
-        {chainForm(
-          handleUpdate,
-          t('common.save'),
-          () => {
-            setEditingChain(null);
-            resetForm();
-          },
-        )}
+        <form onSubmit={handleSave} className="space-y-4">
+          <Input
+            label={t('chains.name')}
+            value={formName}
+            onChange={(e) => setFormName(e.target.value)}
+            required
+            disabled={submitting}
+          />
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="secondary" onClick={closeModal} disabled={submitting}>
+              {t('common.cancel')}
+            </Button>
+            <Button type="submit" isLoading={submitting}>
+              {modal?.mode === 'create' ? t('chains.create') : t('common.save')}
+            </Button>
+          </div>
+        </form>
       </Modal>
     </div>
   );

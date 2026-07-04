@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Menu, Lock, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { isAdminPortalRole } from '../lib/roles';
+import { formatRoleLabel, isAdminPortalRole } from '../lib/roles';
 import type { PortalRole } from '../types/api';
 
 const getProfilePath = (role: PortalRole): string | null => {
@@ -47,13 +47,6 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showProfileMenu]);
 
-  const roleLabel =
-    user?.role === 'superAdmin'
-      ? 'Super Admin'
-      : user?.role
-        ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
-        : 'Admin';
-
   return (
     <header className="h-14 lg:h-16 bg-card/80 backdrop-blur-xl border-b border-border sticky top-0 z-30 px-4 md:px-6 flex items-center justify-between shrink-0">
       <div className="flex items-center gap-3">
@@ -78,7 +71,7 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
               <p className="text-sm font-medium text-text leading-tight">
                 {user?.name || 'Admin User'}
               </p>
-              <p className="text-xs text-text-muted leading-tight">{roleLabel}</p>
+              <p className="text-xs text-text-muted leading-tight">{formatRoleLabel(user?.role)}</p>
             </div>
             <div className="w-8 h-8 rounded-lg bg-primary-muted border border-primary/20 flex items-center justify-center text-primary">
               <User size={15} strokeWidth={2} />

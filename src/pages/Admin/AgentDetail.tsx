@@ -14,6 +14,7 @@ import { getAgent, getAgentChainReferrals, listAgentUsers } from '../../services
 import { formatApiError } from '../../lib/api';
 import type { Agent, ApiError, ChainWithUsers, ReferralUser, UserStatus } from '../../types/api';
 import { formatAgentName, formatUserName } from '../../types/api';
+import { formatLocation } from '../../lib/location';
 import { formatLocalDate, formatLocalDateTime } from '../../lib/dates';
 
 type UserTab = 'approved' | 'pending' | 'rejected';
@@ -89,13 +90,6 @@ const AgentDetail = () => {
     if (activeTab !== 'chains') return;
     void fetchChains();
   }, [activeTab, fetchChains]);
-
-  const formatLocation = (value: Agent) => {
-    if (value.city && value.state) return `${value.city}, ${value.state}`;
-    if (value.state) return value.state;
-    if (value.city) return value.city;
-    return '—';
-  };
 
   const filteredUsers = users.filter((user) => {
     const query = search.toLowerCase();
@@ -210,7 +204,7 @@ const AgentDetail = () => {
             </div>
             <div>
               <dt className="text-xs text-text-secondary">Location</dt>
-              <dd className="text-sm font-medium text-text mt-0.5">{formatLocation(agent)}</dd>
+              <dd className="text-sm font-medium text-text mt-0.5">{formatLocation(agent.state, agent.city)}</dd>
             </div>
             <div>
               <dt className="text-xs text-text-secondary">Last login</dt>

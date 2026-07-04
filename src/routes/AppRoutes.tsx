@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import ProtectedRoute from '../components/auth/ProtectedRoute';
+import Loader from '../components/ui/Loader';
 import ChooseLogin from '../pages/Login/ChooseLogin';
 
 // Auth Pages
@@ -46,15 +47,9 @@ const RegisterUser = lazy(() => import('../pages/RegisterUser/RegisterUser'));
 
 const NotFound = lazy(() => import('../pages/NotFound/NotFound'));
 
-const Loader = () => (
-  <div className="min-h-screen bg-background flex items-center justify-center">
-    <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-  </div>
-);
-
 const AppRoutes = () => {
   return (
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<Loader size="lg" className="min-h-screen" />}>
       <Routes>
         <Route path="/" element={<Navigate to="/choose-login" replace />} />
         <Route path="/choose-login" element={<ChooseLogin />} />
