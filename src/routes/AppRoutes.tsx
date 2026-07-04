@@ -14,9 +14,6 @@ const AgentDetail = lazy(() => import('../pages/Admin/AgentDetail'));
 const AdminAgentUserDetail = lazy(() => import('../pages/Admin/AdminAgentUserDetail'));
 const Admins = lazy(() => import('../pages/Admin/Admins'));
 const Chains = lazy(() => import('../pages/Admin/Chains'));
-const Users = lazy(() => import('../pages/Admin/Users'));
-const Referrals = lazy(() => import('../pages/Admin/Referrals'));
-const Withdrawals = lazy(() => import('../pages/Admin/Withdrawals'));
 const Forms = lazy(() => import('../pages/Admin/Forms'));
 const FormBuilderPage = lazy(() => import('../pages/Admin/FormBuilderPage'));
 const FormResponses = lazy(() => import('../pages/Admin/FormResponses'));
@@ -95,8 +92,6 @@ const AppRoutes = () => {
               </ProtectedRoute>
             }
           />
-          <Route path="customers" element={<Users />} />
-          <Route path="referrals" element={<Referrals />} />
           <Route path="forms" element={<Forms />} />
           <Route path="forms/:formId/responses" element={<FormResponses />} />
           <Route
@@ -115,7 +110,6 @@ const AppRoutes = () => {
               </ProtectedRoute>
             }
           />
-          <Route path="withdrawals" element={<Withdrawals />} />
           <Route path="settings" element={<Settings />} />
           <Route path="change-password" element={<ChangePassword />} />
         </Route>
@@ -147,8 +141,6 @@ const AppRoutes = () => {
           <Route path="forms" element={<AgentForms />} />
           <Route path="forms/:formId" element={<AgentFormSubmit />} />
           <Route path="your-chains" element={<AgentChainReferrals />} />
-          <Route path="referrals" element={<div className="p-8"><h2 className="text-2xl text-text font-bold">Referrals (Coming Soon)</h2></div>} />
-          <Route path="documents" element={<div className="p-8"><h2 className="text-2xl text-text font-bold">Documents (Coming Soon)</h2></div>} />
           <Route path="profile" element={<AgentProfile />} />
           <Route path="change-password" element={<ChangePassword />} />
           <Route path="settings" element={<AgentSettings />} />
@@ -164,10 +156,6 @@ const AppRoutes = () => {
           <Route path="dashboard" element={<UserDashboard />} />
           <Route path="forms" element={<UserForms />} />
           <Route path="forms/:formId" element={<UserFormSubmit />} />
-          <Route path="request" element={<div className="p-8"><h2 className="text-2xl text-text font-bold">Request Withdrawal (Coming Soon)</h2></div>} />
-          <Route path="history" element={<div className="p-8"><h2 className="text-2xl text-text font-bold">Withdrawal History (Coming Soon)</h2></div>} />
-          <Route path="notifications" element={<div className="p-8"><h2 className="text-2xl text-text font-bold">Notifications (Coming Soon)</h2></div>} />
-          <Route path="profile" element={<div className="p-8"><h2 className="text-2xl text-text font-bold">Profile (Coming Soon)</h2></div>} />
           <Route path="settings" element={<UserSettings />} />
         </Route>
 
