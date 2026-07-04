@@ -38,10 +38,10 @@ const AgentUserFormSubmit = lazy(() => import('../pages/Agent/AgentUserFormSubmi
 const AgentChainReferrals = lazy(() => import('../pages/Agent/AgentChainReferrals'));
 
 // User Portal Pages
-const WithdrawalDashboard = lazy(() => import('../pages/Withdrawal/WithdrawalDashboard'));
-const WithdrawalSettings = lazy(() => import('../pages/Withdrawal/Settings'));
-const WithdrawalForms = lazy(() => import('../pages/Withdrawal/WithdrawalForms'));
-const WithdrawalFormSubmit = lazy(() => import('../pages/Withdrawal/WithdrawalFormSubmit'));
+const UserDashboard = lazy(() => import('../pages/User/UserDashboard'));
+const UserSettings = lazy(() => import('../pages/User/UserSettings'));
+const UserForms = lazy(() => import('../pages/User/UserForms'));
+const UserFormSubmit = lazy(() => import('../pages/User/UserFormSubmit'));
 
 const RegisterUser = lazy(() => import('../pages/RegisterUser/RegisterUser'));
 
@@ -161,14 +161,14 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }>
           <Route index element={<Navigate to="/user/dashboard" replace />} />
-          <Route path="dashboard" element={<WithdrawalDashboard />} />
-          <Route path="forms" element={<WithdrawalForms />} />
-          <Route path="forms/:formId" element={<WithdrawalFormSubmit />} />
+          <Route path="dashboard" element={<UserDashboard />} />
+          <Route path="forms" element={<UserForms />} />
+          <Route path="forms/:formId" element={<UserFormSubmit />} />
           <Route path="request" element={<div className="p-8"><h2 className="text-2xl text-text font-bold">Request Withdrawal (Coming Soon)</h2></div>} />
           <Route path="history" element={<div className="p-8"><h2 className="text-2xl text-text font-bold">Withdrawal History (Coming Soon)</h2></div>} />
           <Route path="notifications" element={<div className="p-8"><h2 className="text-2xl text-text font-bold">Notifications (Coming Soon)</h2></div>} />
           <Route path="profile" element={<div className="p-8"><h2 className="text-2xl text-text font-bold">Profile (Coming Soon)</h2></div>} />
-          <Route path="settings" element={<WithdrawalSettings />} />
+          <Route path="settings" element={<UserSettings />} />
         </Route>
 
         <Route path="/withdrawal/*" element={<Navigate to="/user/dashboard" replace />} />

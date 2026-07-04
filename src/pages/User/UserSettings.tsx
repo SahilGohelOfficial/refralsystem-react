@@ -2,7 +2,7 @@ import React from 'react';
 import LanguageSelector from '../../components/ui/LanguageSelector';
 import { useTranslation } from 'react-i18next';
 
-const WithdrawalSettings = () => {
+const UserSettings = () => {
   const { t } = useTranslation();
   return (
     <div className="space-y-6">
@@ -15,4 +15,4 @@ const WithdrawalSettings = () => {
   );
 };
 
-export default WithdrawalSettings;
+export default UserSettings;
