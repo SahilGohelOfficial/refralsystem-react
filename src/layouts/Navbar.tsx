@@ -1,15 +1,37 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Menu, LogOut, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { Menu, Lock, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { isAdminPortalRole } from '../lib/roles';
+import type { PortalRole } from '../types/api';
+
+const getProfilePath = (role: PortalRole): string | null => {
+  if (isAdminPortalRole(role)) return '/admin/profile';
+  if (role === 'agent') return '/agent/profile';
+  if (role === 'user') return '/user/settings';
+  return null;
+};
+
+const getChangePasswordPath = (role: PortalRole): string | null => {
+  if (isAdminPortalRole(role)) return '/admin/change-password';
+  if (role === 'agent') return '/agent/change-password';
+  return null;
+};
 
 interface NavbarProps {
   onMenuClick: () => void;
 }
 
 const Navbar = ({ onMenuClick }: NavbarProps) => {
-  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  const { user } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const profilePath = user ? getProfilePath(user.role) : null;
+  const changePasswordPath = user ? getChangePasswordPath(user.role) : null;
 
   useEffect(() => {
     if (!showProfileMenu) return;
@@ -71,17 +93,34 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
                 <p className="text-sm font-medium text-text">{user?.name}</p>
                 <p className="text-xs text-text-muted truncate">{user?.email}</p>
               </div>
-              <button
-                onClick={() => {
-                  setShowProfileMenu(false);
-                  logout();
-                }}
-                className="w-full text-left px-3.5 py-2 text-sm text-error hover:bg-error-muted flex items-center gap-2.5 transition-colors duration-150"
-                role="menuitem"
-              >
-                <LogOut size={15} />
-                Logout
-              </button>
+              {profilePath && (
+                <button
+                  onClick={() => {
+                    setShowProfileMenu(false);
+                    navigate(profilePath);
+                  }}
+                  className="w-full text-left px-3.5 py-2 text-sm text-text hover:bg-surface-elevated flex items-center gap-2.5 transition-colors duration-150"
+                  role="menuitem"
+                >
+                  <User size={15} />
+                  {user?.role === 'agent'
+                    ? t('nav.agent.profile', 'Profile')
+                    : t('nav.admin.profile', 'Profile')}
+                </button>
+              )}
+              {changePasswordPath && (
+                <button
+                  onClick={() => {
+                    setShowProfileMenu(false);
+                    navigate(changePasswordPath);
+                  }}
+                  className="w-full text-left px-3.5 py-2 text-sm text-text hover:bg-surface-elevated flex items-center gap-2.5 transition-colors duration-150"
+                  role="menuitem"
+                >
+                  <Lock size={15} />
+                  {t('nav.admin.change_password', 'Change Password')}
+                </button>
+              )}
             </div>
           )}
         </div>

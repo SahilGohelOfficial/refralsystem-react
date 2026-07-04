@@ -26,7 +26,7 @@ const adminNavItems = [
 
 const agentNavItems = [
   { path: '/agent/dashboard', labelKey: 'nav.agent.dashboard', icon: LayoutDashboard },
-  { path: '/agent/customers', labelKey: 'nav.agent.my_users', icon: Users },
+  { path: '/agent/users', labelKey: 'nav.agent.my_users', icon: Users },
   { path: '/agent/user-requests', labelKey: 'nav.agent.user_requests', icon: ClipboardList },
   { path: '/agent/your-chains', labelKey: 'nav.agent.your_chains', icon: Link2 },
   { path: '/agent/forms', labelKey: 'nav.agent.forms', icon: FileText },

@@ -18,6 +18,7 @@ const Forms = lazy(() => import('../pages/Admin/Forms'));
 const FormBuilderPage = lazy(() => import('../pages/Admin/FormBuilderPage'));
 const FormResponses = lazy(() => import('../pages/Admin/FormResponses'));
 const Settings = lazy(() => import('../pages/Settings/Settings'));
+const AdminProfile = lazy(() => import('../pages/Admin/AdminProfile'));
 const ChangePassword = lazy(() => import('../pages/ChangePassword/ChangePassword'));
 
 // Agent Pages
@@ -111,12 +112,13 @@ const AppRoutes = () => {
             }
           />
           <Route path="settings" element={<Settings />} />
+          <Route path="profile" element={<AdminProfile />} />
           <Route path="change-password" element={<ChangePassword />} />
         </Route>
 
         {/* Agent Protected Routes */}
         <Route
-          path="/agent/register-customer"
+          path="/agent/register-user"
           element={
             <ProtectedRoute allowedRoles={['agent']}>
               <RegisterUser />
@@ -130,10 +132,10 @@ const AppRoutes = () => {
         }>
           <Route index element={<Navigate to="/agent/dashboard" replace />} />
           <Route path="dashboard" element={<AgentDashboard />} />
-          <Route path="customers" element={<AgentMyUsers />} />
-          <Route path="customers/:userId" element={<AgentUserDetail />} />
-          <Route path="customers/:userId/forms" element={<AgentUserFormsRedirect />} />
-          <Route path="customers/:userId/forms/:formId" element={<AgentUserFormSubmit />} />
+          <Route path="users" element={<AgentMyUsers />} />
+          <Route path="users/:userId" element={<AgentUserDetail />} />
+          <Route path="users/:userId/forms" element={<AgentUserFormsRedirect />} />
+          <Route path="users/:userId/forms/:formId" element={<AgentUserFormSubmit />} />
           <Route path="user-requests" element={<UserRequests />} />
           <Route path="user-requests/:userId" element={<AgentUserDetail />} />
           <Route path="user-requests/:userId/forms" element={<AgentUserFormsRedirect />} />

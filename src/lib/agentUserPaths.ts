@@ -5,10 +5,10 @@ export function useAgentUserPaths() {
   const location = useLocation();
   const fromUserRequests = location.pathname.includes('/agent/user-requests/');
 
-  const backListPath = fromUserRequests ? '/agent/user-requests' : '/agent/customers';
+  const backListPath = fromUserRequests ? '/agent/user-requests' : '/agent/users';
   const userDetailPath = fromUserRequests
     ? `/agent/user-requests/${userId}`
-    : `/agent/customers/${userId}`;
+    : `/agent/users/${userId}`;
 
   return {
     userId,

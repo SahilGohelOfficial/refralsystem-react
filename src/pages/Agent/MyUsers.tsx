@@ -166,7 +166,7 @@ const MyUsers = () => {
         <Button
           type="button"
           className="shrink-0 gap-2"
-          onClick={() => navigate('/agent/register-customer')}
+          onClick={() => navigate('/agent/register-user')}
         >
           <UserPlus size={16} />
           {t('nav.agent.register_user', 'Register User')}
@@ -194,7 +194,7 @@ const MyUsers = () => {
             <p>{search ? t('agent.my_users.no_results', 'No users match your search.') : t('agent.my_users.empty', 'No users yet.')}</p>
             {!search && (
               <Link
-                to="/agent/register-customer"
+                to="/agent/register-user"
                 className="inline-block mt-3 text-primary hover:underline text-sm font-medium"
               >
                 {t('agent.my_users.empty_action', 'Register your first user')}
@@ -218,7 +218,7 @@ const MyUsers = () => {
                 <TableRow
                   key={user.id}
                   className="cursor-pointer hover:bg-surface/50"
-                  onClick={() => navigate(`/agent/customers/${user.id}`)}
+                  onClick={() => navigate(`/agent/users/${user.id}`)}
                 >
                   <TableCell>
                     <div className="flex items-center gap-3">

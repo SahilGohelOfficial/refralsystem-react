@@ -5,7 +5,7 @@ const AgentUserFormsRedirect = () => {
   const location = useLocation();
   const target = location.pathname.includes('/user-requests/')
     ? `/agent/user-requests/${userId}`
-    : `/agent/customers/${userId}`;
+    : `/agent/users/${userId}`;
 
   return <Navigate to={target} replace />;
 };
