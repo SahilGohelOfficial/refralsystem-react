@@ -21,8 +21,8 @@ interface MenuPosition {
   left: number;
 }
 
-const MENU_WIDTH = 224;
-const MENU_GAP = 8;
+const MENU_WIDTH = 220;
+const MENU_GAP = 6;
 
 const DropdownContext = createContext<{ close: () => void } | null>(null);
 
@@ -107,7 +107,7 @@ export const Dropdown = ({ trigger, children, align = 'right' }: DropdownProps) 
             width: MENU_WIDTH,
             zIndex: 9999,
           }}
-          className="rounded-xl glass-panel py-1 shadow-2xl border border-border"
+          className="rounded-lg bg-card border border-border py-1 shadow-xl"
           role="menu"
         >
           {children}
@@ -158,11 +158,11 @@ export const DropdownItem = ({
         onClick?.();
         context?.close();
       }}
-      className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center gap-2
+      className={`w-full text-left px-3 py-2 text-sm transition-colors duration-150 flex items-center gap-2.5
         ${
           danger
-            ? 'text-error hover:bg-error/10 hover:text-error'
-            : 'text-text-secondary hover:bg-surface hover:text-text'
+            ? 'text-error hover:bg-error-muted'
+            : 'text-text-secondary hover:bg-surface-elevated hover:text-text'
         }
         ${className}
       `}
@@ -172,4 +172,4 @@ export const DropdownItem = ({
   );
 };
 
-export const DropdownDivider = () => <div className="h-px bg-border my-1" />;
+export const DropdownDivider = () => <div className="divider my-1" />;

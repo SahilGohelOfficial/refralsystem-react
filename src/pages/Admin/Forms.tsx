@@ -10,6 +10,9 @@ import { Dropdown, DropdownItem } from '../../components/ui/Dropdown'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
 import Modal from '../../components/ui/Modal'
+import PageHeader from '../../components/ui/PageHeader'
+import IconButton from '../../components/ui/IconButton'
+import Loader from '../../components/ui/Loader'
 import { useAuth } from '../../context/AuthContext'
 import { formatApiError } from '../../lib/api'
 import { deleteForm, listForms } from '../../services/forms.service'
@@ -81,30 +84,23 @@ const Forms = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-text">
-            {t('forms.title', 'Dynamic Forms')}
-          </h1>
-          <p className="text-sm text-text-secondary mt-1">
-            {t('forms.subtitle', 'Create and manage custom form schemas.')}
-          </p>
-        </div>
-        {isSuperAdmin && (
-          <Button
-            className="shrink-0 gap-2"
-            onClick={() => navigate('/admin/forms/new')}
-          >
-            <Plus size={16} />
-            {t('forms.create', 'Create Form')}
-          </Button>
-        )}
-      </div>
+    <div className="page-shell">
+      <PageHeader
+        title={t('forms.title', 'Dynamic Forms')}
+        description={t('forms.subtitle', 'Create and manage custom form schemas.')}
+        actions={
+          isSuperAdmin ? (
+            <Button onClick={() => navigate('/admin/forms/new')}>
+              <Plus size={16} />
+              {t('forms.create', 'Create Form')}
+            </Button>
+          ) : undefined
+        }
+      />
 
-      <Card className="p-0">
-        <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-4 justify-between items-center bg-surface/50 rounded-t-[20px]">
-          <div className="w-full sm:w-96">
+      <Card padding="none" className="data-card">
+        <div className="table-toolbar">
+          <div className="w-full sm:max-w-md">
             <Input
               icon={Search}
               placeholder={t('forms.search_placeholder', 'Search by title...')}
@@ -115,11 +111,9 @@ const Forms = () => {
         </div>
 
         {loading ? (
-          <div className="p-12 flex justify-center">
-            <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-          </div>
+          <Loader text={t('common.loading', 'Loading...')} />
         ) : filteredForms.length === 0 ? (
-          <div className="p-12 text-center text-text-secondary">
+          <div className="py-16 text-center text-sm text-text-secondary">
             {search
               ? t('forms.no_results', 'No forms match your search.')
               : t('forms.empty', 'No forms yet. Create your first form.')}
@@ -153,7 +147,7 @@ const Forms = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={form.isPublished ? 'success' : 'neutral'}>
+                    <Badge variant={form.isPublished ? 'success' : 'neutral'} dot>
                       {form.isPublished
                         ? t('forms.status_published', 'Published')
                         : t('forms.status_draft', 'Draft')}
@@ -180,9 +174,9 @@ const Forms = () => {
                       <Dropdown
                         align="right"
                         trigger={
-                          <button className="p-1 text-text-secondary hover:text-text hover:bg-surface rounded-md transition-colors">
+                          <IconButton size="sm" aria-label={t('forms.col_actions', 'Actions')}>
                             <MoreVertical size={16} />
-                          </button>
+                          </IconButton>
                         }
                       >
                         <DropdownItem

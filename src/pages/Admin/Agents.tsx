@@ -20,6 +20,9 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import Modal from '../../components/ui/Modal';
+import PageHeader from '../../components/ui/PageHeader';
+import IconButton from '../../components/ui/IconButton';
+import Loader from '../../components/ui/Loader';
 import {
   createAgent,
   deleteAgent,
@@ -381,23 +384,21 @@ const Agents = () => {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-text">Agent Management</h1>
-          <p className="text-sm text-text-secondary mt-1">
-            Manage partner agents and their accounts.
-          </p>
-        </div>
-        <Button className="shrink-0 gap-2" onClick={openCreate}>
-          <Plus size={16} />
-          Add New Agent
-        </Button>
-      </div>
+    <div className="page-shell">
+      <PageHeader
+        title="Agent Management"
+        description="Manage partner agents and their accounts."
+        actions={
+          <Button onClick={openCreate}>
+            <Plus size={16} />
+            Add New Agent
+          </Button>
+        }
+      />
 
-      <Card className="p-0">
-        <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-4 justify-between items-center bg-surface/50 rounded-t-[20px]">
-          <div className="w-full sm:w-96">
+      <Card padding="none" className="data-card">
+        <div className="table-toolbar">
+          <div className="w-full sm:max-w-md">
             <Input
               icon={Search}
               placeholder="Search by name, login ID, email, or location..."
@@ -408,11 +409,9 @@ const Agents = () => {
         </div>
 
         {loading ? (
-          <div className="p-12 flex justify-center">
-            <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-          </div>
+          <Loader text="Loading agents..." />
         ) : filteredAgents.length === 0 ? (
-          <div className="p-12 text-center text-text-secondary">
+          <div className="py-16 text-center text-sm text-text-secondary">
             {search ? 'No agents match your search.' : 'No agents yet. Create your first agent.'}
           </div>
         ) : (
@@ -431,12 +430,11 @@ const Agents = () => {
               {filteredAgents.map((agent) => (
                 <TableRow
                   key={agent.id}
-                  className="cursor-pointer hover:bg-surface/50"
                   onClick={() => navigate(`/admin/agents/${agent.id}`)}
                 >
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                      <div className="avatar w-10 h-10 text-sm">
                         {agent.firstName.charAt(0)}
                       </div>
                       <div>
@@ -453,7 +451,7 @@ const Agents = () => {
                   <TableCell>{formatLocation(agent)}</TableCell>
                   <TableCell>{agent.phoneNumber ?? '—'}</TableCell>
                   <TableCell>
-                    <Badge variant={agent.isActive ? 'success' : 'neutral'}>
+                    <Badge variant={agent.isActive ? 'success' : 'neutral'} dot>
                       {agent.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                   </TableCell>
@@ -461,9 +459,9 @@ const Agents = () => {
                     <Dropdown
                       align="right"
                       trigger={
-                        <button className="p-1 text-text-secondary hover:text-text hover:bg-surface rounded-md transition-colors">
+                        <IconButton size="sm" aria-label="Agent actions">
                           <MoreVertical size={16} />
-                        </button>
+                        </IconButton>
                       }
                     >
                       <DropdownItem onClick={() => void openEdit(agent)}>
@@ -521,7 +519,7 @@ const Agents = () => {
             <p className="text-sm text-text-secondary">
               Save these credentials now. The password cannot be retrieved later.
             </p>
-            <div className="rounded-lg border border-border bg-surface p-4 space-y-3 font-mono text-sm">
+            <div className="rounded-lg border border-border bg-surface-elevated p-4 space-y-3 font-mono text-sm">
               <div className="flex justify-between gap-4">
                 <span className="text-text-secondary">Login ID</span>
                 <span className="text-text">{credentials.agentLoginId}</span>

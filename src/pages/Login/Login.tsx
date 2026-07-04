@@ -137,24 +137,24 @@ const Login = () => {
   const IdentifierIcon = portal === 'agent' ? User : portal === 'user' ? Phone : Mail;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-primary/10 rounded-full blur-[100px]"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-primary/5 rounded-full blur-[100px]"></div>
+    <div className="auth-shell">
+      <div className="auth-glow-top" />
+      <div className="auth-glow-bottom" />
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
         <button
           onClick={() => navigate('/choose-login')}
-          className="absolute left-0 top-2 p-2 text-text-secondary hover:text-text transition-colors flex items-center gap-2"
+          className="absolute left-0 top-2 icon-btn gap-2 !inline-flex"
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft size={18} />
           <span className="text-sm">Back</span>
         </button>
         <div className="flex justify-center mb-6 mt-10">
-          <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-background font-bold text-3xl shadow-[0_0_20px_rgba(212,160,23,0.4)]">
+          <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center text-background font-bold text-xl shadow-sm">
             A
           </div>
         </div>
-        <h2 className="mt-2 text-center text-3xl font-extrabold text-text tracking-tight">
+        <h2 className="text-center text-2xl font-semibold text-text tracking-tight">
           {title}
         </h2>
         <p className="mt-2 text-center text-sm text-text-secondary">
@@ -163,8 +163,8 @@ const Login = () => {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
-        <div className="glass-panel py-8 px-4 shadow-2xl sm:rounded-2xl sm:px-10 border border-primary/20">
-          <form className="space-y-6" onSubmit={handleSubmit}>
+        <div className="glass-panel rounded-xl py-8 px-5 sm:px-8">
+          <form className="space-y-5" onSubmit={handleSubmit}>
             <Input
               label={identifierLabel}
               type={identifierType}
@@ -181,33 +181,31 @@ const Login = () => {
               disabled={isLoading}
             />
 
-            <div>
-              <Input
-                label="Password"
-                type="password"
-                placeholder="••••••••"
-                icon={Lock}
-                value={password}
-                onChange={(e) => handlePasswordChange(e.target.value)}
-                autoComplete="current-password"
-                error={fieldErrors.password}
-                required
-                disabled={isLoading}
-              />
-            </div>
+            <Input
+              label="Password"
+              type="password"
+              placeholder="••••••••"
+              icon={Lock}
+              value={password}
+              onChange={(e) => handlePasswordChange(e.target.value)}
+              autoComplete="current-password"
+              error={fieldErrors.password}
+              required
+              disabled={isLoading}
+            />
 
             <Button
               type="submit"
               fullWidth
               size="lg"
               isLoading={isLoading}
-              className="mt-6"
+              className="mt-2"
             >
               Sign in
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-xs text-text-secondary/60">
+          <div className="mt-6 text-center text-xs text-text-muted">
             <p>
               {portal === 'admin' && 'API credentials (after seed):'}
               <br />

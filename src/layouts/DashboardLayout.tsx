@@ -21,12 +21,12 @@ const DashboardLayout = () => {
   return (
     <div className="min-h-screen bg-background flex">
       <Sidebar isMobileOpen={isMobileOpen} setIsMobileOpen={setIsMobileOpen} />
-      
+
       <div className="flex-1 flex flex-col min-w-0">
         <Navbar onMenuClick={() => setIsMobileOpen(true)} />
-        
+
         <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-x-hidden">
-          <div className="max-w-7xl mx-auto h-full">
+          <div className="mx-auto w-full">
             {user?.role === 'user' && <UserPortalStatusBanner />}
             <Outlet />
           </div>

@@ -12,17 +12,19 @@ const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) 
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 border-t border-border sm:px-6">
-      <div className="flex flex-1 justify-between sm:hidden">
-        <Button 
-          variant="secondary" 
+    <div className="flex items-center justify-between px-5 py-3.5 border-t border-border bg-surface/30">
+      <div className="flex flex-1 justify-between sm:hidden gap-3">
+        <Button
+          variant="secondary"
+          size="sm"
           disabled={currentPage === 1}
           onClick={() => onPageChange(currentPage - 1)}
         >
           Previous
         </Button>
-        <Button 
-          variant="secondary" 
+        <Button
+          variant="secondary"
+          size="sm"
           disabled={currentPage === totalPages}
           onClick={() => onPageChange(currentPage + 1)}
         >
@@ -30,46 +32,43 @@ const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) 
         </Button>
       </div>
       <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-        <div>
-          <p className="text-sm text-text-secondary">
-            Showing page <span className="font-medium text-text">{currentPage}</span> of{' '}
-            <span className="font-medium text-text">{totalPages}</span>
-          </p>
-        </div>
-        <div>
-          <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+        <p className="text-sm text-text-secondary">
+          Page <span className="font-medium text-text tabular-nums">{currentPage}</span> of{' '}
+          <span className="font-medium text-text tabular-nums">{totalPages}</span>
+        </p>
+        <nav className="isolate inline-flex items-center gap-1" aria-label="Pagination">
+          <button
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="icon-btn disabled:opacity-40 disabled:pointer-events-none"
+            aria-label="Previous page"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          {pages.map((page) => (
             <button
-              onClick={() => onPageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="relative inline-flex items-center rounded-l-md px-2 py-2 text-text-secondary ring-1 ring-inset ring-border hover:bg-surface focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+              key={page}
+              onClick={() => onPageChange(page)}
+              className={`min-w-[2.25rem] h-9 inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors duration-150
+                ${
+                  currentPage === page
+                    ? 'bg-primary-muted text-primary border border-primary/20'
+                    : 'text-text-secondary hover:bg-surface-elevated hover:text-text'
+                }
+              `}
             >
-              <span className="sr-only">Previous</span>
-              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+              {page}
             </button>
-            {pages.map(page => (
-              <button
-                key={page}
-                onClick={() => onPageChange(page)}
-                className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold focus:z-20 focus:outline-offset-0
-                  ${currentPage === page 
-                    ? 'z-10 bg-primary/10 text-primary ring-1 ring-inset ring-primary' 
-                    : 'text-text-secondary ring-1 ring-inset ring-border hover:bg-surface hover:text-text'
-                  }
-                `}
-              >
-                {page}
-              </button>
-            ))}
-            <button
-              onClick={() => onPageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="relative inline-flex items-center rounded-r-md px-2 py-2 text-text-secondary ring-1 ring-inset ring-border hover:bg-surface focus:z-20 focus:outline-offset-0 disabled:opacity-50"
-            >
-              <span className="sr-only">Next</span>
-              <ChevronRight className="h-5 w-5" aria-hidden="true" />
-            </button>
-          </nav>
-        </div>
+          ))}
+          <button
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="icon-btn disabled:opacity-40 disabled:pointer-events-none"
+            aria-label="Next page"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </nav>
       </div>
     </div>
   );

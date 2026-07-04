@@ -6,7 +6,10 @@ interface SkeletonProps {
 
 const Skeleton = ({ className = '' }: SkeletonProps) => {
   return (
-    <div className={`animate-pulse bg-surface/80 rounded-md ${className}`}></div>
+    <div
+      className={`animate-pulse bg-surface-elevated rounded-md ${className}`}
+      aria-hidden="true"
+    />
   );
 };
 

@@ -5,11 +5,21 @@ interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
+  description?: string;
   children: ReactNode;
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  footer?: ReactNode;
 }
 
-const Modal = ({ isOpen, onClose, title, children, maxWidth = 'md' }: ModalProps) => {
+const Modal = ({
+  isOpen,
+  onClose,
+  title,
+  description,
+  children,
+  maxWidth = 'md',
+  footer,
+}: ModalProps) => {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -20,6 +30,17 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = 'md' }: ModalProps
       document.body.style.overflow = 'unset';
     };
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -32,26 +53,46 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = 'md' }: ModalProps
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div 
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+    >
+      <div
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
         onClick={onClose}
+        aria-hidden="true"
       />
-      
-      <div className={`relative w-full ${maxWidthClasses[maxWidth]} bg-card border border-border rounded-2xl shadow-2xl transform transition-all`}>
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <h3 className="text-lg font-semibold text-text">{title}</h3>
-          <button 
+
+      <div
+        className={`relative w-full ${maxWidthClasses[maxWidth]} bg-card border border-border rounded-xl shadow-xl flex flex-col max-h-[calc(100vh-2rem)]`}
+      >
+        <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-border shrink-0">
+          <div className="min-w-0">
+            <h3 id="modal-title" className="text-base font-semibold text-text">
+              {title}
+            </h3>
+            {description && (
+              <p className="text-sm text-text-secondary mt-0.5">{description}</p>
+            )}
+          </div>
+          <button
             onClick={onClose}
-            className="text-text-secondary hover:text-text hover:bg-surface p-1 rounded-md transition-colors"
+            className="icon-btn-sm shrink-0 -mr-1 -mt-0.5"
+            aria-label="Close dialog"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
-        
-        <div className="p-4">
-          {children}
-        </div>
+
+        <div className="p-5 overflow-y-auto">{children}</div>
+
+        {footer && (
+          <div className="px-5 py-4 border-t border-border bg-surface/30 shrink-0">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );

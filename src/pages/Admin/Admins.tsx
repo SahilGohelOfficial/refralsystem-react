@@ -18,6 +18,9 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import Modal from '../../components/ui/Modal';
+import PageHeader from '../../components/ui/PageHeader';
+import IconButton from '../../components/ui/IconButton';
+import Loader from '../../components/ui/Loader';
 import {
   createAdmin,
   listAdmins,
@@ -290,23 +293,21 @@ const Admins = () => {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-text">Admin Management</h1>
-          <p className="text-sm text-text-secondary mt-1">
-            Create and manage admin accounts. Super Admin only.
-          </p>
-        </div>
-        <Button className="shrink-0 gap-2" onClick={openCreate}>
-          <Plus size={16} />
-          Add New Admin
-        </Button>
-      </div>
+    <div className="page-shell">
+      <PageHeader
+        title="Admin Management"
+        description="Create and manage admin accounts. Super Admin only."
+        actions={
+          <Button onClick={openCreate}>
+            <Plus size={16} />
+            Add New Admin
+          </Button>
+        }
+      />
 
-      <Card className="p-0">
-        <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-4 justify-between items-center bg-surface/50 rounded-t-[20px]">
-          <div className="w-full sm:w-96">
+      <Card padding="none" className="data-card">
+        <div className="table-toolbar">
+          <div className="w-full sm:max-w-md">
             <Input
               icon={Search}
               placeholder="Search by name, email, phone, or role..."
@@ -317,11 +318,9 @@ const Admins = () => {
         </div>
 
         {loading ? (
-          <div className="p-12 flex justify-center">
-            <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-          </div>
+          <Loader text="Loading admins..." />
         ) : filteredAdmins.length === 0 ? (
-          <div className="p-12 text-center text-text-secondary">
+          <div className="py-16 text-center text-sm text-text-secondary">
             {search ? 'No admins match your search.' : 'No other admins yet. Create your first admin.'}
           </div>
         ) : (
@@ -340,7 +339,7 @@ const Admins = () => {
                 <TableRow key={admin.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                      <div className="avatar w-10 h-10 text-sm">
                         {admin.name.charAt(0)}
                       </div>
                       <div>
@@ -366,7 +365,7 @@ const Admins = () => {
                       : 'Never'}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={admin.isActive ? 'success' : 'neutral'}>
+                    <Badge variant={admin.isActive ? 'success' : 'neutral'} dot>
                       {admin.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                   </TableCell>
@@ -374,9 +373,9 @@ const Admins = () => {
                     <Dropdown
                       align="right"
                       trigger={
-                        <button className="p-1 text-text-secondary hover:text-text hover:bg-surface rounded-md transition-colors">
+                        <IconButton size="sm" aria-label="Admin actions">
                           <MoreVertical size={16} />
-                        </button>
+                        </IconButton>
                       }
                     >
                       <DropdownItem onClick={() => openEdit(admin)}>

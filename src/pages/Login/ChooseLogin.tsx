@@ -1,74 +1,69 @@
 import React from 'react';
-import { Shield, Users, Wallet } from 'lucide-react';
+import { Shield, Users, Wallet, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+
+const portals = [
+  {
+    path: '/admin/login',
+    icon: Shield,
+    title: 'Admin Portal',
+    description: 'System management, analytics, and configuration',
+  },
+  {
+    path: '/agent/login',
+    icon: Users,
+    title: 'Agent Portal',
+    description: 'Partner access, user onboarding, and referrals',
+  },
+  {
+    path: '/user/login',
+    icon: Wallet,
+    title: 'User Portal',
+    description: 'Account access, forms, and referral services',
+  },
+];
 
 const ChooseLogin = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-primary/10 rounded-full blur-[100px]"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-primary/5 rounded-full blur-[100px]"></div>
+    <div className="auth-shell px-4">
+      <div className="auth-glow-top" />
+      <div className="auth-glow-bottom" />
 
       <div className="sm:mx-auto sm:w-full sm:max-w-4xl relative z-10">
         <div className="flex justify-center mb-6">
-          <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center text-background font-bold text-4xl shadow-[0_0_30px_rgba(212,160,23,0.5)]">
+          <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-background font-bold text-2xl shadow-sm">
             A
           </div>
         </div>
-        <h2 className="mt-2 text-center text-4xl font-extrabold text-text tracking-tight">
+        <h2 className="text-center text-3xl font-semibold text-text tracking-tight">
           Choose Your Portal
         </h2>
-        <p className="mt-4 text-center text-base text-text-secondary">
+        <p className="mt-3 text-center text-sm text-text-secondary max-w-md mx-auto">
           Select the appropriate portal to securely access your account
         </p>
 
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Admin Portal */}
-          <button
-            onClick={() => navigate('/admin/login')}
-            className="group relative glass-panel p-8 rounded-2xl border border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-[0_0_30px_rgba(212,160,23,0.15)] hover:-translate-y-2 text-left w-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
-          >
-            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-              <Shield size={100} className="text-primary transform rotate-12 group-hover:scale-110 transition-transform duration-500" />
-            </div>
-            <div className="w-16 h-16 rounded-xl bg-surface border border-border flex items-center justify-center mb-8 group-hover:bg-primary/10 transition-colors">
-              <Shield className="text-primary" size={32} />
-            </div>
-            <h3 className="text-2xl font-bold text-text mb-3">Admin Portal</h3>
-            <p className="text-sm text-text-secondary leading-relaxed">System Management & Analytics Control</p>
-          </button>
-
-          {/* Agent Portal */}
-          <button
-            onClick={() => navigate('/agent/login')}
-            className="group relative glass-panel p-8 rounded-2xl border border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-[0_0_30px_rgba(212,160,23,0.15)] hover:-translate-y-2 text-left w-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
-          >
-            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-              <Users size={100} className="text-primary transform rotate-12 group-hover:scale-110 transition-transform duration-500" />
-            </div>
-            <div className="w-16 h-16 rounded-xl bg-surface border border-border flex items-center justify-center mb-8 group-hover:bg-primary/10 transition-colors">
-              <Users className="text-primary" size={32} />
-            </div>
-            <h3 className="text-2xl font-bold text-text mb-3">Agent Portal</h3>
-            <p className="text-sm text-text-secondary leading-relaxed">Partner Access & User Onboarding</p>
-          </button>
-
-          {/* User Portal */}
-          <button
-            onClick={() => navigate('/user/login')}
-            className="group relative glass-panel p-8 rounded-2xl border border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-[0_0_30px_rgba(212,160,23,0.15)] hover:-translate-y-2 text-left w-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
-          >
-            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-              <Wallet size={100} className="text-primary transform rotate-12 group-hover:scale-110 transition-transform duration-500" />
-            </div>
-            <div className="w-16 h-16 rounded-xl bg-surface border border-border flex items-center justify-center mb-8 group-hover:bg-primary/10 transition-colors">
-              <Wallet className="text-primary" size={32} />
-            </div>
-            <h3 className="text-2xl font-bold text-text mb-3">User Portal</h3>
-            <p className="text-sm text-text-secondary leading-relaxed">Account access & referral services</p>
-          </button>
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-5">
+          {portals.map((portal) => (
+            <button
+              key={portal.path}
+              onClick={() => navigate(portal.path)}
+              className="portal-card group"
+            >
+              <div className="w-12 h-12 rounded-xl bg-surface-elevated border border-border flex items-center justify-center mb-6 group-hover:bg-primary-muted group-hover:border-primary/20 transition-colors duration-200">
+                <portal.icon className="text-primary" size={24} strokeWidth={1.75} />
+              </div>
+              <h3 className="text-lg font-semibold text-text mb-2">{portal.title}</h3>
+              <p className="text-sm text-text-secondary leading-relaxed mb-6">
+                {portal.description}
+              </p>
+              <span className="inline-flex items-center gap-1.5 text-sm font-medium text-primary group-hover:gap-2.5 transition-all duration-200">
+                Continue
+                <ArrowRight size={16} />
+              </span>
+            </button>
+          ))}
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Menu, Search, Bell, LogOut, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -9,61 +9,96 @@ interface NavbarProps {
 const Navbar = ({ onMenuClick }: NavbarProps) => {
   const { user, logout } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showProfileMenu) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowProfileMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showProfileMenu]);
+
+  const roleLabel =
+    user?.role === 'superAdmin'
+      ? 'Super Admin'
+      : user?.role
+        ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
+        : 'Admin';
 
   return (
-    <header className="h-16 glass-panel border-x-0 border-t-0 rounded-none sticky top-0 z-30 px-4 md:px-6 flex items-center justify-between">
-      <div className="flex items-center gap-4">
-        <button 
+    <header className="h-14 lg:h-16 bg-card/80 backdrop-blur-xl border-b border-border sticky top-0 z-30 px-4 md:px-6 flex items-center justify-between shrink-0">
+      <div className="flex items-center gap-3">
+        <button
           onClick={onMenuClick}
-          className="lg:hidden p-2 -ml-2 text-text-secondary hover:text-primary transition-colors"
+          className="lg:hidden icon-btn"
+          aria-label="Open menu"
         >
-          <Menu size={24} />
+          <Menu size={20} />
         </button>
-        
-        <div className="hidden md:flex items-center gap-2 bg-surface border border-border rounded-lg px-3 py-1.5 focus-within:border-primary/50 transition-colors w-64 lg:w-96">
-          <Search size={18} className="text-text-secondary" />
-          <input 
-            type="text" 
-            placeholder="Search..." 
-            className="bg-transparent border-none outline-none text-sm w-full text-text placeholder:text-text-secondary"
+
+        <div className="hidden md:flex items-center gap-2.5 bg-surface border border-border rounded-lg px-3.5 py-2 focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/20 transition-all w-64 lg:w-80">
+          <Search size={16} className="text-text-muted shrink-0" />
+          <input
+            type="text"
+            placeholder="Search..."
+            className="bg-transparent border-none outline-none text-sm w-full text-text placeholder:text-text-muted"
           />
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <button className="relative p-2 text-text-secondary hover:text-primary transition-colors">
-          <Bell size={20} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full ring-2 ring-card"></span>
+      <div className="flex items-center gap-2">
+        <button
+          className="icon-btn relative"
+          aria-label="Notifications"
+        >
+          <Bell size={18} />
+          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-primary rounded-full ring-2 ring-card" />
         </button>
 
-        <div className="relative">
-          <button 
+        <div className="w-px h-6 bg-border mx-1 hidden sm:block" />
+
+        <div className="relative" ref={menuRef}>
+          <button
             onClick={() => setShowProfileMenu(!showProfileMenu)}
-            className="flex items-center gap-3 pl-2 py-1 rounded-full hover:bg-surface transition-colors"
+            className="flex items-center gap-2.5 pl-1 pr-2 py-1 rounded-lg hover:bg-surface-elevated transition-colors duration-150"
+            aria-expanded={showProfileMenu}
+            aria-haspopup="menu"
           >
             <div className="hidden md:block text-right">
-              <p className="text-sm font-medium text-text">{user?.name || 'Admin User'}</p>
-              <p className="text-xs text-text-secondary">{user?.role || 'Admin'}</p>
+              <p className="text-sm font-medium text-text leading-tight">
+                {user?.name || 'Admin User'}
+              </p>
+              <p className="text-xs text-text-muted leading-tight">{roleLabel}</p>
             </div>
-            <div className="w-8 h-8 rounded-full bg-surface border border-primary/30 flex items-center justify-center text-primary">
-              <User size={16} />
+            <div className="w-8 h-8 rounded-lg bg-primary-muted border border-primary/20 flex items-center justify-center text-primary">
+              <User size={15} strokeWidth={2} />
             </div>
           </button>
 
           {showProfileMenu && (
-            <div className="absolute right-0 mt-2 w-48 glass-panel border border-border py-1">
-              <div className="px-4 py-2 border-b border-border md:hidden">
+            <div
+              className="absolute right-0 mt-2 w-52 bg-card border border-border rounded-lg shadow-xl py-1 z-50"
+              role="menu"
+            >
+              <div className="px-3.5 py-2.5 border-b border-border md:hidden">
                 <p className="text-sm font-medium text-text">{user?.name}</p>
-                <p className="text-xs text-text-secondary">{user?.email}</p>
+                <p className="text-xs text-text-muted truncate">{user?.email}</p>
               </div>
-              <button 
+              <button
                 onClick={() => {
                   setShowProfileMenu(false);
                   logout();
                 }}
-                className="w-full text-left px-4 py-2 text-sm text-error hover:bg-surface flex items-center gap-2 transition-colors"
+                className="w-full text-left px-3.5 py-2 text-sm text-error hover:bg-error-muted flex items-center gap-2.5 transition-colors duration-150"
+                role="menuitem"
               >
-                <LogOut size={16} />
+                <LogOut size={15} />
                 Logout
               </button>
             </div>

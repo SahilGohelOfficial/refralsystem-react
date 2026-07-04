@@ -10,10 +10,10 @@ const ChainColumn = ({ chain }: ChainColumnProps) => {
   const { t } = useTranslation();
 
   return (
-    <div className="w-64 shrink-0 glass-card rounded-xl border border-border flex flex-col">
-      <div className="px-4 py-3 border-b border-border">
+    <div className="w-64 shrink-0 glass-card flex flex-col">
+      <div className="px-4 py-3.5 border-b border-border bg-surface/40">
         <h3 className="text-sm font-semibold text-text truncate">{chain.name}</h3>
-        <p className="text-xs text-text-secondary mt-0.5">
+        <p className="text-xs text-text-muted mt-0.5">
           {chain.users.length} {chain.users.length === 1 ? 'user' : 'users'}
         </p>
       </div>
