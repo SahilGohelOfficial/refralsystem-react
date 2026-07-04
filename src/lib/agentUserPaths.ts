@@ -12,6 +12,7 @@ export function useAgentUserPaths() {
 
   return {
     userId,
+    fromUserRequests,
     backListPath,
     userDetailPath,
     formSubmitPath: (formId: string) => `${userDetailPath}/forms/${formId}`,

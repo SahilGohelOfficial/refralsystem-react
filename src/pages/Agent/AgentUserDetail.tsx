@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, CheckCircle, Eye, Search, XCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Edit2, Eye, Search, Trash2, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Table, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
@@ -12,9 +12,17 @@ import Modal from '../../components/ui/Modal';
 import Select from '../../components/ui/Select';
 import Textarea from '../../components/forms/form/Textarea';
 import PortalFormViewModal from '../../components/forms/portal/PortalFormViewModal';
+import AgentUserEditModal from '../../components/agent/AgentUserEditModal';
+import { useConfirm } from '../../context/ConfirmContext';
 import { formatApiError } from '../../lib/api';
 import { useAgentUserPaths } from '../../lib/agentUserPaths';
-import { getMyUser, listUserForms, updateMyUserStatus, getApprovalInfo } from '../../services/agents.service';
+import {
+  deleteMyUser,
+  getMyUser,
+  getApprovalInfo,
+  listUserForms,
+  updateMyUserStatus,
+} from '../../services/agents.service';
 import type { ApiError, ApprovalInfo, FormSummary, ReferralUser, UserStatus } from '../../types/api';
 import { formatUserName } from '../../types/api';
 
@@ -55,8 +63,9 @@ const statusLabelKey = (status: UserStatus) => {
 
 const AgentUserDetail = () => {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const navigate = useNavigate();
-  const { userId, backListPath, formSubmitPath } = useAgentUserPaths();
+  const { userId, fromUserRequests, backListPath, formSubmitPath } = useAgentUserPaths();
   const [user, setUser] = useState<ReferralUser | null>(null);
   const [forms, setForms] = useState<FormSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,6 +77,7 @@ const AgentUserDetail = () => {
   const [approveOpen, setApproveOpen] = useState(false);
   const [approvalInfo, setApprovalInfo] = useState<ApprovalInfo | null>(null);
   const [selectedChainId, setSelectedChainId] = useState('');
+  const [editOpen, setEditOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!userId) return;
@@ -131,6 +141,34 @@ const AgentUserDetail = () => {
       await updateMyUserStatus(user.id, { status: 'approved', chainId: selectedChainId });
       toast.success(t('agent.user_request_detail.approve_success', 'User approved successfully'));
       setApproveOpen(false);
+      navigate(backListPath);
+    } catch (error) {
+      toast.error(formatApiError(error as ApiError));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!user) return;
+
+    const name = formatUserName(user);
+    const confirmed = await confirm({
+      title: t('agent.my_users.delete_title', 'Delete User'),
+      message: t(
+        'agent.my_users.delete_confirm_named',
+        'Delete user "{{name}}"? This cannot be undone.',
+        { name },
+      ),
+      variant: 'danger',
+      confirmLabel: t('agent.my_users.delete', 'Delete'),
+    });
+    if (!confirmed) return;
+
+    setSubmitting(true);
+    try {
+      await deleteMyUser(user.id);
+      toast.success(t('agent.my_users.deleted_success', 'User deleted successfully'));
       navigate(backListPath);
     } catch (error) {
       toast.error(formatApiError(error as ApiError));
@@ -211,29 +249,55 @@ const AgentUserDetail = () => {
           </div>
         </div>
 
-        {isPending ? (
-          <div className="flex gap-2 shrink-0">
-            <Button
-              type="button"
-              variant="secondary"
-              className="gap-2 text-error border-error/30 hover:bg-error/10"
-              onClick={() => setRejectOpen(true)}
-              disabled={submitting}
-            >
-              <XCircle size={16} />
-              {t('agent.user_request_detail.reject', 'Reject')}
-            </Button>
-            <Button
-              type="button"
-              className="gap-2"
-              onClick={() => void handleApprove()}
-              isLoading={submitting}
-            >
-              <CheckCircle size={16} />
-              {t('agent.user_request_detail.approve', 'Approve')}
-            </Button>
-          </div>
-        ) : null}
+        <div className="flex gap-2 shrink-0">
+          {isPending && fromUserRequests ? (
+            <>
+              <Button
+                type="button"
+                variant="secondary"
+                className="gap-2 text-error border-error/30 hover:bg-error/10"
+                onClick={() => setRejectOpen(true)}
+                disabled={submitting}
+              >
+                <XCircle size={16} />
+                {t('agent.user_request_detail.reject', 'Reject')}
+              </Button>
+              <Button
+                type="button"
+                className="gap-2"
+                onClick={() => void handleApprove()}
+                isLoading={submitting}
+              >
+                <CheckCircle size={16} />
+                {t('agent.user_request_detail.approve', 'Approve')}
+              </Button>
+            </>
+          ) : null}
+          {!fromUserRequests ? (
+            <>
+              <Button
+                type="button"
+                variant="secondary"
+                className="gap-2"
+                onClick={() => setEditOpen(true)}
+                disabled={submitting}
+              >
+                <Edit2 size={16} />
+                {t('agent.my_users.edit', 'Edit')}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                className="gap-2 text-error border-error/30 hover:bg-error/10"
+                onClick={() => void handleDelete()}
+                disabled={submitting}
+              >
+                <Trash2 size={16} />
+                {t('agent.my_users.delete', 'Delete')}
+              </Button>
+            </>
+          ) : null}
+        </div>
       </div>
 
       <Card>
@@ -271,6 +335,60 @@ const AgentUserDetail = () => {
                 {t('agent.user_request_detail.email', 'Email')}
               </dt>
               <dd className="text-sm font-medium text-text break-all">{user.email}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-text-secondary">
+                {t('register.date_of_birth', 'Date of Birth')}
+              </dt>
+              <dd className="text-sm font-medium text-text mt-0.5">
+                {user.dateOfBirth ? formatDate(user.dateOfBirth) : '—'}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-text-secondary">
+                {t('register.is_married', 'Are you married?')}
+              </dt>
+              <dd className="text-sm font-medium text-text mt-0.5">
+                {user.isMarried ? 'Yes' : user.isMarried === false ? 'No' : '—'}
+              </dd>
+            </div>
+            {user.isMarried && (
+              <div>
+                <dt className="text-xs text-text-secondary">
+                  {t('register.marriage_date', 'Marriage Date')}
+                </dt>
+                <dd className="text-sm font-medium text-text mt-0.5">
+                  {user.marriageDate ? formatDate(user.marriageDate) : '—'}
+                </dd>
+              </div>
+            )}
+            <div>
+              <dt className="text-xs text-text-secondary">
+                {t('register.address_line1', 'Address Line 1')}
+              </dt>
+              <dd className="text-sm font-medium text-text mt-0.5">
+                {user.addressLine1 ?? '—'}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-text-secondary">
+                {t('register.address_line2', 'Address line 2')}
+              </dt>
+              <dd className="text-sm font-medium text-text mt-0.5">
+                {user.addressLine2 ?? '—'}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-text-secondary">
+                {t('register.landmark', 'Landmark')}
+              </dt>
+              <dd className="text-sm font-medium text-text mt-0.5">{user.landmark ?? '—'}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-text-secondary">
+                {t('register.postal_code', 'Postal/ZIP Code (PIN Code)')}
+              </dt>
+              <dd className="text-sm font-medium text-text mt-0.5">{user.postalCode ?? '—'}</dd>
             </div>
             <div>
               <dt className="text-xs text-text-secondary">
@@ -409,6 +527,13 @@ const AgentUserDetail = () => {
           </Table>
         )}
       </Card>
+
+      <AgentUserEditModal
+        user={user}
+        isOpen={editOpen}
+        onClose={() => setEditOpen(false)}
+        onSaved={(updated) => setUser(updated)}
+      />
 
       <PortalFormViewModal
         isOpen={viewFormId !== null}

@@ -14,6 +14,7 @@ import {
   listChains,
   updateChain,
 } from '../../services/chains.service';
+import { useConfirm } from '../../context/ConfirmContext';
 import { formatApiError } from '../../lib/api';
 import type { ApiError, Chain } from '../../types/api';
 
@@ -32,6 +33,7 @@ function formatDate(iso?: string): string {
 
 const Chains = () => {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [chains, setChains] = useState<Chain[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -90,6 +92,17 @@ const Chains = () => {
     e.preventDefault();
     if (!editingChain) return;
 
+    const confirmed = await confirm({
+      title: t('chains.edit', 'Edit Chain'),
+      message: t(
+        'chains.update_confirm',
+        'Save changes to "{{name}}"?',
+        { name: editingChain.name },
+      ),
+      confirmLabel: t('common.save', 'Save Changes'),
+    });
+    if (!confirmed) return;
+
     setSubmitting(true);
     try {
       await updateChain(editingChain.id, { name: formName });
@@ -105,9 +118,13 @@ const Chains = () => {
   };
 
   const handleDelete = async (chain: Chain) => {
-    if (!window.confirm(t('chains.deleteConfirm', { name: chain.name }))) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: t('chains.delete', 'Delete Chain'),
+      message: t('chains.deleteConfirm', { name: chain.name }),
+      variant: 'danger',
+      confirmLabel: t('chains.delete', 'Delete Chain'),
+    });
+    if (!confirmed) return;
 
     try {
       await deleteChain(chain.id);

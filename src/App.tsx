@@ -2,13 +2,16 @@ import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
+import { ConfirmProvider } from './context/ConfirmContext';
 import AppRoutes from './routes/AppRoutes';
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
+        <ConfirmProvider>
+          <AppRoutes />
+        </ConfirmProvider>
         <Toaster
           position="top-right"
           gutter={12}

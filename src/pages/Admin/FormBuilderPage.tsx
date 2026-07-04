@@ -10,6 +10,7 @@ import {
   toFormSchema,
   toUpdatePayload,
 } from '../../lib/forms/formMappers'
+import { useConfirm } from '../../context/ConfirmContext'
 import { formatApiError } from '../../lib/api'
 import {
   createForm,
@@ -23,6 +24,7 @@ const FormBuilderPage = () => {
   const { formId } = useParams<{ formId: string }>()
   const navigate = useNavigate()
   const { t } = useTranslation()
+  const confirm = useConfirm()
   const [isSaving, setIsSaving] = useState(false)
   const [loading, setLoading] = useState(Boolean(formId))
   const [loadedSchema, setLoadedSchema] = useState<FormSchema | null>(null)
@@ -64,6 +66,15 @@ const FormBuilderPage = () => {
 
   const handleSave = useCallback(
     async (schema: FormSchema) => {
+      if (isEditMode && formId) {
+        const confirmed = await confirm({
+          title: t('forms.edit', 'Edit Form'),
+          message: t('forms.update_confirm', 'Save changes to this form?'),
+          confirmLabel: t('common.save', 'Save Changes'),
+        })
+        if (!confirmed) return
+      }
+
       setIsSaving(true)
       try {
         validateFormSchema(schema)
@@ -85,7 +96,7 @@ const FormBuilderPage = () => {
         setIsSaving(false)
       }
     },
-    [isEditMode, formId, navigate, t],
+    [confirm, isEditMode, formId, navigate, t],
   )
 
   const handleCancel = useCallback(() => {

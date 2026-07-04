@@ -1,27 +1,21 @@
-import { useState, useEffect, useCallback, FormEvent } from 'react';
+import { useState, useEffect, useCallback, type MouseEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Search, MoreVertical, Edit2, Trash2, UserPlus } from 'lucide-react';
+import { Search, Edit2, Trash2, UserPlus, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Card } from '../../components/ui/Card';
 import { Table, TableHeader, TableRow, TableHead, TableCell } from '../../components/ui/Table';
-import { Dropdown, DropdownItem } from '../../components/ui/Dropdown';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
-import Modal from '../../components/ui/Modal';
+import AgentUserEditModal from '../../components/agent/AgentUserEditModal';
 import {
   deleteMyUser,
-  getMyUser,
   listMyUsers,
-  updateMyUser,
 } from '../../services/agents.service';
+import { useConfirm } from '../../context/ConfirmContext';
 import { formatApiError } from '../../lib/api';
 import type { ApiError, ReferralUser } from '../../types/api';
 import { formatUserName } from '../../types/api';
-
-function normalizePhone(value: string): string {
-  return value.replace(/\D/g, '').slice(0, 10);
-}
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, {
@@ -33,19 +27,12 @@ function formatDate(iso: string): string {
 
 const MyUsers = () => {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const navigate = useNavigate();
   const [users, setUsers] = useState<ReferralUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [editingUser, setEditingUser] = useState<ReferralUser | null>(null);
-  const [loadingEdit, setLoadingEdit] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-
-  const [firstName, setFirstName] = useState('');
-  const [middleName, setMiddleName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [email, setEmail] = useState('');
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -63,75 +50,19 @@ const MyUsers = () => {
     void fetchUsers();
   }, [fetchUsers]);
 
-  const openEdit = async (user: ReferralUser) => {
-    setEditingUser(user);
-    setFirstName(user.firstName);
-    setMiddleName(user.middleName ?? '');
-    setLastName(user.lastName);
-    setPhoneNumber(user.phoneNumber);
-    setEmail(user.email);
-    setLoadingEdit(true);
-    try {
-      const fresh = await getMyUser(user.id);
-      setEditingUser(fresh);
-      setFirstName(fresh.firstName);
-      setMiddleName(fresh.middleName ?? '');
-      setLastName(fresh.lastName);
-      setPhoneNumber(fresh.phoneNumber);
-      setEmail(fresh.email);
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
-    } finally {
-      setLoadingEdit(false);
-    }
-  };
-
-  const closeEdit = () => {
-    setEditingUser(null);
-    setFirstName('');
-    setMiddleName('');
-    setLastName('');
-    setPhoneNumber('');
-    setEmail('');
-  };
-
-  const handleUpdate = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!editingUser) return;
-
-    if (!/^\d{10}$/.test(phoneNumber)) {
-      toast.error(t('agent.my_users.err_phone', 'Phone number must be exactly 10 digits'));
-      return;
-    }
-    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      toast.error(t('agent.my_users.err_email', 'Valid email is required'));
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      await updateMyUser(editingUser.id, {
-        firstName: firstName.trim(),
-        middleName: middleName.trim(),
-        lastName: lastName.trim(),
-        phoneNumber,
-        email: email.trim(),
-      });
-      toast.success(t('agent.my_users.updated_success', 'User updated successfully'));
-      closeEdit();
-      await fetchUsers();
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const handleDelete = async (user: ReferralUser) => {
     const name = formatUserName(user);
-    if (!window.confirm(t('agent.my_users.delete_confirm', `Delete user "${name}"? This cannot be undone.`))) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: t('agent.my_users.delete_title', 'Delete User'),
+      message: t(
+        'agent.my_users.delete_confirm_named',
+        'Delete user "{{name}}"? This cannot be undone.',
+        { name },
+      ),
+      variant: 'danger',
+      confirmLabel: t('agent.my_users.delete', 'Delete'),
+    });
+    if (!confirmed) return;
 
     try {
       await deleteMyUser(user.id);
@@ -151,6 +82,10 @@ const MyUsers = () => {
       user.email.toLowerCase().includes(query)
     );
   });
+
+  const stopRowNavigation = (e: MouseEvent) => {
+    e.stopPropagation();
+  };
 
   return (
     <div className="space-y-6">
@@ -191,7 +126,11 @@ const MyUsers = () => {
           </div>
         ) : filteredUsers.length === 0 ? (
           <div className="p-12 text-center text-text-secondary">
-            <p>{search ? t('agent.my_users.no_results', 'No users match your search.') : t('agent.my_users.empty', 'No users yet.')}</p>
+            <p>
+              {search
+                ? t('agent.my_users.no_results', 'No users match your search.')
+                : t('agent.my_users.empty', 'No users yet.')}
+            </p>
             {!search && (
               <Link
                 to="/agent/register-user"
@@ -238,26 +177,36 @@ const MyUsers = () => {
                       {user.filledFormsCount ?? 0}/{user.totalFormsCount ?? 0}
                     </span>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <Dropdown
-                      align="right"
-                      trigger={
-                        <button
-                          type="button"
-                          className="p-1 text-text-secondary hover:text-text hover:bg-surface rounded-md transition-colors"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <MoreVertical size={16} />
-                        </button>
-                      }
-                    >
-                      <DropdownItem onClick={() => void openEdit(user)}>
-                        <Edit2 size={14} /> {t('agent.my_users.edit', 'Edit')}
-                      </DropdownItem>
-                      <DropdownItem danger onClick={() => void handleDelete(user)}>
-                        <Trash2 size={14} /> {t('agent.my_users.delete', 'Delete')}
-                      </DropdownItem>
-                    </Dropdown>
+                  <TableCell className="text-right" onClick={stopRowNavigation}>
+                    <div className="flex justify-end items-center gap-1">
+                      <button
+                        type="button"
+                        className="icon-btn-sm"
+                        title={t('agent.my_users.view', 'View details')}
+                        aria-label={t('agent.my_users.view', 'View details')}
+                        onClick={() => navigate(`/agent/users/${user.id}`)}
+                      >
+                        <Eye size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        className="icon-btn-sm"
+                        title={t('agent.my_users.edit', 'Edit')}
+                        aria-label={t('agent.my_users.edit', 'Edit')}
+                        onClick={() => setEditingUser(user)}
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        className="icon-btn-sm text-error hover:text-error hover:bg-error-muted"
+                        title={t('agent.my_users.delete', 'Delete')}
+                        aria-label={t('agent.my_users.delete', 'Delete')}
+                        onClick={() => void handleDelete(user)}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -266,68 +215,12 @@ const MyUsers = () => {
         )}
       </Card>
 
-      <Modal
+      <AgentUserEditModal
+        user={editingUser}
         isOpen={!!editingUser}
-        onClose={closeEdit}
-        title={t('agent.my_users.edit_title', 'Edit User')}
-      >
-        {loadingEdit ? (
-          <div className="flex justify-center py-8">
-            <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-          </div>
-        ) : (
-          <form onSubmit={handleUpdate} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <Input
-                label={t('agent.my_users.first_name', 'First name')}
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                required
-                disabled={submitting}
-              />
-              <Input
-                label={t('agent.my_users.middle_name', 'Middle name')}
-                value={middleName}
-                onChange={(e) => setMiddleName(e.target.value)}
-                disabled={submitting}
-              />
-              <Input
-                label={t('agent.my_users.last_name', 'Last name')}
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                required
-                disabled={submitting}
-              />
-            </div>
-            <Input
-              label={t('agent.my_users.phone', 'Phone number')}
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(normalizePhone(e.target.value))}
-              placeholder="9876543210"
-              inputMode="numeric"
-              maxLength={10}
-              required
-              disabled={submitting}
-            />
-            <Input
-              label={t('agent.my_users.email', 'Email')}
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={submitting}
-            />
-            <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="secondary" onClick={closeEdit} disabled={submitting}>
-                {t('common.cancel', 'Cancel')}
-              </Button>
-              <Button type="submit" isLoading={submitting}>
-                {t('agent.my_users.save', 'Save changes')}
-              </Button>
-            </div>
-          </form>
-        )}
-      </Modal>
+        onClose={() => setEditingUser(null)}
+        onSaved={() => void fetchUsers()}
+      />
     </div>
   );
 };

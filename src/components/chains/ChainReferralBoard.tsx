@@ -21,7 +21,7 @@ const ChainReferralBoard = ({ chains, loading }: ChainReferralBoardProps) => {
   if (chains.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-text-secondary">
-        <p className="text-lg">{t('agent.chain_referrals.empty', 'No chain assignments yet')}</p>
+        <p className="text-lg">{t('agent.chain_referrals.empty', 'No chains available')}</p>
       </div>
     );
   }

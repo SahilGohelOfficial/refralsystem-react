@@ -9,8 +9,8 @@ import Badge from '../../components/ui/Badge'
 import { Dropdown, DropdownItem } from '../../components/ui/Dropdown'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
-import Modal from '../../components/ui/Modal'
 import PageHeader from '../../components/ui/PageHeader'
+import { useConfirm } from '../../context/ConfirmContext'
 import IconButton from '../../components/ui/IconButton'
 import Loader from '../../components/ui/Loader'
 import { useAuth } from '../../context/AuthContext'
@@ -34,13 +34,13 @@ function formatDate(iso?: string): string {
 const Forms = () => {
   const navigate = useNavigate()
   const { t } = useTranslation()
+  const confirm = useConfirm()
   const { user } = useAuth()
   const isSuperAdmin = user?.role === 'superAdmin'
 
   const [forms, setForms] = useState<FormSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [deletingForm, setDeletingForm] = useState<FormSummary | null>(null)
   const [deleting, setDeleting] = useState(false)
 
   const fetchForms = useCallback(async () => {
@@ -68,13 +68,25 @@ const Forms = () => {
     )
   }, [forms, search])
 
-  const handleDelete = async () => {
-    if (!deletingForm) return
+  const handleDelete = async (form: FormSummary) => {
+    if (deleting) return
+
+    const confirmed = await confirm({
+      title: t('forms.delete_title', 'Delete Form'),
+      message: t(
+        'forms.delete_confirm',
+        'Delete "{{title}}"? This cannot be undone.',
+        { title: form.title },
+      ),
+      variant: 'danger',
+      confirmLabel: t('forms.delete', 'Delete Form'),
+    })
+    if (!confirmed) return
+
     setDeleting(true)
     try {
-      await deleteForm(deletingForm.id)
+      await deleteForm(form.id)
       toast.success(t('forms.deleted_success', 'Form deleted successfully'))
-      setDeletingForm(null)
       await fetchForms()
     } catch (error) {
       toast.error(formatApiError(error as ApiError))
@@ -184,7 +196,7 @@ const Forms = () => {
                         >
                           <Edit2 size={14} /> {t('forms.edit', 'Edit Form')}
                         </DropdownItem>
-                        <DropdownItem danger onClick={() => setDeletingForm(form)}>
+                        <DropdownItem danger onClick={() => void handleDelete(form)}>
                           <Trash2 size={14} /> {t('forms.delete', 'Delete Form')}
                         </DropdownItem>
                       </Dropdown>
@@ -197,33 +209,6 @@ const Forms = () => {
         )}
       </Card>
 
-      <Modal
-        isOpen={!!deletingForm}
-        onClose={() => !deleting && setDeletingForm(null)}
-        title={t('forms.delete_title', 'Delete Form')}
-      >
-        <div className="space-y-4">
-          <p className="text-sm text-text-secondary">
-            {t(
-              'forms.delete_confirm',
-              'Delete "{{title}}"? This cannot be undone.',
-              { title: deletingForm?.title ?? '' },
-            )}
-          </p>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button
-              variant="secondary"
-              onClick={() => setDeletingForm(null)}
-              disabled={deleting}
-            >
-              {t('common.cancel', 'Cancel')}
-            </Button>
-            <Button variant="danger" onClick={handleDelete} isLoading={deleting}>
-              {t('forms.delete', 'Delete Form')}
-            </Button>
-          </div>
-        </div>
-      </Modal>
     </div>
   )
 }

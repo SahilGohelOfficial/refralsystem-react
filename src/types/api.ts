@@ -6,7 +6,7 @@ export interface Admin {
   id: string;
   name: string;
   email: string;
-  phoneNumber: string | null;
+  phoneNumber: string;
   role: AdminRole;
   isActive: boolean;
   lastLogin: string | null;
@@ -111,8 +111,8 @@ export interface SignUpAgentPayload {
   firstName: string;
   middleName?: string;
   lastName: string;
-  phoneNumber: string;
-  email: string;
+  phoneNumber: string | null;
+  email: string | null;
   state: string;
   city: string;
   password: string;
@@ -166,6 +166,13 @@ export interface ReferralUser {
   referralCode: string | null;
   referredByUserId: string | null;
   referredByName: string | null;
+  dateOfBirth?: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
+  landmark?: string | null;
+  postalCode?: string | null;
+  isMarried?: boolean;
+  marriageDate?: string | null;
   createdAt: string;
   updatedAt: string;
   filledFormsCount?: number;
@@ -191,11 +198,16 @@ export function formatUserName(
 }
 
 export interface UpdateUserPayload {
-  firstName?: string;
+  firstName: string;
   middleName?: string;
-  lastName?: string;
-  phoneNumber?: string;
-  email?: string;
+  lastName: string;
+  dateOfBirth: string;
+  isMarried: boolean;
+  marriageDate?: string | null;
+  addressLine1: string;
+  addressLine2?: string;
+  landmark?: string;
+  postalCode: string;
 }
 
 export interface CreateUserPayload {

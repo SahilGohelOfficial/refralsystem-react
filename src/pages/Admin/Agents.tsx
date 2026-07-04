@@ -32,12 +32,14 @@ import {
   updateAgentStatus,
 } from '../../services/agents.service';
 import { listCities, listStates } from '../../services/location.service';
+import { useConfirm } from '../../context/ConfirmContext';
 import { formatApiError } from '../../lib/api';
 import type { Agent, AgentCredentials, ApiError, City, State } from '../../types/api';
 import { formatAgentName } from '../../types/api';
 
 const Agents = () => {
   const navigate = useNavigate();
+  const confirm = useConfirm();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [states, setStates] = useState<State[]>([]);
   const [cities, setCities] = useState<City[]>([]);
@@ -189,6 +191,13 @@ const Agents = () => {
     e.preventDefault();
     if (!editingAgent) return;
 
+    const confirmed = await confirm({
+      title: 'Edit Agent',
+      message: `Save changes to "${formatAgentName(editingAgent)}"?`,
+      confirmLabel: 'Save Changes',
+    });
+    if (!confirmed) return;
+
     const { state, city } = resolveLocationNames();
     if (!state || !city) {
       toast.error('Please select state and city');
@@ -218,6 +227,17 @@ const Agents = () => {
   };
 
   const handleToggleStatus = async (agent: Agent) => {
+    const name = formatAgentName(agent);
+    const confirmed = await confirm({
+      title: agent.isActive ? 'Deactivate Agent' : 'Activate Agent',
+      message: agent.isActive
+        ? `Deactivate "${name}"? They will not be able to log in.`
+        : `Activate "${name}"? They will be able to log in again.`,
+      variant: agent.isActive ? 'danger' : 'default',
+      confirmLabel: agent.isActive ? 'Deactivate' : 'Activate',
+    });
+    if (!confirmed) return;
+
     try {
       await updateAgentStatus(agent.id, !agent.isActive);
       toast.success(agent.isActive ? 'Agent deactivated' : 'Agent activated');
@@ -228,6 +248,15 @@ const Agents = () => {
   };
 
   const handleResetPassword = async (agent: Agent) => {
+    const name = formatAgentName(agent);
+    const confirmed = await confirm({
+      title: 'Reset Password',
+      message: `Reset password for "${name}"? A new password will be generated and all existing sessions will be invalidated.`,
+      variant: 'danger',
+      confirmLabel: 'Reset Password',
+    });
+    if (!confirmed) return;
+
     try {
       const result = await resetAgentPassword(agent.id);
       setCredentials(result.credentials);
@@ -238,9 +267,13 @@ const Agents = () => {
   };
 
   const handleDelete = async (agent: Agent) => {
-    if (!window.confirm(`Delete agent "${formatAgentName(agent)}"? This cannot be undone.`)) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: 'Delete Agent',
+      message: `Delete agent "${formatAgentName(agent)}"? This cannot be undone.`,
+      variant: 'danger',
+      confirmLabel: 'Delete',
+    });
+    if (!confirmed) return;
 
     try {
       await deleteAgent(agent.id);
@@ -467,10 +500,10 @@ const Agents = () => {
                       <DropdownItem onClick={() => void openEdit(agent)}>
                         <Edit2 size={14} /> Edit Agent
                       </DropdownItem>
-                      <DropdownItem onClick={() => handleResetPassword(agent)}>
+                      <DropdownItem onClick={() => void handleResetPassword(agent)}>
                         <KeyRound size={14} /> Reset Password
                       </DropdownItem>
-                      <DropdownItem onClick={() => handleToggleStatus(agent)}>
+                      <DropdownItem onClick={() => void handleToggleStatus(agent)}>
                         {agent.isActive ? (
                           <>
                             <UserX size={14} /> Deactivate

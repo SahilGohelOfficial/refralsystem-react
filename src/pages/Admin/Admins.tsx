@@ -28,6 +28,7 @@ import {
   updateAdmin,
   updateAdminStatus,
 } from '../../services/admins.service';
+import { useConfirm } from '../../context/ConfirmContext';
 import { formatApiError } from '../../lib/api';
 import type { Admin, AdminRole, ApiError } from '../../types/api';
 
@@ -39,7 +40,23 @@ const roleOptions = [
 const formatRole = (role: AdminRole) =>
   role === 'superAdmin' ? 'Super Admin' : 'Admin';
 
+type ResetFieldErrors = {
+  newPassword?: string;
+  confirmPassword?: string;
+};
+
+function validatePassword(value: string): string | undefined {
+  if (!value.trim()) {
+    return 'Password is required';
+  }
+  if (value.length < 8 || !/[a-zA-Z]/.test(value) || !/[0-9]/.test(value)) {
+    return 'Password must be at least 8 characters with one letter and one number';
+  }
+  return undefined;
+}
+
 const Admins = () => {
+  const confirm = useConfirm();
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -54,6 +71,8 @@ const Admins = () => {
   const [formPassword, setFormPassword] = useState('');
   const [formRole, setFormRole] = useState<AdminRole>('admin');
   const [resetPassword, setResetPassword] = useState('');
+  const [resetConfirmPassword, setResetConfirmPassword] = useState('');
+  const [resetFieldErrors, setResetFieldErrors] = useState<ResetFieldErrors>({});
 
   const fetchAdmins = useCallback(async () => {
     setLoading(true);
@@ -78,6 +97,15 @@ const Admins = () => {
     setFormPassword('');
     setFormRole('admin');
     setResetPassword('');
+    setResetConfirmPassword('');
+    setResetFieldErrors({});
+  };
+
+  const openResetPassword = (admin: Admin) => {
+    setResetTarget(admin);
+    setResetPassword('');
+    setResetConfirmPassword('');
+    setResetFieldErrors({});
   };
 
   const openCreate = () => {
@@ -119,6 +147,13 @@ const Admins = () => {
     e.preventDefault();
     if (!editingAdmin) return;
 
+    const confirmed = await confirm({
+      title: 'Edit Admin',
+      message: `Save changes to "${editingAdmin.name}"?`,
+      confirmLabel: 'Save Changes',
+    });
+    if (!confirmed) return;
+
     setSubmitting(true);
     try {
       await updateAdmin(editingAdmin.id, {
@@ -152,12 +187,39 @@ const Admins = () => {
     e.preventDefault();
     if (!resetTarget) return;
 
+    const errors: ResetFieldErrors = {};
+    const passwordError = validatePassword(resetPassword);
+    if (passwordError) {
+      errors.newPassword = passwordError;
+    }
+    if (!resetConfirmPassword.trim()) {
+      errors.confirmPassword = 'Please confirm the new password';
+    } else if (resetPassword !== resetConfirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setResetFieldErrors(errors);
+      return;
+    }
+
+    setResetFieldErrors({});
+
+    const confirmed = await confirm({
+      title: 'Reset Password',
+      message: `Reset password for "${resetTarget.name}"? This invalidates all existing sessions.`,
+      variant: 'danger',
+      confirmLabel: 'Reset Password',
+    });
+    if (!confirmed) return;
+
     setSubmitting(true);
     try {
       await resetAdminPassword(resetTarget.id, resetPassword);
       toast.success('Password reset successfully');
       setResetTarget(null);
       setResetPassword('');
+      setResetConfirmPassword('');
     } catch (error) {
       toast.error(formatApiError(error as ApiError));
     } finally {
@@ -381,7 +443,7 @@ const Admins = () => {
                       <DropdownItem onClick={() => openEdit(admin)}>
                         <Edit2 size={14} /> Edit Admin
                       </DropdownItem>
-                      <DropdownItem onClick={() => setResetTarget(admin)}>
+                      <DropdownItem onClick={() => openResetPassword(admin)}>
                         <KeyRound size={14} /> Reset Password
                       </DropdownItem>
                       <DropdownItem onClick={() => handleToggleStatus(admin)}>
@@ -422,8 +484,11 @@ const Admins = () => {
       <Modal
         isOpen={!!resetTarget}
         onClose={() => {
+          if (submitting) return;
           setResetTarget(null);
           setResetPassword('');
+          setResetConfirmPassword('');
+          setResetFieldErrors({});
         }}
         title={`Reset Password — ${resetTarget?.name ?? ''}`}
       >
@@ -435,9 +500,31 @@ const Admins = () => {
             label="New Password"
             type="password"
             value={resetPassword}
-            onChange={(e) => setResetPassword(e.target.value)}
+            onChange={(e) => {
+              setResetPassword(e.target.value);
+              if (resetFieldErrors.newPassword) {
+                setResetFieldErrors((prev) => ({ ...prev, newPassword: undefined }));
+              }
+            }}
+            error={resetFieldErrors.newPassword}
             required
             disabled={submitting}
+            autoComplete="new-password"
+          />
+          <Input
+            label="Confirm New Password"
+            type="password"
+            value={resetConfirmPassword}
+            onChange={(e) => {
+              setResetConfirmPassword(e.target.value);
+              if (resetFieldErrors.confirmPassword) {
+                setResetFieldErrors((prev) => ({ ...prev, confirmPassword: undefined }));
+              }
+            }}
+            error={resetFieldErrors.confirmPassword}
+            required
+            disabled={submitting}
+            autoComplete="new-password"
           />
           <p className="text-xs text-text-secondary -mt-2">
             At least 8 characters with one letter and one number.
@@ -449,6 +536,8 @@ const Admins = () => {
               onClick={() => {
                 setResetTarget(null);
                 setResetPassword('');
+                setResetConfirmPassword('');
+                setResetFieldErrors({});
               }}
               disabled={submitting}
             >

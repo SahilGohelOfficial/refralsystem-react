@@ -34,7 +34,10 @@ const AgentChainReferrals = () => {
           {t('agent.chain_referrals.title', 'Your Chains')}
         </h1>
         <p className="text-sm text-text-secondary mt-1">
-          {t('agent.chain_referrals.subtitle', 'View your chain assignments and referral positions')}
+          {t(
+            'agent.chain_referrals.subtitle',
+            'View all chains and your referral positions within each.',
+          )}
         </p>
       </div>
       <ChainReferralBoard chains={chains} loading={loading} />

@@ -21,6 +21,7 @@ import Input from '../../components/ui/Input';
 import PageHeader from '../../components/ui/PageHeader';
 import Select from '../../components/ui/Select';
 import Skeleton from '../../components/ui/Skeleton';
+import { useConfirm } from '../../context/ConfirmContext';
 import { getAgentProfile, updateAgentProfile } from '../../services/agents.service';
 import { listCities, listStates } from '../../services/location.service';
 import { formatApiError } from '../../lib/api';
@@ -102,6 +103,7 @@ const InfoRow = ({
 const AgentProfile = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const confirm = useConfirm();
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -201,6 +203,13 @@ const AgentProfile = () => {
       toast.error(t('agent.profile.select_location', 'Please select state and city'));
       return;
     }
+
+    const confirmed = await confirm({
+      title: t('agent.profile.edit_title', 'Edit Profile'),
+      message: t('agent.profile.update_confirm', 'Save changes to your profile?'),
+      confirmLabel: t('common.save', 'Save Changes'),
+    });
+    if (!confirmed) return;
 
     setSubmitting(true);
     try {
