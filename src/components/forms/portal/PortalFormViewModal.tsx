@@ -13,6 +13,9 @@ import {
   getUserFormResponseFileDownloadUrl,
   listUserFormResponses,
   getUserForm,
+  getAgentUserForm,
+  listAgentUserFormResponses,
+  getAgentUserFormResponseFileDownloadUrl,
 } from '../../../services/agents.service';
 import type { ApiError, Form, FormResponse, StoredFileMeta } from '../../../types/api';
 import { resolveFieldLabel } from '../../../lib/labels';
@@ -22,6 +25,7 @@ type PortalFormViewModalProps = {
   onClose: () => void;
   formId: string | null;
   userId?: string;
+  agentId?: string;
 };
 
 function formatDateTime(iso?: string): string {
@@ -63,6 +67,7 @@ export default function PortalFormViewModal({
   onClose,
   formId,
   userId,
+  agentId,
 }: PortalFormViewModalProps) {
   const { t } = useTranslation();
   const [form, setForm] = useState<Form | null>(null);
@@ -85,9 +90,15 @@ export default function PortalFormViewModal({
     setResponse(null);
     try {
       const [formData, responses] = await Promise.all([
-        userId ? getUserForm(userId, formId) : getForm(formId),
         userId
-          ? listUserFormResponses(userId, formId)
+          ? agentId
+            ? getAgentUserForm(agentId, userId, formId)
+            : getUserForm(userId, formId)
+          : getForm(formId),
+        userId
+          ? agentId
+            ? listAgentUserFormResponses(agentId, userId, formId)
+            : listUserFormResponses(userId, formId)
           : listFormResponses(formId),
       ]);
       setForm(formData);
@@ -98,7 +109,7 @@ export default function PortalFormViewModal({
     } finally {
       setLoading(false);
     }
-  }, [formId, onClose, userId]);
+  }, [agentId, formId, onClose, userId]);
 
   useEffect(() => {
     if (isOpen && formId) {
@@ -118,12 +129,20 @@ export default function PortalFormViewModal({
 
       try {
         const { downloadUrl } = userId
-          ? await getUserFormResponseFileDownloadUrl(
-              userId,
-              formId,
-              response.id,
-              fieldId,
-            )
+          ? agentId
+            ? await getAgentUserFormResponseFileDownloadUrl(
+                agentId,
+                userId,
+                formId,
+                response.id,
+                fieldId,
+              )
+            : await getUserFormResponseFileDownloadUrl(
+                userId,
+                formId,
+                response.id,
+                fieldId,
+              )
           : await getFormResponseFileDownloadUrl(formId, response.id, fieldId);
         window.open(downloadUrl, '_blank', 'noopener,noreferrer');
       } catch (error) {
@@ -136,7 +155,7 @@ export default function PortalFormViewModal({
         });
       }
     },
-    [formId, response, userId],
+    [agentId, formId, response, userId],
   );
 
   const title = form?.title ?? t('forms.portal.view_title', 'Submitted form');

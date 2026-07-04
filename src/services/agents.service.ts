@@ -32,6 +32,45 @@ export function getAgent(id: string) {
   return api<Agent>(`/agents/${id}`);
 }
 
+export function listAgentUsers(agentId: string, status?: UserStatus) {
+  const query = status ? `?status=${status}` : '';
+  return api<ReferralUser[]>(`/agents/${agentId}/users${query}`);
+}
+
+export function getAgentUser(agentId: string, userId: string) {
+  return api<ReferralUser>(`/agents/${agentId}/users/${userId}`);
+}
+
+export function listAgentUserForms(agentId: string, userId: string) {
+  return api<FormSummary[]>(`/agents/${agentId}/users/${userId}/forms`);
+}
+
+export function getAgentUserForm(agentId: string, userId: string, formId: string) {
+  return api<Form>(`/agents/${agentId}/users/${userId}/forms/${formId}`);
+}
+
+export function listAgentUserFormResponses(
+  agentId: string,
+  userId: string,
+  formId: string,
+) {
+  return api<FormResponse[]>(
+    `/agents/${agentId}/users/${userId}/forms/${formId}/responses`,
+  );
+}
+
+export function getAgentUserFormResponseFileDownloadUrl(
+  agentId: string,
+  userId: string,
+  formId: string,
+  responseId: string,
+  fieldId: string,
+) {
+  return api<FormResponseFileDownloadResponse>(
+    `/agents/${agentId}/users/${userId}/forms/${formId}/responses/${responseId}/files/${fieldId}/download`,
+  );
+}
+
 export function createAgent(payload: CreateAgentPayload) {
   return api<CreateAgentResponse>('/agents', {
     method: 'POST',

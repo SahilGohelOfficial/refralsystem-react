@@ -10,6 +10,8 @@ const Login = lazy(() => import('../pages/Login/Login'));
 // Admin Pages
 const AdminDashboard = lazy(() => import('../pages/Admin/AdminDashboard'));
 const Agents = lazy(() => import('../pages/Admin/Agents'));
+const AgentDetail = lazy(() => import('../pages/Admin/AgentDetail'));
+const AdminAgentUserDetail = lazy(() => import('../pages/Admin/AdminAgentUserDetail'));
 const Admins = lazy(() => import('../pages/Admin/Admins'));
 const Chains = lazy(() => import('../pages/Admin/Chains'));
 const Users = lazy(() => import('../pages/Admin/Users'));
@@ -75,6 +77,8 @@ const AppRoutes = () => {
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="agents" element={<Agents />} />
+          <Route path="agents/:agentId" element={<AgentDetail />} />
+          <Route path="agents/:agentId/users/:userId" element={<AdminAgentUserDetail />} />
           <Route
             path="admins"
             element={

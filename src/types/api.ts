@@ -29,6 +29,16 @@ export interface Agent {
   createdById: string | null;
   createdAt: string;
   updatedAt: string;
+  bankDetails?: BankDetails | null;
+}
+
+export interface BankDetails {
+  id: string;
+  accountHolderName: string;
+  accountNumber: string;
+  ifscCode: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export function formatAgentName(
