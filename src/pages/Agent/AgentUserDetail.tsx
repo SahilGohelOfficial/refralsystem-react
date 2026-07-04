@@ -61,19 +61,20 @@ const AgentUserDetail = () => {
     if (!userId) return;
     setLoading(true);
     try {
-      const [userData, formsData] = await Promise.all([
-        getMyUser(userId),
-        listUserForms(userId),
-      ]);
+      const userData = await getMyUser(userId);
       setUser(userData);
-      setForms(formsData);
+      if (!fromUserRequests) {
+        setForms(await listUserForms(userId));
+      } else {
+        setForms([]);
+      }
     } catch (error) {
       toast.error(formatApiError(error as ApiError));
       navigate(backListPath);
     } finally {
       setLoading(false);
     }
-  }, [userId, navigate, backListPath]);
+  }, [userId, navigate, backListPath, fromUserRequests]);
 
   useEffect(() => {
     void fetchData();
@@ -191,8 +192,10 @@ const AgentUserDetail = () => {
     return null;
   }
 
-  const filledCount = user.filledFormsCount ?? forms.filter((f) => f.isSubmitted === true).length;
-  const totalCount = user.totalFormsCount ?? forms.length;
+  const filledCount = fromUserRequests
+    ? 0
+    : (user.filledFormsCount ?? forms.filter((f) => f.isSubmitted === true).length);
+  const totalCount = fromUserRequests ? 0 : (user.totalFormsCount ?? forms.length);
   const isPending = user.status === 'pending';
 
   return (
@@ -390,17 +393,19 @@ const AgentUserDetail = () => {
                 {user.referralCode ?? '—'}
               </dd>
             </div>
-            <div>
-              <dt className="text-xs text-text-secondary">
-                {t('agent.user_requests.col_forms', 'Forms')}
-              </dt>
-              <dd className="text-sm font-medium text-text mt-0.5">
-                {filledCount}/{totalCount}{' '}
-                <span className="text-text-secondary font-normal">
-                  {t('agent.user_detail.forms_completed', 'completed')}
-                </span>
-              </dd>
-            </div>
+            {!fromUserRequests ? (
+              <div>
+                <dt className="text-xs text-text-secondary">
+                  {t('agent.user_requests.col_forms', 'Forms')}
+                </dt>
+                <dd className="text-sm font-medium text-text mt-0.5">
+                  {filledCount}/{totalCount}{' '}
+                  <span className="text-text-secondary font-normal">
+                    {t('agent.user_detail.forms_completed', 'completed')}
+                  </span>
+                </dd>
+              </div>
+            ) : null}
           </dl>
 
           {user.note ? (
@@ -414,97 +419,99 @@ const AgentUserDetail = () => {
         </CardContent>
       </Card>
 
-      <Card className="p-0 overflow-hidden">
-        <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between bg-surface/50">
-          <h2 className="text-lg font-semibold text-text">
-            {t('agent.user_detail.forms_section', 'Forms')}
-          </h2>
-          <div className="w-full sm:w-72">
-            <Input
-              icon={Search}
-              placeholder={t('forms.search_placeholder', 'Search by title...')}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+      {!fromUserRequests ? (
+        <Card className="p-0 overflow-hidden">
+          <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between bg-surface/50">
+            <h2 className="text-lg font-semibold text-text">
+              {t('agent.user_detail.forms_section', 'Forms')}
+            </h2>
+            <div className="w-full sm:w-72">
+              <Input
+                icon={Search}
+                placeholder={t('forms.search_placeholder', 'Search by title...')}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
           </div>
-        </div>
 
-        {filteredForms.length === 0 ? (
-          <div className="p-12 text-center text-text-secondary">
-            {search
-              ? t('forms.no_results', 'No forms match your search.')
-              : t('forms.portal.empty', 'No forms available right now.')}
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t('forms.col_title', 'Title')}</TableHead>
-                <TableHead>{t('forms.portal.col_submitted', 'Submitted')}</TableHead>
-                <TableHead>{t('forms.col_updated', 'Last Updated')}</TableHead>
-                <TableHead className="text-right">
-                  {t('forms.portal.col_action', 'Action')}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <tbody>
-              {filteredForms.map((form) => (
-                <TableRow key={form.id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium text-text">{form.title}</div>
-                      {form.description ? (
-                        <div className="text-xs text-text-secondary truncate max-w-[200px] sm:max-w-xs">
-                          {form.description}
-                        </div>
-                      ) : null}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {form.isSubmitted === true ? (
-                      <Badge variant="success">
-                        {t('forms.portal.submitted_yes', 'Submitted')}
-                      </Badge>
-                    ) : form.isSubmitted === false ? (
-                      <Badge variant="warning">
-                        {t('forms.portal.submitted_no', 'Not submitted')}
-                      </Badge>
-                    ) : (
-                      <Badge variant="neutral">
-                        {t('forms.portal.submitted_na', 'N/A')}
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>{formatLocalDate(form.updatedAt)}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end items-center gap-2">
+          {filteredForms.length === 0 ? (
+            <div className="p-12 text-center text-text-secondary">
+              {search
+                ? t('forms.no_results', 'No forms match your search.')
+                : t('forms.portal.empty', 'No forms available right now.')}
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('forms.col_title', 'Title')}</TableHead>
+                  <TableHead>{t('forms.portal.col_submitted', 'Submitted')}</TableHead>
+                  <TableHead>{t('forms.col_updated', 'Last Updated')}</TableHead>
+                  <TableHead className="text-right">
+                    {t('forms.portal.col_action', 'Action')}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <tbody>
+                {filteredForms.map((form) => (
+                  <TableRow key={form.id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium text-text">{form.title}</div>
+                        {form.description ? (
+                          <div className="text-xs text-text-secondary truncate max-w-[200px] sm:max-w-xs">
+                            {form.description}
+                          </div>
+                        ) : null}
+                      </div>
+                    </TableCell>
+                    <TableCell>
                       {form.isSubmitted === true ? (
+                        <Badge variant="success">
+                          {t('forms.portal.submitted_yes', 'Submitted')}
+                        </Badge>
+                      ) : form.isSubmitted === false ? (
+                        <Badge variant="warning">
+                          {t('forms.portal.submitted_no', 'Not submitted')}
+                        </Badge>
+                      ) : (
+                        <Badge variant="neutral">
+                          {t('forms.portal.submitted_na', 'N/A')}
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>{formatLocalDate(form.updatedAt)}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end items-center gap-2">
+                        {form.isSubmitted === true ? (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            aria-label={t('forms.portal.view', 'View')}
+                            title={t('forms.portal.view', 'View')}
+                            onClick={() => setViewFormId(form.id)}
+                          >
+                            <Eye size={16} />
+                          </Button>
+                        ) : null}
                         <Button
                           size="sm"
-                          variant="secondary"
-                          aria-label={t('forms.portal.view', 'View')}
-                          title={t('forms.portal.view', 'View')}
-                          onClick={() => setViewFormId(form.id)}
+                          onClick={() => navigate(formSubmitPath(form.id))}
                         >
-                          <Eye size={16} />
+                          {form.isSubmitted
+                            ? t('forms.portal.edit', 'Edit')
+                            : t('forms.portal.fill', 'Fill')}
                         </Button>
-                      ) : null}
-                      <Button
-                        size="sm"
-                        onClick={() => navigate(formSubmitPath(form.id))}
-                      >
-                        {form.isSubmitted
-                          ? t('forms.portal.edit', 'Edit')
-                          : t('forms.portal.fill', 'Fill')}
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </tbody>
-          </Table>
-        )}
-      </Card>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </tbody>
+            </Table>
+          )}
+        </Card>
+      ) : null}
 
       <AgentUserEditModal
         user={user}
@@ -513,12 +520,14 @@ const AgentUserDetail = () => {
         onSaved={(updated) => setUser(updated)}
       />
 
-      <PortalFormViewModal
-        isOpen={viewFormId !== null}
-        onClose={() => setViewFormId(null)}
-        formId={viewFormId}
-        userId={userId}
-      />
+      {!fromUserRequests ? (
+        <PortalFormViewModal
+          isOpen={viewFormId !== null}
+          onClose={() => setViewFormId(null)}
+          formId={viewFormId}
+          userId={userId}
+        />
+      ) : null}
 
       <Modal
         isOpen={rejectOpen}

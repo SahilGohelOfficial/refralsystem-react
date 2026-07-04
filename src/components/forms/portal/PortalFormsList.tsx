@@ -82,9 +82,9 @@ export default function PortalFormsList({
             <TableHeader>
               <TableRow>
                 <TableHead>{t('forms.col_title', 'Title')}</TableHead>
-                <TableHead>{t('forms.col_published', 'Published')}</TableHead>
+                <TableHead>{t('forms.portal.col_submitted', 'Submitted')}</TableHead>
                 <TableHead>{t('forms.col_updated', 'Last Updated')}</TableHead>
-                <TableHead className="text-right">{t('forms.col_actions', 'Actions')}</TableHead>
+                <TableHead className="text-right">{t('forms.portal.col_action', 'Action')}</TableHead>
               </TableRow>
             </TableHeader>
             <tbody>
@@ -101,24 +101,41 @@ export default function PortalFormsList({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={form.isPublished ? 'success' : 'neutral'} dot>
-                      {form.isPublished
-                        ? t('forms.status_published', 'Published')
-                        : t('forms.status_draft', 'Draft')}
-                    </Badge>
+                    {form.isSubmitted === true ? (
+                      <Badge variant="success">
+                        {t('forms.portal.submitted_yes', 'Submitted')}
+                      </Badge>
+                    ) : form.isSubmitted === false ? (
+                      <Badge variant="warning">
+                        {t('forms.portal.submitted_no', 'Not submitted')}
+                      </Badge>
+                    ) : (
+                      <Badge variant="neutral">
+                        {t('forms.portal.submitted_na', 'N/A')}
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell>{formatLocalDate(form.updatedAt)}</TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button size="sm" variant="secondary" onClick={() => setViewFormId(form.id)}>
-                        <Eye size={14} />
-                        {t('forms.view', 'View')}
-                      </Button>
+                    <div className="flex justify-end items-center gap-2">
+                      {form.isSubmitted === true ? (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          aria-label={t('forms.portal.view', 'View')}
+                          title={t('forms.portal.view', 'View')}
+                          onClick={() => setViewFormId(form.id)}
+                        >
+                          <Eye size={16} />
+                        </Button>
+                      ) : null}
                       <Button
                         size="sm"
                         onClick={() => navigate(`${detailsPathPrefix}/${form.id}`)}
                       >
-                        {t('forms.submit', 'Submit')}
+                        {form.isSubmitted
+                          ? t('forms.portal.edit', 'Edit')
+                          : t('forms.portal.fill', 'Fill')}
                       </Button>
                     </div>
                   </TableCell>
@@ -130,9 +147,9 @@ export default function PortalFormsList({
       </Card>
 
       <PortalFormViewModal
+        isOpen={!!viewFormId}
         formId={viewFormId}
         onClose={() => setViewFormId(null)}
-        userType={userType}
       />
     </div>
   );

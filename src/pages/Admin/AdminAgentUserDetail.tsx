@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Eye, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
@@ -14,7 +15,7 @@ import { useToastOnError } from '../../hooks/useToastOnError';
 import { formatApiError } from '../../lib/api';
 import type { ApiError, UserStatus } from '../../types/api';
 import { formatUserName } from '../../types/api';
-import { formatLocalDate, formatLocalDateTime } from '../../lib/dates';
+import { formatCalendarDate, formatLocalDate, formatLocalDateTime } from '../../lib/dates';
 
 const statusVariant = (status: UserStatus) => {
   if (status === 'pending') return 'warning';
@@ -22,30 +23,34 @@ const statusVariant = (status: UserStatus) => {
   return 'success';
 };
 
-const statusLabel = (status: UserStatus) => {
-  if (status === 'pending') return 'Pending';
-  if (status === 'rejected') return 'Rejected';
-  return 'Accepted';
+const statusLabelKey = (status: UserStatus) => {
+  if (status === 'pending') return 'agent.user_requests.status_pending';
+  if (status === 'rejected') return 'agent.user_requests.status_rejected';
+  return 'agent.user_requests.status_approved';
 };
 
 const AdminAgentUserDetail = () => {
+  const { t } = useTranslation();
   const { agentId = '', userId = '' } = useParams();
   const navigate = useNavigate();
+  const backListPath = `/admin/agents/${agentId}`;
   const [search, setSearch] = useState('');
   const [viewFormId, setViewFormId] = useState<string | null>(null);
 
   const { data: user, isLoading: loadingUser, error: userError } = useAgentUser(agentId, userId);
+  const showForms = user != null && user.status !== 'pending';
   const { data: forms = [], isLoading: loadingForms, error: formsError } = useAgentUserForms(
     agentId,
     userId,
+    showForms,
   );
-  useToastOnError(formsError);
+  useToastOnError(formsError, showForms);
 
   useEffect(() => {
     if (!userError) return;
     toast.error(formatApiError(userError as ApiError));
-    navigate(`/admin/agents/${agentId}`);
-  }, [userError, agentId, navigate]);
+    navigate(backListPath);
+  }, [userError, backListPath, navigate]);
 
   const filteredForms = useMemo(() => {
     const query = search.toLowerCase();
@@ -56,7 +61,7 @@ const AdminAgentUserDetail = () => {
     );
   }, [forms, search]);
 
-  const isLoading = loadingUser || loadingForms;
+  const isLoading = loadingUser || (showForms && loadingForms);
 
   if (isLoading) {
     return <Loader size="lg" className="min-h-[50vh]" />;
@@ -66,104 +71,269 @@ const AdminAgentUserDetail = () => {
     return null;
   }
 
+  const filledCount = user.filledFormsCount ?? forms.filter((f) => f.isSubmitted === true).length;
+  const totalCount = user.totalFormsCount ?? forms.length;
+
   return (
-    <div className="page-shell space-y-6">
-      <Button variant="secondary" onClick={() => navigate(`/admin/agents/${agentId}`)}>
-        <ArrowLeft size={16} />
-        Back to Agent
-      </Button>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-4 min-w-0">
+          <Button
+            type="button"
+            variant="secondary"
+            className="shrink-0 gap-2 mt-1"
+            onClick={() => navigate(backListPath)}
+          >
+            <ArrowLeft size={16} />
+            {t('common.back', 'Back')}
+          </Button>
+
+          <div className="flex items-start gap-4 min-w-0">
+            <div className="w-14 h-14 rounded-full bg-primary/15 flex items-center justify-center text-primary text-xl font-bold shrink-0">
+              {user.firstName.charAt(0)}
+            </div>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-2xl font-bold text-text truncate">{formatUserName(user)}</h1>
+                <Badge variant={statusVariant(user.status)}>
+                  {t(statusLabelKey(user.status), user.status)}
+                </Badge>
+              </div>
+              <p className="text-sm text-text-secondary mt-1">
+                {user.phoneNumber} · {user.email}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>{formatUserName(user)}</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle>{t('agent.user_request_detail.details', 'User Details')}</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-2 text-sm">
-          <div>
-            <span className="text-text-secondary">Email</span>
-            <p className="font-medium text-text">{user.email}</p>
-          </div>
-          <div>
-            <span className="text-text-secondary">Phone</span>
-            <p className="font-medium text-text">{user.phoneNumber}</p>
-          </div>
-          <div>
-            <span className="text-text-secondary">Status</span>
-            <p>
-              <Badge variant={statusVariant(user.status)} dot>
-                {statusLabel(user.status)}
-              </Badge>
-            </p>
-          </div>
-          <div>
-            <span className="text-text-secondary">Registered</span>
-            <p className="font-medium text-text">{formatLocalDateTime(user.createdAt)}</p>
-          </div>
+        <CardContent className="space-y-4">
+          <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <dt className="text-xs text-text-secondary">
+                {t('agent.user_request_detail.first_name', 'First name')}
+              </dt>
+              <dd className="text-sm font-medium text-text mt-0.5">{user.firstName}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-text-secondary">
+                {t('agent.user_request_detail.middle_name', 'Middle name')}
+              </dt>
+              <dd className="text-sm font-medium text-text mt-0.5">{user.middleName ?? '—'}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-text-secondary">
+                {t('agent.user_request_detail.last_name', 'Last name')}
+              </dt>
+              <dd className="text-sm font-medium text-text mt-0.5">{user.lastName}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-text-secondary">
+                {t('agent.user_request_detail.phone', 'Phone')}
+              </dt>
+              <dd className="text-sm font-medium text-text mt-0.5">{user.phoneNumber}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-text-secondary">
+                {t('agent.user_request_detail.email', 'Email')}
+              </dt>
+              <dd className="text-sm font-medium text-text break-all">{user.email}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-text-secondary">
+                {t('register.date_of_birth', 'Date of Birth')}
+              </dt>
+              <dd className="text-sm font-medium text-text mt-0.5">
+                {user.dateOfBirth ? formatCalendarDate(user.dateOfBirth) : '—'}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-text-secondary">
+                {t('register.is_married', 'Are you married?')}
+              </dt>
+              <dd className="text-sm font-medium text-text mt-0.5">
+                {user.isMarried ? 'Yes' : user.isMarried === false ? 'No' : '—'}
+              </dd>
+            </div>
+            {user.isMarried ? (
+              <div>
+                <dt className="text-xs text-text-secondary">
+                  {t('register.marriage_date', 'Marriage Date')}
+                </dt>
+                <dd className="text-sm font-medium text-text mt-0.5">
+                  {user.marriageDate ? formatCalendarDate(user.marriageDate) : '—'}
+                </dd>
+              </div>
+            ) : null}
+            <div>
+              <dt className="text-xs text-text-secondary">
+                {t('register.address_line1', 'Address Line 1')}
+              </dt>
+              <dd className="text-sm font-medium text-text mt-0.5">{user.addressLine1 ?? '—'}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-text-secondary">
+                {t('register.address_line2', 'Address line 2')}
+              </dt>
+              <dd className="text-sm font-medium text-text mt-0.5">{user.addressLine2 ?? '—'}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-text-secondary">
+                {t('register.landmark', 'Landmark')}
+              </dt>
+              <dd className="text-sm font-medium text-text mt-0.5">{user.landmark ?? '—'}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-text-secondary">
+                {t('register.postal_code', 'Postal/ZIP Code (PIN Code)')}
+              </dt>
+              <dd className="text-sm font-medium text-text mt-0.5">{user.postalCode ?? '—'}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-text-secondary">
+                {t('agent.user_request_detail.submitted', 'Submitted')}
+              </dt>
+              <dd className="text-sm font-medium text-text mt-0.5">
+                {formatLocalDateTime(user.createdAt)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-text-secondary">
+                {t('agent.user_detail.referred_by', 'Referral by')}
+              </dt>
+              <dd className="text-sm font-medium text-text mt-0.5">{user.referredByName ?? '—'}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-text-secondary">
+                {t('agent.user_detail.referral_code', 'Referral code')}
+              </dt>
+              <dd className="text-sm font-medium text-text mt-0.5 font-mono">
+                {user.referralCode ?? '—'}
+              </dd>
+            </div>
+            {showForms ? (
+              <div>
+                <dt className="text-xs text-text-secondary">
+                  {t('agent.user_requests.col_forms', 'Forms')}
+                </dt>
+                <dd className="text-sm font-medium text-text mt-0.5">
+                  {filledCount}/{totalCount}{' '}
+                  <span className="text-text-secondary font-normal">
+                    {t('agent.user_detail.forms_completed', 'completed')}
+                  </span>
+                </dd>
+              </div>
+            ) : null}
+          </dl>
+
+          {user.note ? (
+            <div className="rounded-lg border border-error/30 bg-error/5 p-3">
+              <p className="text-xs font-medium text-error mb-1">
+                {t('agent.user_request_detail.rejection_note', 'Rejection note')}
+              </p>
+              <p className="text-sm text-text">{user.note}</p>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
 
-      <Card padding="none" className="data-card">
-        <div className="table-toolbar">
-          <div className="w-full sm:max-w-md">
-            <Input
-              icon={Search}
-              placeholder="Search forms..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+      {showForms ? (
+        <Card className="p-0 overflow-hidden">
+          <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between bg-surface/50">
+            <h2 className="text-lg font-semibold text-text">
+              {t('agent.user_detail.forms_section', 'Forms')}
+            </h2>
+            <div className="w-full sm:w-72">
+              <Input
+                icon={Search}
+                placeholder={t('forms.search_placeholder', 'Search by title...')}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
           </div>
-        </div>
 
-        {filteredForms.length === 0 ? (
-          <div className="py-16 text-center text-sm text-text-secondary">
-            {search ? 'No forms match your search.' : 'No forms assigned to this user.'}
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Published</TableHead>
-                <TableHead>Submitted</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <tbody>
-              {filteredForms.map((form) => (
-                <TableRow key={form.id}>
-                  <TableCell>
-                    <div className="font-medium text-text">{form.title}</div>
-                    {form.description ? (
-                      <div className="text-xs text-text-secondary truncate max-w-xs">
-                        {form.description}
-                      </div>
-                    ) : null}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={form.isPublished ? 'success' : 'neutral'} dot>
-                      {form.isPublished ? 'Published' : 'Draft'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{form.submittedCount ?? 0}</TableCell>
-                  <TableCell className="text-right">
-                    <Button size="sm" variant="secondary" onClick={() => setViewFormId(form.id)}>
-                      <Eye size={14} />
-                      View
-                    </Button>
-                  </TableCell>
+          {filteredForms.length === 0 ? (
+            <div className="p-12 text-center text-text-secondary">
+              {search
+                ? t('forms.no_results', 'No forms match your search.')
+                : t('forms.portal.empty', 'No forms available right now.')}
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('forms.col_title', 'Title')}</TableHead>
+                  <TableHead>{t('forms.portal.col_submitted', 'Submitted')}</TableHead>
+                  <TableHead>{t('forms.col_updated', 'Last Updated')}</TableHead>
+                  <TableHead className="text-right">
+                    {t('forms.portal.col_action', 'Action')}
+                  </TableHead>
                 </TableRow>
-              ))}
-            </tbody>
-          </Table>
-        )}
-      </Card>
+              </TableHeader>
+              <tbody>
+                {filteredForms.map((form) => (
+                  <TableRow key={form.id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium text-text">{form.title}</div>
+                        {form.description ? (
+                          <div className="text-xs text-text-secondary truncate max-w-[200px] sm:max-w-xs">
+                            {form.description}
+                          </div>
+                        ) : null}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {form.isSubmitted === true ? (
+                        <Badge variant="success">
+                          {t('forms.portal.submitted_yes', 'Submitted')}
+                        </Badge>
+                      ) : form.isSubmitted === false ? (
+                        <Badge variant="warning">
+                          {t('forms.portal.submitted_no', 'Not submitted')}
+                        </Badge>
+                      ) : (
+                        <Badge variant="neutral">
+                          {t('forms.portal.submitted_na', 'N/A')}
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>{formatLocalDate(form.updatedAt)}</TableCell>
+                    <TableCell className="text-right">
+                      {form.isSubmitted === true ? (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          aria-label={t('forms.portal.view', 'View')}
+                          title={t('forms.portal.view', 'View')}
+                          onClick={() => setViewFormId(form.id)}
+                        >
+                          <Eye size={16} />
+                        </Button>
+                      ) : null}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </tbody>
+            </Table>
+          )}
+        </Card>
+      ) : null}
 
-      <PortalFormViewModal
-        isOpen={!!viewFormId}
-        formId={viewFormId}
-        onClose={() => setViewFormId(null)}
-        agentId={agentId}
-        userId={userId}
-      />
+      {showForms ? (
+        <PortalFormViewModal
+          isOpen={viewFormId !== null}
+          onClose={() => setViewFormId(null)}
+          formId={viewFormId}
+          agentId={agentId}
+          userId={userId}
+        />
+      ) : null}
     </div>
   );
 };
