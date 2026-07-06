@@ -15,11 +15,13 @@ import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
+import { RadioGroup } from '../../components/forms/form/Radio';
 import { Card, CardContent } from '../../components/ui/Card';
 import { agentSignUp, sendAgentRegistrationOtp } from '../../services/agents.service';
 import { listCities, listStates } from '../../services/location.service';
 import { formatApiError } from '../../lib/api';
 import type { ApiError, City, State } from '../../types/api';
+import { choiceToGender } from '../../types/api';
 import { normalizePhone } from '../RegisterUser/useRegisterForm';
 
 type Step = 'details' | 'otp' | 'bank';
@@ -46,6 +48,7 @@ const AgentSignUp = () => {
   const [firstName, setFirstName] = useState('');
   const [middleName, setMiddleName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [genderChoice, setGenderChoice] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -115,6 +118,9 @@ const AgentSignUp = () => {
     }
     if (!lastName.trim()) {
       errors.lastName = t('register.err_last_name', 'Last name is required');
+    }
+    if (!choiceToGender(genderChoice)) {
+      errors.gender = t('register.err_gender_required', 'Please select gender');
     }
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       errors.email = t('register.err_email', 'Valid email is required');
@@ -249,6 +255,7 @@ const AgentSignUp = () => {
         firstName: firstName.trim(),
         middleName: middleName.trim() || undefined,
         lastName: lastName.trim(),
+        gender: choiceToGender(genderChoice)!,
         phoneNumber,
         email: email.trim(),
         state,
@@ -357,6 +364,15 @@ const AgentSignUp = () => {
                     disabled={submitting}
                   />
                 </div>
+                <RadioGroup
+                  name="gender"
+                  label={t('register.gender', 'Gender')}
+                  options={['Male', 'Female']}
+                  value={genderChoice}
+                  onChange={(e) => setGenderChoice(e.target.value)}
+                  error={fieldErrors.gender}
+                  required
+                />
                 <Input
                   label={t('agent.signup.email', 'Email')}
                   type="email"

@@ -18,7 +18,7 @@ import {
 import { useToastOnError } from '../../hooks/useToastOnError';
 import { formatApiError } from '../../lib/api';
 import type { ApiError, ReferralUser, UserStatus } from '../../types/api';
-import { formatAgentName, formatUserName } from '../../types/api';
+import { formatAgentName, formatGenderLabel, formatUserName } from '../../types/api';
 import { formatLocation } from '../../lib/location';
 import { formatLocalDate, formatLocalDateTime } from '../../lib/dates';
 
@@ -160,6 +160,12 @@ const AgentDetail = () => {
             <div>
               <dt className="text-xs text-text-secondary">Last name</dt>
               <dd className="text-sm font-medium text-text mt-0.5">{agent.lastName}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-text-secondary">Gender</dt>
+              <dd className="text-sm font-medium text-text mt-0.5">
+                {formatGenderLabel(agent.gender, t)}
+              </dd>
             </div>
             <div>
               <dt className="text-xs text-text-secondary">Login ID</dt>

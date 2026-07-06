@@ -70,6 +70,8 @@ const RegisterUser = () => {
     setReferralCode,
     dateOfBirth,
     setDateOfBirth,
+    genderChoice,
+    setGenderChoice,
     isMarriedChoice,
     marriageDate,
     setMarriageDate,
@@ -206,6 +208,8 @@ const RegisterUser = () => {
                 setReferralCode={setReferralCode}
                 dateOfBirth={dateOfBirth}
                 setDateOfBirth={setDateOfBirth}
+                genderChoice={genderChoice}
+                setGenderChoice={setGenderChoice}
                 isMarriedChoice={isMarriedChoice}
                 marriageDate={marriageDate}
                 setMarriageDate={setMarriageDate}

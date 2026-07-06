@@ -2,6 +2,31 @@ export type AdminRole = 'superAdmin' | 'admin';
 
 export type PortalRole = 'admin' | 'superAdmin' | 'agent' | 'user';
 
+export type Gender = 'male' | 'female';
+
+export type GenderChoice = 'Male' | 'Female';
+
+export function genderToChoice(gender: Gender | null | undefined): GenderChoice | '' {
+  if (gender === 'male') return 'Male';
+  if (gender === 'female') return 'Female';
+  return '';
+}
+
+export function choiceToGender(choice: string): Gender | null {
+  if (choice === 'Male') return 'male';
+  if (choice === 'Female') return 'female';
+  return null;
+}
+
+export function formatGenderLabel(
+  gender: Gender | null | undefined,
+  t: (key: string, fallback: string) => string,
+): string {
+  if (gender === 'male') return t('register.gender_male', 'Male');
+  if (gender === 'female') return t('register.gender_female', 'Female');
+  return '—';
+}
+
 export interface Admin {
   id: string;
   name: string;
@@ -20,6 +45,7 @@ export interface Agent {
   firstName: string;
   middleName: string | null;
   lastName: string;
+  gender?: Gender | null;
   phoneNumber: string | null;
   email: string | null;
   isActive: boolean;
@@ -91,6 +117,7 @@ export interface CreateAgentPayload {
   firstName: string;
   middleName?: string;
   lastName: string;
+  gender: Gender;
   phoneNumber?: string;
   email?: string;
   state: string;
@@ -101,6 +128,7 @@ export interface UpdateAgentPayload {
   firstName?: string;
   middleName?: string;
   lastName?: string;
+  gender?: Gender;
   phoneNumber?: string;
   email?: string;
   state?: string;
@@ -111,6 +139,7 @@ export interface SignUpAgentPayload {
   firstName: string;
   middleName?: string;
   lastName: string;
+  gender: Gender;
   phoneNumber: string | null;
   email: string | null;
   state: string;
@@ -127,6 +156,7 @@ export interface UpdateAgentProfilePayload {
   firstName?: string;
   middleName?: string;
   lastName?: string;
+  gender?: Gender;
   phoneNumber?: string;
   email?: string;
   state?: string;
@@ -167,6 +197,7 @@ export interface ReferralUser {
   referredByUserId: string | null;
   referredByName: string | null;
   dateOfBirth?: string | null;
+  gender?: Gender | null;
   addressLine1?: string | null;
   addressLine2?: string | null;
   landmark?: string | null;
@@ -202,6 +233,7 @@ export interface UpdateUserPayload {
   middleName?: string;
   lastName: string;
   dateOfBirth: string;
+  gender: Gender;
   isMarried: boolean;
   marriageDate?: string | null;
   addressLine1: string;
@@ -219,6 +251,7 @@ export interface CreateUserPayload {
   password: string;
   referralCode?: string;
   dateOfBirth: string;
+  gender: Gender;
   addressLine1: string;
   addressLine2?: string;
   landmark?: string;

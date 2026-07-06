@@ -23,6 +23,8 @@ type RegisterPersonalStepProps = {
   setReferralCode: (v: string) => void;
   dateOfBirth: string;
   setDateOfBirth: (v: string) => void;
+  genderChoice: string;
+  setGenderChoice: (v: string) => void;
   isMarriedChoice: string;
   marriageDate: string;
   setMarriageDate: (v: string) => void;
@@ -48,6 +50,8 @@ export default function RegisterPersonalStep({
   setReferralCode,
   dateOfBirth,
   setDateOfBirth,
+  genderChoice,
+  setGenderChoice,
   isMarriedChoice,
   marriageDate,
   setMarriageDate,
@@ -119,6 +123,15 @@ export default function RegisterPersonalStep({
         required
         disabled={submitting}
         max={todayUtcDateString()}
+      />
+      <RadioGroup
+        name="gender"
+        label={t('register.gender', 'Gender')}
+        options={['Male', 'Female']}
+        value={genderChoice}
+        onChange={(e) => setGenderChoice(e.target.value)}
+        error={fieldErrors.gender}
+        required
       />
       <RadioGroup
         name="isMarried"

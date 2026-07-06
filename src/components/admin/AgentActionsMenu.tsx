@@ -22,7 +22,7 @@ import {
 import { useLocationSelect } from '../../hooks/useLocationSelect';
 import { useConfirm } from '../../context/ConfirmContext';
 import type { Agent, AgentCredentials } from '../../types/api';
-import { formatAgentName } from '../../types/api';
+import { formatAgentName, choiceToGender, genderToChoice } from '../../types/api';
 
 interface AgentActionsMenuProps {
   agent: Agent;
@@ -49,6 +49,8 @@ const AgentActionsMenu = ({
   const [formFirstName, setFormFirstName] = useState('');
   const [formMiddleName, setFormMiddleName] = useState('');
   const [formLastName, setFormLastName] = useState('');
+  const [formGenderChoice, setFormGenderChoice] = useState('');
+  const [formGenderError, setFormGenderError] = useState('');
   const [formEmail, setFormEmail] = useState('');
   const [formPhoneNumber, setFormPhoneNumber] = useState('');
 
@@ -58,6 +60,8 @@ const AgentActionsMenu = ({
     setFormFirstName('');
     setFormMiddleName('');
     setFormLastName('');
+    setFormGenderChoice('');
+    setFormGenderError('');
     setFormEmail('');
     setFormPhoneNumber('');
     location.reset();
@@ -72,6 +76,7 @@ const AgentActionsMenu = ({
     setFormFirstName(agent.firstName);
     setFormMiddleName(agent.middleName ?? '');
     setFormLastName(agent.lastName);
+    setFormGenderChoice(genderToChoice(agent.gender));
     setFormEmail(agent.email ?? '');
     setFormPhoneNumber(agent.phoneNumber ?? '');
     await location.initFromNames(agent.state, agent.city);
@@ -88,6 +93,13 @@ const AgentActionsMenu = ({
     });
     if (!confirmed) return;
 
+    const gender = choiceToGender(formGenderChoice);
+    if (!gender) {
+      setFormGenderError('Please select gender');
+      return;
+    }
+    setFormGenderError('');
+
     const { state, city } = location.resolveNames();
     if (!state || !city) {
       toast.error('Please select state and city');
@@ -101,6 +113,7 @@ const AgentActionsMenu = ({
           firstName: formFirstName.trim(),
           middleName: formMiddleName.trim() || undefined,
           lastName: formLastName.trim(),
+          gender,
           email: formEmail || undefined,
           phoneNumber: formPhoneNumber || undefined,
           state,
@@ -212,6 +225,9 @@ const AgentActionsMenu = ({
           setMiddleName={setFormMiddleName}
           lastName={formLastName}
           setLastName={setFormLastName}
+          genderChoice={formGenderChoice}
+          setGenderChoice={setFormGenderChoice}
+          genderError={formGenderError}
           email={formEmail}
           setEmail={setFormEmail}
           phoneNumber={formPhoneNumber}

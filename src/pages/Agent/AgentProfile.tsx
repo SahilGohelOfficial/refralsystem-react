@@ -20,12 +20,13 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import PageHeader from '../../components/ui/PageHeader';
 import Select from '../../components/ui/Select';
+import { RadioGroup } from '../../components/forms/form/Radio';
 import Skeleton from '../../components/ui/Skeleton';
 import { useConfirm } from '../../context/ConfirmContext';
 import { getAgentProfile, updateAgentProfile } from '../../services/agents.service';
 import { listCities, listStates } from '../../services/location.service';
 import { formatApiError } from '../../lib/api';
-import { formatAgentName } from '../../types/api';
+import { choiceToGender, formatAgentName, genderToChoice } from '../../types/api';
 import type { Agent, ApiError, City, State } from '../../types/api';
 import { formatLocalDate, formatLocalDateTime } from '../../lib/dates';
 
@@ -94,6 +95,7 @@ const AgentProfile = () => {
   const [firstName, setFirstName] = useState('');
   const [middleName, setMiddleName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [genderChoice, setGenderChoice] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
 
@@ -143,6 +145,7 @@ const AgentProfile = () => {
       setFirstName(agent.firstName);
       setMiddleName(agent.middleName ?? '');
       setLastName(agent.lastName);
+      setGenderChoice(genderToChoice(agent.gender));
       setPhoneNumber(agent.phoneNumber ?? '');
       setEmail(agent.email ?? '');
       setStates(stateList);
@@ -179,6 +182,11 @@ const AgentProfile = () => {
       toast.error(t('agent.profile.err_phone', 'Phone number must be exactly 10 digits'));
       return;
     }
+    const gender = choiceToGender(genderChoice);
+    if (!gender) {
+      toast.error(t('register.err_gender_required', 'Please select gender'));
+      return;
+    }
 
     const { state, city } = resolveLocationNames();
     if (!state || !city) {
@@ -199,6 +207,7 @@ const AgentProfile = () => {
         firstName: firstName.trim(),
         middleName: middleName.trim(),
         lastName: lastName.trim(),
+        gender,
         phoneNumber: phoneNumber || undefined,
         email: email.trim() || undefined,
         state,
@@ -387,6 +396,14 @@ const AgentProfile = () => {
                     disabled={submitting}
                   />
                 </div>
+                <RadioGroup
+                  name="gender"
+                  label={t('agent.profile.gender', 'Gender')}
+                  options={['Male', 'Female']}
+                  value={genderChoice}
+                  onChange={(e) => setGenderChoice(e.target.value)}
+                  required
+                />
               </div>
 
               <div className="space-y-5">

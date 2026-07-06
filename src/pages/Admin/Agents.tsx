@@ -18,7 +18,7 @@ import { useLocationSelect } from '../../hooks/useLocationSelect';
 import { useToastOnError } from '../../hooks/useToastOnError';
 import { formatLocation } from '../../lib/location';
 import type { AgentCredentials } from '../../types/api';
-import { formatAgentName } from '../../types/api';
+import { formatAgentName, choiceToGender } from '../../types/api';
 
 const Agents = () => {
   const navigate = useNavigate();
@@ -32,6 +32,8 @@ const Agents = () => {
   const [formFirstName, setFormFirstName] = useState('');
   const [formMiddleName, setFormMiddleName] = useState('');
   const [formLastName, setFormLastName] = useState('');
+  const [formGenderChoice, setFormGenderChoice] = useState('');
+  const [formGenderError, setFormGenderError] = useState('');
   const [formEmail, setFormEmail] = useState('');
   const [formPhoneNumber, setFormPhoneNumber] = useState('');
   const location = useLocationSelect();
@@ -40,6 +42,8 @@ const Agents = () => {
     setFormFirstName('');
     setFormMiddleName('');
     setFormLastName('');
+    setFormGenderChoice('');
+    setFormGenderError('');
     setFormEmail('');
     setFormPhoneNumber('');
     location.reset();
@@ -52,6 +56,12 @@ const Agents = () => {
 
   const handleCreate = async (e: FormEvent) => {
     e.preventDefault();
+    const gender = choiceToGender(formGenderChoice);
+    if (!gender) {
+      setFormGenderError('Please select gender');
+      return;
+    }
+    setFormGenderError('');
     const { state, city } = location.resolveNames();
     if (!state || !city) {
       toast.error('Please select state and city');
@@ -63,6 +73,7 @@ const Agents = () => {
         firstName: formFirstName.trim(),
         middleName: formMiddleName.trim() || undefined,
         lastName: formLastName.trim(),
+        gender,
         email: formEmail || undefined,
         phoneNumber: formPhoneNumber || undefined,
         state,
@@ -175,6 +186,9 @@ const Agents = () => {
           setMiddleName={setFormMiddleName}
           lastName={formLastName}
           setLastName={setFormLastName}
+          genderChoice={formGenderChoice}
+          setGenderChoice={setFormGenderChoice}
+          genderError={formGenderError}
           email={formEmail}
           setEmail={setFormEmail}
           phoneNumber={formPhoneNumber}

@@ -18,6 +18,7 @@ import type {
   ReferralUser,
   State,
 } from '../../types/api';
+import { choiceToGender } from '../../types/api';
 import { isPastOrTodayUtc } from '../../lib/dates';
 
 export type RegisterStep = 'personal' | 'address' | 'bank' | 'otp' | 'agent' | 'success';
@@ -52,6 +53,7 @@ export function useRegisterForm({ t, isAgentPortal, agentUserId }: UseRegisterFo
   const [password, setPassword] = useState('');
   const [referralCode, setReferralCode] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
+  const [genderChoice, setGenderChoice] = useState('');
   const [isMarriedChoice, setIsMarriedChoice] = useState('');
   const [marriageDate, setMarriageDate] = useState('');
 
@@ -175,6 +177,9 @@ export function useRegisterForm({ t, isAgentPortal, agentUserId }: UseRegisterFo
     } else if (!isPastOrTodayUtc(dateOfBirth)) {
       errors.dateOfBirth = t('register.err_dob_invalid', 'Enter a valid date of birth');
     }
+    if (!choiceToGender(genderChoice)) {
+      errors.gender = t('register.err_gender_required', 'Please select gender');
+    }
     if (!isMarriedChoice) {
       errors.isMarried = t('register.err_married_required', 'Please select an option');
     } else if (isMarriedChoice === 'Yes' && !marriageDate) {
@@ -268,6 +273,7 @@ export function useRegisterForm({ t, isAgentPortal, agentUserId }: UseRegisterFo
       ? { referralCode: referralCode.trim().toUpperCase() }
       : {}),
     dateOfBirth,
+    gender: choiceToGender(genderChoice)!,
     addressLine1: addressLine1.trim(),
     addressLine2: addressLine2.trim() || undefined,
     landmark: landmark.trim() || undefined,
@@ -415,6 +421,8 @@ export function useRegisterForm({ t, isAgentPortal, agentUserId }: UseRegisterFo
     setReferralCode,
     dateOfBirth,
     setDateOfBirth,
+    genderChoice,
+    setGenderChoice,
     isMarriedChoice,
     marriageDate,
     setMarriageDate,

@@ -19,7 +19,7 @@ import PageHeader from '../../components/ui/PageHeader';
 import Skeleton from '../../components/ui/Skeleton';
 import { useMyProfile } from '../../hooks/queries';
 import { useToastOnError } from '../../hooks/useToastOnError';
-import { formatUserName } from '../../types/api';
+import { formatGenderLabel, formatUserName } from '../../types/api';
 import type { UserStatus } from '../../types/api';
 import { formatCalendarDate, formatLocalDateTime } from '../../lib/dates';
 
@@ -228,6 +228,14 @@ const UserProfile = () => {
                   </dt>
                   <dd className="text-sm font-medium text-text mt-0.5">
                     {formatCalendarDate(profile.dateOfBirth)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-text-muted">
+                    {t('user_portal.profile.gender', 'Gender')}
+                  </dt>
+                  <dd className="text-sm font-medium text-text mt-0.5">
+                    {formatGenderLabel(profile.gender, t)}
                   </dd>
                 </div>
                 <div>

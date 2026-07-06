@@ -24,7 +24,7 @@ import {
   updateMyUserStatus,
 } from '../../services/agents.service';
 import type { ApiError, ApprovalInfo, FormSummary, ReferralUser, UserStatus } from '../../types/api';
-import { formatUserName } from '../../types/api';
+import { formatGenderLabel, formatUserName } from '../../types/api';
 import { formatCalendarDate, formatLocalDate, formatLocalDateTime } from '../../lib/dates';
 
 const statusVariant = (status: UserStatus) => {
@@ -323,6 +323,14 @@ const AgentUserDetail = () => {
               </dt>
               <dd className="text-sm font-medium text-text mt-0.5">
                 {user.dateOfBirth ? formatCalendarDate(user.dateOfBirth) : '—'}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-text-secondary">
+                {t('register.gender', 'Gender')}
+              </dt>
+              <dd className="text-sm font-medium text-text mt-0.5">
+                {formatGenderLabel(user.gender, t)}
               </dd>
             </div>
             <div>

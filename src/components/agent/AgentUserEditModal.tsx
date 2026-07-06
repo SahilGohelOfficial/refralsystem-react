@@ -8,7 +8,7 @@ import { RadioGroup } from '../forms/form/Radio';
 import { useMyUser, useUpdateMyUser } from '../../hooks/queries';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useToastOnError } from '../../hooks/useToastOnError';
-import type { ReferralUser } from '../../types/api';
+import { choiceToGender, genderToChoice, type ReferralUser } from '../../types/api';
 import { isPastOrTodayUtc, todayUtcDateString, toDateInputValue } from '../../lib/dates';
 
 interface AgentUserEditModalProps {
@@ -33,6 +33,7 @@ const AgentUserEditModal = ({ user, isOpen, onClose, onSaved }: AgentUserEditMod
   const [middleName, setMiddleName] = useState('');
   const [lastName, setLastName] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
+  const [genderChoice, setGenderChoice] = useState('');
   const [isMarriedChoice, setIsMarriedChoice] = useState('');
   const [marriageDate, setMarriageDate] = useState('');
   const [addressLine1, setAddressLine1] = useState('');
@@ -45,6 +46,7 @@ const AgentUserEditModal = ({ user, isOpen, onClose, onSaved }: AgentUserEditMod
     setMiddleName(data.middleName ?? '');
     setLastName(data.lastName);
     setDateOfBirth(toDateInputValue(data.dateOfBirth));
+    setGenderChoice(genderToChoice(data.gender));
     setIsMarriedChoice(data.isMarried ? 'Yes' : 'No');
     setMarriageDate(toDateInputValue(data.marriageDate));
     setAddressLine1(data.addressLine1 ?? '');
@@ -76,6 +78,11 @@ const AgentUserEditModal = ({ user, isOpen, onClose, onSaved }: AgentUserEditMod
     }
     if (!isPastOrTodayUtc(dateOfBirth)) {
       toast.error(t('register.err_dob_invalid', 'Enter a valid date of birth'));
+      return;
+    }
+    const gender = choiceToGender(genderChoice);
+    if (!gender) {
+      toast.error(t('register.err_gender_required', 'Please select gender'));
       return;
     }
     if (!isMarriedChoice) {
@@ -116,6 +123,7 @@ const AgentUserEditModal = ({ user, isOpen, onClose, onSaved }: AgentUserEditMod
           middleName: middleName.trim(),
           lastName: lastName.trim(),
           dateOfBirth,
+          gender,
           isMarried: isMarriedChoice === 'Yes',
           marriageDate: isMarriedChoice === 'Yes' ? marriageDate : null,
           addressLine1: addressLine1.trim(),
@@ -205,6 +213,14 @@ const AgentUserEditModal = ({ user, isOpen, onClose, onSaved }: AgentUserEditMod
               required
               disabled={submitting}
               max={todayUtcDateString()}
+            />
+            <RadioGroup
+              name="gender"
+              label={t('register.gender', 'Gender')}
+              options={['Male', 'Female']}
+              value={genderChoice}
+              onChange={(e) => setGenderChoice(e.target.value)}
+              required
             />
             <RadioGroup
               name="isMarried"
