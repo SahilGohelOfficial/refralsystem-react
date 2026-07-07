@@ -4,7 +4,7 @@ import { Lock, User } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import PageHeader from '../../components/ui/PageHeader';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../stores/authStore';
 import { formatRoleLabel } from '../../lib/roles';
 
 const AdminProfile = () => {

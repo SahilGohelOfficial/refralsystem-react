@@ -22,6 +22,9 @@ import type {
   UserStatus,
   ApprovalInfo,
   ChainWithUsers,
+  Payment,
+  PaymentScreenshotDownloadResponse,
+  UpdatePaymentStatusPayload,
 } from '../types/api';
 
 export function listAgents() {
@@ -216,4 +219,45 @@ export function getUserFormResponseFileDownloadUrl(
   return api<FormResponseFileDownloadResponse>(
     `/agents/me/users/${userId}/forms/${formId}/responses/${responseId}/files/${fieldId}/download`,
   );
+}
+
+export function getMyUserPayment(userId: string) {
+  return api<Payment | null>(`/agents/me/users/${userId}/payment`);
+}
+
+export function getMyUserPaymentScreenshotUrl(userId: string) {
+  return api<PaymentScreenshotDownloadResponse>(
+    `/agents/me/users/${userId}/payment/screenshot`,
+  );
+}
+
+export function updateMyUserPaymentStatus(
+  userId: string,
+  payload: UpdatePaymentStatusPayload,
+) {
+  return api<Payment>(`/agents/me/users/${userId}/payment/status`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getAgentUserPayment(agentId: string, userId: string) {
+  return api<Payment | null>(`/agents/${agentId}/users/${userId}/payment`);
+}
+
+export function getAgentUserPaymentScreenshotUrl(agentId: string, userId: string) {
+  return api<PaymentScreenshotDownloadResponse>(
+    `/agents/${agentId}/users/${userId}/payment/screenshot`,
+  );
+}
+
+export function updateAgentUserPaymentStatus(
+  agentId: string,
+  userId: string,
+  payload: UpdatePaymentStatusPayload,
+) {
+  return api<Payment>(`/agents/${agentId}/users/${userId}/payment/status`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
 }

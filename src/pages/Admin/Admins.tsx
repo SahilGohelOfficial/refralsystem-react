@@ -28,7 +28,7 @@ import {
   useUpdateAdmin,
   useUpdateAdminStatus,
 } from '../../hooks/queries';
-import { useConfirm } from '../../context/ConfirmContext';
+import { useConfirm } from '../../stores/confirmStore';
 import { useToastOnError } from '../../hooks/useToastOnError';
 import { formatRoleLabel } from '../../lib/roles';
 import type { Admin, AdminRole } from '../../types/api';

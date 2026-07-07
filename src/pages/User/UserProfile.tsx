@@ -23,15 +23,17 @@ import { formatGenderLabel, formatUserName } from '../../types/api';
 import type { UserStatus } from '../../types/api';
 import { formatCalendarDate, formatLocalDateTime } from '../../lib/dates';
 
-const statusVariant = (status: UserStatus) => {
+const statusVariant = (status: UserStatus | null) => {
   if (status === 'approved') return 'success' as const;
   if (status === 'rejected') return 'error' as const;
+  if (status == null) return 'neutral' as const;
   return 'warning' as const;
 };
 
-const statusLabelKey = (status: UserStatus) => {
+const statusLabelKey = (status: UserStatus | null) => {
   if (status === 'approved') return 'user_portal.profile.status_approved';
   if (status === 'rejected') return 'user_portal.profile.status_rejected';
+  if (status == null) return 'user_portal.profile.status_payment_pending';
   return 'user_portal.profile.status_pending';
 };
 

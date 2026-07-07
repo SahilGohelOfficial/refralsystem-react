@@ -11,7 +11,7 @@ import {
   toFormSchema,
   toUpdatePayload,
 } from '../../lib/forms/formMappers'
-import { useConfirm } from '../../context/ConfirmContext'
+import { useConfirm } from '../../stores/confirmStore'
 import { formatApiError } from '../../lib/api'
 import { useCreateForm, useForm, useUpdateForm } from '../../hooks/queries'
 import { useToastOnError } from '../../hooks/useToastOnError'

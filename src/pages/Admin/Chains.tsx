@@ -17,7 +17,7 @@ import {
   useDeleteChain,
   useUpdateChain,
 } from '../../hooks/queries';
-import { useConfirm } from '../../context/ConfirmContext';
+import { useConfirm } from '../../stores/confirmStore';
 import { useToastOnError } from '../../hooks/useToastOnError';
 import type { Chain } from '../../types/api';
 import { formatLocalDate } from '../../lib/dates';

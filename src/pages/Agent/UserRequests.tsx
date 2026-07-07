@@ -9,16 +9,28 @@ import Input from '../../components/ui/Input';
 import Loader from '../../components/ui/Loader';
 import { useMyUsers } from '../../hooks/queries';
 import { useToastOnError } from '../../hooks/useToastOnError';
-import type { UserStatus } from '../../types/api';
+import type { UserStatus, PaymentStatus } from '../../types/api';
 import { formatUserName } from '../../types/api';
 import { formatLocalDate } from '../../lib/dates';
 
 type RequestTab = 'pending' | 'rejected';
 
-const statusVariant = (status: UserStatus) => {
+const statusVariant = (status: UserStatus | null) => {
   if (status === 'pending') return 'warning';
   if (status === 'rejected') return 'error';
   return 'success';
+};
+
+const paymentStatusVariant = (status: PaymentStatus) => {
+  if (status === 'received') return 'success';
+  if (status === 'not_received') return 'error';
+  return 'warning';
+};
+
+const paymentStatusLabel = (status: PaymentStatus) => {
+  if (status === 'received') return 'Received';
+  if (status === 'not_received') return 'Not received';
+  return 'Pending';
 };
 
 const UserRequests = () => {
@@ -101,6 +113,7 @@ const UserRequests = () => {
                 <TableHead>{t('agent.user_requests.col_user', 'User')}</TableHead>
                 <TableHead>{t('agent.user_requests.col_phone', 'Phone')}</TableHead>
                 <TableHead>{t('agent.user_requests.col_status', 'Status')}</TableHead>
+                <TableHead>{t('agent.user_requests.col_payment', 'Payment')}</TableHead>
                 <TableHead>{t('agent.user_requests.col_registered', 'Registered')}</TableHead>
               </TableRow>
             </TableHeader>
@@ -118,8 +131,17 @@ const UserRequests = () => {
                   <TableCell>{user.phoneNumber}</TableCell>
                   <TableCell>
                     <Badge variant={statusVariant(user.status)} dot>
-                      {user.status}
+                      {user.status ?? '—'}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {user.payment ? (
+                      <Badge variant={paymentStatusVariant(user.payment.status)} dot>
+                        {paymentStatusLabel(user.payment.status)}
+                      </Badge>
+                    ) : (
+                      <span className="text-sm text-text-secondary">—</span>
+                    )}
                   </TableCell>
                   <TableCell>{formatLocalDate(user.createdAt)}</TableCell>
                 </TableRow>

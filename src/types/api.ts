@@ -183,6 +183,42 @@ export interface City {
 
 export type UserStatus = 'pending' | 'approved' | 'rejected';
 
+export type PaymentStatus = 'pending' | 'received' | 'not_received';
+
+export interface Payment {
+  id: string;
+  userId: string;
+  screenShot: string;
+  status: PaymentStatus;
+  statusUpdatedAt: string | null;
+  createdAt: string;
+}
+
+export interface PaymentSummary {
+  status: PaymentStatus;
+  statusUpdatedAt: string | null;
+  createdAt: string;
+}
+
+export interface PresignPaymentUploadPayload {
+  fileName: string;
+  contentType: string;
+  size: number;
+}
+
+export interface ConfirmPaymentPayload {
+  screenShot: string;
+}
+
+export interface UpdatePaymentStatusPayload {
+  status: 'received' | 'not_received';
+}
+
+export interface PaymentScreenshotDownloadResponse {
+  downloadUrl: string;
+  expiresIn: number;
+}
+
 export interface ReferralUser {
   id: string;
   firstName: string;
@@ -191,11 +227,12 @@ export interface ReferralUser {
   phoneNumber: string;
   email: string;
   agentId: string | null;
-  status: UserStatus;
+  status: UserStatus | null;
   note: string | null;
   referralCode: string | null;
   referredByUserId: string | null;
   referredByName: string | null;
+  payment?: PaymentSummary | null;
   dateOfBirth?: string | null;
   gender?: Gender | null;
   addressLine1?: string | null;

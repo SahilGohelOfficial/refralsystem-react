@@ -12,7 +12,7 @@ import {
 import { Card, CardContent } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../stores/authStore';
 import { formatAgentName, formatUserName } from '../../types/api';
 import { useRegisterForm, type RegisterStep } from './useRegisterForm';
 import RegisterPersonalStep from './RegisterPersonalStep';

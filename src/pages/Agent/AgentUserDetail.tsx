@@ -13,27 +13,36 @@ import Select from '../../components/ui/Select';
 import Textarea from '../../components/forms/form/Textarea';
 import PortalFormViewModal from '../../components/forms/portal/PortalFormViewModal';
 import AgentUserEditModal from '../../components/agent/AgentUserEditModal';
-import { useConfirm } from '../../context/ConfirmContext';
+import { useConfirm } from '../../stores/confirmStore';
 import { formatApiError } from '../../lib/api';
+import { queryClient } from '../../lib/queryClient';
+import { queryKeys } from '../../lib/queryKeys';
 import { useAgentUserPaths } from '../../lib/agentUserPaths';
 import {
   deleteMyUser,
   getMyUser,
   getApprovalInfo,
+  getMyUserPayment,
+  getMyUserPaymentScreenshotUrl,
   listUserForms,
+  updateMyUserPaymentStatus,
   updateMyUserStatus,
 } from '../../services/agents.service';
 import type { ApiError, ApprovalInfo, FormSummary, ReferralUser, UserStatus } from '../../types/api';
 import { formatGenderLabel, formatUserName } from '../../types/api';
 import { formatCalendarDate, formatLocalDate, formatLocalDateTime } from '../../lib/dates';
+import {
+  PaymentReviewSection,
+  usePaymentReview,
+} from '../../components/agent/PaymentReviewSection';
 
-const statusVariant = (status: UserStatus) => {
+const statusVariant = (status: UserStatus | null) => {
   if (status === 'pending') return 'warning';
   if (status === 'rejected') return 'error';
   return 'success';
 };
 
-const statusLabelKey = (status: UserStatus) => {
+const statusLabelKey = (status: UserStatus | null) => {
   if (status === 'pending') return 'agent.user_requests.status_pending';
   if (status === 'rejected') return 'agent.user_requests.status_rejected';
   return 'agent.user_requests.status_approved';
@@ -56,6 +65,17 @@ const AgentUserDetail = () => {
   const [approvalInfo, setApprovalInfo] = useState<ApprovalInfo | null>(null);
   const [selectedChainId, setSelectedChainId] = useState('');
   const [editOpen, setEditOpen] = useState(false);
+
+  const paymentReview = usePaymentReview({
+    enabled: Boolean(userId && fromUserRequests),
+    reloadKey: userId,
+    fetchPayment: () => getMyUserPayment(userId!),
+    fetchScreenshotUrl: async () => {
+      const response = await getMyUserPaymentScreenshotUrl(userId!);
+      return response.downloadUrl;
+    },
+    updateStatus: (status) => updateMyUserPaymentStatus(userId!, { status }),
+  });
 
   const fetchData = useCallback(async () => {
     if (!userId) return;
@@ -89,6 +109,10 @@ const AgentUserDetail = () => {
     );
   }, [forms, search]);
 
+  const refreshMyUserLists = () => {
+    void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUsersPrefix });
+  };
+
   const handleApprove = async () => {
     if (!user) return;
 
@@ -97,6 +121,7 @@ const AgentUserDetail = () => {
       const info = await getApprovalInfo(user.id);
       if (!info.requiresChainSelection) {
         await updateMyUserStatus(user.id, { status: 'approved' });
+        refreshMyUserLists();
         toast.success(t('agent.user_request_detail.approve_success', 'User approved successfully'));
         navigate(backListPath);
       } else {
@@ -118,6 +143,7 @@ const AgentUserDetail = () => {
     setSubmitting(true);
     try {
       await updateMyUserStatus(user.id, { status: 'approved', chainId: selectedChainId });
+      refreshMyUserLists();
       toast.success(t('agent.user_request_detail.approve_success', 'User approved successfully'));
       setApproveOpen(false);
       navigate(backListPath);
@@ -169,6 +195,7 @@ const AgentUserDetail = () => {
     setSubmitting(true);
     try {
       await updateMyUserStatus(user.id, { status: 'rejected', note });
+      refreshMyUserLists();
       toast.success(t('agent.user_request_detail.reject_success', 'User rejected successfully'));
       setRejectOpen(false);
       setRejectNote('');
@@ -197,6 +224,7 @@ const AgentUserDetail = () => {
     : (user.filledFormsCount ?? forms.filter((f) => f.isSubmitted === true).length);
   const totalCount = fromUserRequests ? 0 : (user.totalFormsCount ?? forms.length);
   const isPending = user.status === 'pending';
+  const canApprove = isPending && paymentReview.payment?.status === 'received';
 
   return (
     <div className="space-y-6">
@@ -248,6 +276,15 @@ const AgentUserDetail = () => {
                 className="gap-2"
                 onClick={() => void handleApprove()}
                 isLoading={submitting}
+                disabled={!canApprove}
+                title={
+                  !canApprove
+                    ? t(
+                        'agent.payment.approve_blocked',
+                        'Mark payment as received before approving this user.',
+                      )
+                    : undefined
+                }
               >
                 <CheckCircle size={16} />
                 {t('agent.user_request_detail.approve', 'Approve')}
@@ -280,6 +317,17 @@ const AgentUserDetail = () => {
           ) : null}
         </div>
       </div>
+
+      {fromUserRequests && isPending ? (
+        <PaymentReviewSection
+          payment={paymentReview.payment}
+          screenshotUrl={paymentReview.screenshotUrl}
+          loadingScreenshot={paymentReview.loadingScreenshot}
+          submitting={paymentReview.submitting}
+          onMarkReceived={paymentReview.handleMarkReceived}
+          onMarkNotReceived={paymentReview.handleMarkNotReceived}
+        />
+      ) : null}
 
       <Card>
         <CardHeader className="pb-3">

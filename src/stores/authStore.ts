@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { create } from 'zustand';
 import {
   adminLogin,
   agentLogin,
@@ -18,6 +18,7 @@ import { queryClient } from '../lib/queryClient';
 import { queryKeys } from '../lib/queryKeys';
 import { isAdminPortalRole } from '../lib/roles';
 import { getMyProfile } from '../services/users.service';
+import { useUserPortalStore } from './userPortalStore';
 import type { ApiError, PortalRole, Agent, UserStatus } from '../types/api';
 import { formatAgentName, formatUserName } from '../types/api';
 
@@ -27,64 +28,51 @@ export interface User {
   email: string | null;
   role: PortalRole;
   agentLoginId?: string;
-  status?: UserStatus;
+  status?: UserStatus | null;
   note?: string | null;
 }
 
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  isAuthenticated: boolean;
-  login: (identifier: string, password: string, portal: PortalRole) => Promise<void>;
-  loginWithAgentSession: (accessToken: string, agent: Agent) => void;
-  logout: () => Promise<void>;
-  refreshUserProfile: () => Promise<void>;
-}
-
 const USER_KEY = 'app_user';
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
-interface AuthProviderProps {
-  children: ReactNode;
-}
 
 const clearSession = () => {
   clearAccessToken();
   localStorage.removeItem(USER_KEY);
 };
 
-export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+const persistSession = (nextUser: User, accessToken: string) => {
+  setAccessToken(accessToken);
+  localStorage.setItem(USER_KEY, JSON.stringify(nextUser));
+  useAuthStore.setState({ user: nextUser });
+};
 
-  const handleUnauthorized = () => {
-    setUser(null);
-    clearSession();
-  };
+type AuthStore = {
+  user: User | null;
+  loading: boolean;
+  initialize: () => void;
+  login: (identifier: string, password: string, portal: PortalRole) => Promise<void>;
+  loginWithAgentSession: (accessToken: string, agent: Agent) => void;
+  logout: () => Promise<void>;
+  refreshUserProfile: () => Promise<void>;
+};
 
-  useEffect(() => {
-    setUnauthorizedHandler(handleUnauthorized);
+export const useAuthStore = create<AuthStore>((set, get) => ({
+  user: null,
+  loading: true,
+
+  initialize: () => {
+    setUnauthorizedHandler(() => {
+      set({ user: null });
+      useUserPortalStore.getState().reset();
+      clearSession();
+    });
 
     const storedUser = localStorage.getItem(USER_KEY);
     const token = getAccessToken();
 
     if (storedUser && token) {
       try {
-        const parsed = JSON.parse(storedUser) as User & { role: string };
-        if (parsed.role === 'withdrawal') {
-          parsed.role = 'user';
-          localStorage.setItem(USER_KEY, JSON.stringify(parsed));
-        }
-        setUser(parsed);
+        set({ user: JSON.parse(storedUser) as User, loading: false });
+        return;
       } catch {
         clearSession();
       }
@@ -92,20 +80,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       clearSession();
     }
 
-    setLoading(false);
-  }, []);
+    set({ loading: false });
+  },
 
-  const persistSession = (nextUser: User, accessToken: string) => {
-    setAccessToken(accessToken);
-    localStorage.setItem(USER_KEY, JSON.stringify(nextUser));
-    setUser(nextUser);
-  };
-
-  const login = async (
-    identifier: string,
-    password: string,
-    portal: PortalRole,
-  ): Promise<void> => {
+  login: async (identifier, password, portal) => {
     try {
       if (portal === 'agent') {
         const { accessToken, agent } = await agentLogin(identifier, password);
@@ -135,6 +113,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           },
           accessToken,
         );
+        useUserPortalStore.getState().setUserStatus(loginUser.status);
+        void useUserPortalStore.getState().fetchPayment();
         return;
       }
 
@@ -151,13 +131,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } catch (error) {
       throw new Error(formatApiError(error as ApiError));
     }
-  };
+  },
 
-  const logout = async (): Promise<void> => {
+  logout: async () => {
     const token = getAccessToken();
-    const currentUser = user;
+    const currentUser = get().user;
 
-    setUser(null);
+    set({ user: null });
+    useUserPortalStore.getState().reset();
     clearSession();
     queryClient.clear();
 
@@ -176,9 +157,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } catch {
       // Session already cleared locally
     }
-  };
+  },
 
-  const loginWithAgentSession = (accessToken: string, agent: Agent) => {
+  loginWithAgentSession: (accessToken, agent) => {
     persistSession(
       {
         id: agent.id,
@@ -189,9 +170,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       },
       accessToken,
     );
-  };
+  },
 
-  const refreshUserProfile = useCallback(async (): Promise<void> => {
+  refreshUserProfile: async () => {
     const token = getAccessToken();
     if (!token) return;
 
@@ -200,32 +181,42 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         queryKey: queryKeys.users.me,
         queryFn: getMyProfile,
       });
-      setUser((current) => {
-        if (!current || current.role !== 'user') return current;
-        const updated: User = {
-          ...current,
-          name: formatUserName(profile),
-          email: profile.email,
-          status: profile.status,
-          note: profile.note,
-        };
-        localStorage.setItem(USER_KEY, JSON.stringify(updated));
-        return updated;
-      });
+
+      const current = get().user;
+      if (!current || current.role !== 'user') return;
+
+      const updated: User = {
+        ...current,
+        name: formatUserName(profile),
+        email: profile.email,
+        status: profile.status,
+        note: profile.note,
+      };
+      localStorage.setItem(USER_KEY, JSON.stringify(updated));
+      set({ user: updated });
+      useUserPortalStore.getState().setUserStatus(profile.status);
+      void useUserPortalStore.getState().fetchPayment();
     } catch (error) {
       throw new Error(formatApiError(error as ApiError));
     }
-  }, []);
+  },
+}));
 
-  const value = {
+export function useAuth() {
+  const user = useAuthStore((state) => state.user);
+  const loading = useAuthStore((state) => state.loading);
+  const login = useAuthStore((state) => state.login);
+  const logout = useAuthStore((state) => state.logout);
+  const loginWithAgentSession = useAuthStore((state) => state.loginWithAgentSession);
+  const refreshUserProfile = useAuthStore((state) => state.refreshUserProfile);
+
+  return {
     user,
-    login,
-    loginWithAgentSession,
-    logout,
-    refreshUserProfile,
     loading,
     isAuthenticated: !!user && !!getAccessToken(),
+    login,
+    logout,
+    loginWithAgentSession,
+    refreshUserProfile,
   };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
+}

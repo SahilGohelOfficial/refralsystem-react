@@ -28,7 +28,7 @@
       "change_password": "Change Password"
     },
     "agent": {
-      "dashboard": "Agent Dashboard",
+      "dashboard": "Dashboard",
       "register_user": "Register User",
       "my_users": "My Users",
       "user_requests": "User Requests",
@@ -42,6 +42,7 @@
     "user_portal": {
       "dashboard": "Dashboard",
       "forms": "Forms",
+      "payment": "Payment",
       "request_withdrawal": "Request Withdrawal",
       "history": "History",
       "notifications": "Notifications",
@@ -353,12 +354,34 @@
       "col_phone": "Phone",
       "col_email": "Email",
       "col_status": "Status",
+      "col_payment": "Payment",
       "col_submitted": "Submitted",
       "col_forms": "Forms",
       "col_actions": "Actions",
       "status_pending": "Pending",
       "status_rejected": "Rejected",
       "status_approved": "Approved"
+    },
+    "payment": {
+      "title": "Payment",
+      "not_submitted": "No payment has been submitted yet.",
+      "submitted_at": "Submitted",
+      "status_updated_at": "Status updated",
+      "screenshot": "Payment screenshot",
+      "screenshot_alt": "Payment screenshot",
+      "screenshot_unavailable": "Screenshot preview unavailable.",
+      "mark_received": "Mark received",
+      "mark_not_received": "Mark not received",
+      "status_pending": "Pending",
+      "status_received": "Received",
+      "status_not_received": "Not received",
+      "confirm_received_title": "Mark payment as received?",
+      "confirm_received_message": "Confirm that you have verified this payment screenshot.",
+      "confirm_not_received_title": "Mark payment as not received?",
+      "confirm_not_received_message": "The user will be asked to upload a new payment screenshot.",
+      "received_success": "Payment marked as received",
+      "not_received_success": "Payment marked as not received",
+      "approve_blocked": "Mark payment as received before approving this user."
     },
     "user_request_detail": {
       "back": "Back",
@@ -470,6 +493,11 @@
     "status": {
       "pending": "Your request is pending",
       "pending_desc": "Your registration request is awaiting review by your assigned agent.",
+      "payment_required": "Complete your payment to submit your request",
+      "payment_required_desc": "Upload your payment screenshot to send your registration request to your agent.",
+      "payment_not_received": "Payment not verified — please upload again",
+      "payment_not_received_desc": "Your agent could not verify your payment. Upload a new screenshot to continue.",
+      "go_to_payment": "Submit payment",
       "rejected": "Your request was rejected by your agent",
       "rejected_note": "Reason:",
       "approved_once": "Your request has been approved!",

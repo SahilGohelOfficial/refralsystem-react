@@ -6,7 +6,7 @@ import Input from '../ui/Input';
 import Button from '../ui/Button';
 import { RadioGroup } from '../forms/form/Radio';
 import { useMyUser, useUpdateMyUser } from '../../hooks/queries';
-import { useConfirm } from '../../context/ConfirmContext';
+import { useConfirm } from '../../stores/confirmStore';
 import { useToastOnError } from '../../hooks/useToastOnError';
 import { choiceToGender, genderToChoice, type ReferralUser } from '../../types/api';
 import { isPastOrTodayUtc, todayUtcDateString, toDateInputValue } from '../../lib/dates';

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../stores/authStore';
 import { getDashboardPath, isAdminPortalRole } from '../../lib/roles';
 
 interface ProtectedRouteProps {

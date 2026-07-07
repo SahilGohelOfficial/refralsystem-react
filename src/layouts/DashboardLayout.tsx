@@ -3,11 +3,18 @@ import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import UserPortalStatusBanner from '../components/user-portal/UserPortalStatusBanner';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../stores/authStore';
+import { useUserPortalSync } from '../hooks/useUserPortalSync';
 
 const DashboardLayout = () => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const { user, refreshUserProfile } = useAuth();
+
+  useUserPortalSync({
+    enabled: user?.role === 'user',
+    userId: user?.id,
+    userStatus: user?.status,
+  });
 
   useEffect(() => {
     if (user?.role === 'user') {

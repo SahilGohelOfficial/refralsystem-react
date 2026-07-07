@@ -12,8 +12,11 @@ import {
   ShieldCheck,
   Link2,
   ClipboardList,
+  Wallet,
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../stores/authStore';
+import { useMyUsers } from '../hooks/queries';
+import { selectNeedsPaymentSubmission, useUserPortalStore } from '../stores/userPortalStore';
 
 const adminNavItems = [
   { path: '/admin/dashboard', labelKey: 'nav.admin.dashboard', icon: LayoutDashboard },
@@ -27,7 +30,12 @@ const adminNavItems = [
 const agentNavItems = [
   { path: '/agent/dashboard', labelKey: 'nav.agent.dashboard', icon: LayoutDashboard },
   { path: '/agent/users', labelKey: 'nav.agent.my_users', icon: Users },
-  { path: '/agent/user-requests', labelKey: 'nav.agent.user_requests', icon: ClipboardList },
+  {
+    path: '/agent/user-requests',
+    labelKey: 'nav.agent.user_requests',
+    icon: ClipboardList,
+    pendingCount: true,
+  },
   { path: '/agent/your-chains', labelKey: 'nav.agent.your_chains', icon: Link2 },
   { path: '/agent/forms', labelKey: 'nav.agent.forms', icon: FileText },
   { path: '/agent/profile', labelKey: 'nav.agent.profile', icon: Users },
@@ -36,6 +44,7 @@ const agentNavItems = [
 
 const userNavItems = [
   { path: '/user/dashboard', labelKey: 'nav.user_portal.dashboard', icon: LayoutDashboard },
+  { path: '/user/payment', labelKey: 'nav.user_portal.payment', icon: Wallet, paymentRequired: true },
   { path: '/user/forms', labelKey: 'nav.user_portal.forms', icon: FileText },
   { path: '/user/profile', labelKey: 'nav.user_portal.profile', icon: Users },
   { path: '/user/settings', labelKey: 'nav.user_portal.settings', icon: Settings },
@@ -49,6 +58,10 @@ interface SidebarProps {
 const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { user, logout } = useAuth();
+  const needsPaymentSubmission = useUserPortalStore(selectNeedsPaymentSubmission);
+  const isAgent = user?.role === 'agent';
+  const { data: pendingUsers = [] } = useMyUsers('pending', isAgent);
+  const pendingUserCount = pendingUsers.length;
   const { t } = useTranslation();
 
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
@@ -60,7 +73,9 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
     navItems = agentNavItems;
     title = 'Agent Portal';
   } else if (user?.role === 'user') {
-    navItems = userNavItems;
+    navItems = userNavItems.filter(
+      (item) => !item.paymentRequired || needsPaymentSubmission,
+    );
     title = 'User Portal';
   } else {
     navItems =
@@ -120,22 +135,51 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
               Menu
             </p>
           )}
-          {navItems.map((item) => (
+          {navItems.map((item) => {
+            const showPendingCount =
+              isAgent && 'pendingCount' in item && item.pendingCount && pendingUserCount > 0;
+            const pendingCountLabel =
+              pendingUserCount > 99 ? '99+' : String(pendingUserCount);
+
+            return (
             <NavLink
               key={item.path}
               to={item.path}
               onClick={() => setIsMobileOpen(false)}
-              title={isCollapsed ? t(item.labelKey) : undefined}
+              title={
+                isCollapsed
+                  ? showPendingCount
+                    ? `${t(item.labelKey)} (${pendingCountLabel})`
+                    : t(item.labelKey)
+                  : undefined
+              }
               className={({ isActive }) =>
-                `nav-item ${isActive ? 'nav-item-active' : 'nav-item-inactive'} ${
+                `nav-item w-full ${isActive ? 'nav-item-active' : 'nav-item-inactive'} ${
                   isCollapsed ? 'justify-center px-2' : ''
                 }`
               }
             >
-              <item.icon size={18} className="shrink-0" strokeWidth={1.75} />
-              {!isCollapsed && <span className="truncate">{t(item.labelKey)}</span>}
+              <span className="relative shrink-0">
+                <item.icon size={18} strokeWidth={1.75} />
+                {isCollapsed && showPendingCount ? (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-warning text-[10px] font-bold leading-4 text-center text-background">
+                    {pendingCountLabel}
+                  </span>
+                ) : null}
+              </span>
+              {!isCollapsed && (
+                <>
+                  <span className="truncate">{t(item.labelKey)}</span>
+                  {showPendingCount ? (
+                    <span className="ml-auto min-w-[20px] h-5 px-1.5 rounded-full bg-warning/15 text-warning text-[11px] font-semibold leading-5 text-center border border-warning/30">
+                      {pendingCountLabel}
+                    </span>
+                  ) : null}
+                </>
+              )}
             </NavLink>
-          ))}
+            );
+          })}
         </nav>
 
         <div className="p-3 border-t border-border shrink-0">

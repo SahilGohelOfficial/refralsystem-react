@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Menu, Lock, User } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../stores/authStore';
 import { formatRoleLabel, isAdminPortalRole } from '../lib/roles';
 import type { PortalRole } from '../types/api';
 

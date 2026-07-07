@@ -22,7 +22,7 @@ import PageHeader from '../../components/ui/PageHeader';
 import Select from '../../components/ui/Select';
 import { RadioGroup } from '../../components/forms/form/Radio';
 import Skeleton from '../../components/ui/Skeleton';
-import { useConfirm } from '../../context/ConfirmContext';
+import { useConfirm } from '../../stores/confirmStore';
 import { getAgentProfile, updateAgentProfile } from '../../services/agents.service';
 import { listCities, listStates } from '../../services/location.service';
 import { formatApiError } from '../../lib/api';

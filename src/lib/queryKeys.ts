@@ -18,7 +18,9 @@ export const queryKeys = {
       ['agents', agentId, 'users', userId, 'forms', formId] as const,
     chainReferrals: (agentId: string) => ['agents', agentId, 'chain-referrals'] as const,
     myProfile: ['agents', 'me', 'profile'] as const,
-    myUsers: (status?: UserStatus) => ['agents', 'me', 'users', status ?? 'all'] as const,
+    myUsersPrefix: ['agents', 'me', 'users'] as const,
+    myUsers: (status?: UserStatus) =>
+      [...queryKeys.agents.myUsersPrefix, status ?? 'all'] as const,
     myUser: (userId: string) => ['agents', 'me', 'users', userId] as const,
     myChainReferrals: ['agents', 'me', 'chain-referrals'] as const,
     approvalInfo: (userId: string) => ['agents', 'me', 'users', userId, 'approval-info'] as const,

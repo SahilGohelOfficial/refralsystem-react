@@ -1,8 +1,8 @@
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
-import { AuthProvider } from './context/AuthContext';
-import { ConfirmProvider } from './context/ConfirmContext';
+import AuthBootstrap from './components/AuthBootstrap';
+import ConfirmModal from './components/ConfirmModal';
 import { queryClient } from './lib/queryClient';
 import AppRoutes from './routes/AppRoutes';
 
@@ -10,10 +10,9 @@ function App() {
   return (
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ConfirmProvider>
-          <AppRoutes />
-        </ConfirmProvider>
+        <AuthBootstrap />
+        <AppRoutes />
+        <ConfirmModal />
         <Toaster
           position="top-right"
           gutter={12}
@@ -44,7 +43,6 @@ function App() {
             },
           }}
         />
-      </AuthProvider>
       </QueryClientProvider>
     </BrowserRouter>
   );

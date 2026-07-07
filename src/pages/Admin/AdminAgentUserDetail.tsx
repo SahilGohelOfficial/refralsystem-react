@@ -16,14 +16,23 @@ import { formatApiError } from '../../lib/api';
 import type { ApiError, UserStatus } from '../../types/api';
 import { formatGenderLabel, formatUserName } from '../../types/api';
 import { formatCalendarDate, formatLocalDate, formatLocalDateTime } from '../../lib/dates';
+import {
+  getAgentUserPayment,
+  getAgentUserPaymentScreenshotUrl,
+  updateAgentUserPaymentStatus,
+} from '../../services/agents.service';
+import {
+  PaymentReviewSection,
+  usePaymentReview,
+} from '../../components/agent/PaymentReviewSection';
 
-const statusVariant = (status: UserStatus) => {
+const statusVariant = (status: UserStatus | null) => {
   if (status === 'pending') return 'warning';
   if (status === 'rejected') return 'error';
   return 'success';
 };
 
-const statusLabelKey = (status: UserStatus) => {
+const statusLabelKey = (status: UserStatus | null) => {
   if (status === 'pending') return 'agent.user_requests.status_pending';
   if (status === 'rejected') return 'agent.user_requests.status_rejected';
   return 'agent.user_requests.status_approved';
@@ -39,6 +48,19 @@ const AdminAgentUserDetail = () => {
 
   const { data: user, isLoading: loadingUser, error: userError } = useAgentUser(agentId, userId);
   const showForms = user != null && user.status !== 'pending';
+  const showPaymentReview = user != null && user.status === 'pending';
+
+  const paymentReview = usePaymentReview({
+    enabled: showPaymentReview,
+    reloadKey: `${agentId}:${userId}`,
+    fetchPayment: () => getAgentUserPayment(agentId, userId),
+    fetchScreenshotUrl: async () => {
+      const response = await getAgentUserPaymentScreenshotUrl(agentId, userId);
+      return response.downloadUrl;
+    },
+    updateStatus: (status) => updateAgentUserPaymentStatus(agentId, userId, { status }),
+  });
+
   const { data: forms = [], isLoading: loadingForms, error: formsError } = useAgentUserForms(
     agentId,
     userId,
@@ -106,6 +128,17 @@ const AdminAgentUserDetail = () => {
           </div>
         </div>
       </div>
+
+      {showPaymentReview ? (
+        <PaymentReviewSection
+          payment={paymentReview.payment}
+          screenshotUrl={paymentReview.screenshotUrl}
+          loadingScreenshot={paymentReview.loadingScreenshot}
+          submitting={paymentReview.submitting}
+          onMarkReceived={paymentReview.handleMarkReceived}
+          onMarkNotReceived={paymentReview.handleMarkNotReceived}
+        />
+      ) : null}
 
       <Card>
         <CardHeader className="pb-3">

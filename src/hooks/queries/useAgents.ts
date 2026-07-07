@@ -84,10 +84,11 @@ export function useAgentChainReferrals(agentId: string, enabled = true) {
   });
 }
 
-export function useMyUsers(status?: UserStatus) {
+export function useMyUsers(status?: UserStatus, enabled = true) {
   return useQuery({
     queryKey: queryKeys.agents.myUsers(status),
     queryFn: () => listMyUsers(status),
+    enabled,
   });
 }
 
@@ -196,7 +197,7 @@ export function useUpdateMyUser() {
     mutationFn: ({ id, payload }: { id: string; payload: UpdateUserPayload }) =>
       updateMyUser(id, payload),
     onSuccess: (_data, { id }) => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUsers() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUsersPrefix });
       void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUser(id) });
     },
     onError: (error) => toast.error(formatApiError(error as ApiError)),
@@ -208,7 +209,7 @@ export function useDeleteMyUser() {
   return useMutation({
     mutationFn: (id: string) => deleteMyUser(id),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUsers() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUsersPrefix });
     },
     onError: (error) => toast.error(formatApiError(error as ApiError)),
   });
@@ -220,7 +221,7 @@ export function useUpdateMyUserStatus() {
     mutationFn: ({ id, payload }: { id: string; payload: UpdateUserStatusPayload }) =>
       updateMyUserStatus(id, payload),
     onSuccess: (_data, { id }) => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUsers() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUsersPrefix });
       void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUser(id) });
     },
     onError: (error) => toast.error(formatApiError(error as ApiError)),

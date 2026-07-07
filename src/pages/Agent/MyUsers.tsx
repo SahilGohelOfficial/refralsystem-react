@@ -10,7 +10,7 @@ import Input from '../../components/ui/Input';
 import Loader from '../../components/ui/Loader';
 import AgentUserEditModal from '../../components/agent/AgentUserEditModal';
 import { useDeleteMyUser, useMyUsers } from '../../hooks/queries';
-import { useConfirm } from '../../context/ConfirmContext';
+import { useConfirm } from '../../stores/confirmStore';
 import { useToastOnError } from '../../hooks/useToastOnError';
 import type { ReferralUser } from '../../types/api';
 import { formatUserName } from '../../types/api';

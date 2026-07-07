@@ -2,7 +2,11 @@ import { api } from '../lib/api';
 import type {
   Agent,
   AssignAgentPayload,
+  ConfirmPaymentPayload,
   CreateUserPayload,
+  Payment,
+  PresignFormUploadResponse,
+  PresignPaymentUploadPayload,
   ReferralUser,
 } from '../types/api';
 
@@ -42,4 +46,22 @@ export function assignAgent(userId: string, payload: AssignAgentPayload) {
 
 export function getMyProfile() {
   return api<ReferralUser>('/users/me');
+}
+
+export function getMyPayment() {
+  return api<Payment | null>('/users/me/payment');
+}
+
+export function presignPaymentUpload(payload: PresignPaymentUploadPayload) {
+  return api<PresignFormUploadResponse>('/users/me/payment/presign', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function confirmPayment(payload: ConfirmPaymentPayload) {
+  return api<Payment>('/users/me/payment/confirm', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 }

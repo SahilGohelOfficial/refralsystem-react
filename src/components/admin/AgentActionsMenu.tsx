@@ -20,7 +20,7 @@ import {
   useUpdateAgentStatus,
 } from '../../hooks/queries';
 import { useLocationSelect } from '../../hooks/useLocationSelect';
-import { useConfirm } from '../../context/ConfirmContext';
+import { useConfirm } from '../../stores/confirmStore';
 import type { Agent, AgentCredentials } from '../../types/api';
 import { formatAgentName, choiceToGender, genderToChoice } from '../../types/api';
 
