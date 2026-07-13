@@ -25,19 +25,21 @@ import {
 import { formatApiError } from '../../lib/api';
 import { queryKeys } from '../../lib/queryKeys';
 import type {
+  AgentStatus,
   ApiError,
   CreateAgentPayload,
   UpdateAgentPayload,
   UpdateAgentProfilePayload,
+  UpdateAgentStatusPayload,
   UpdateUserPayload,
   UpdateUserStatusPayload,
   UserStatus,
 } from '../../types/api';
 
-export function useAgents() {
+export function useAgents(status?: AgentStatus) {
   return useQuery({
-    queryKey: queryKeys.agents.all,
-    queryFn: listAgents,
+    queryKey: queryKeys.agents.list(status),
+    queryFn: () => listAgents(status),
   });
 }
 
@@ -163,10 +165,15 @@ export function useDeleteAgent() {
 export function useUpdateAgentStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
-      updateAgentStatus(id, isActive),
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: UpdateAgentStatusPayload;
+    }) => updateAgentStatus(id, payload),
     onSuccess: (_data, { id }) => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.agents.all });
+      void queryClient.invalidateQueries({ queryKey: ['agents'] });
       void queryClient.invalidateQueries({ queryKey: queryKeys.agents.detail(id) });
     },
     onError: (error) => toast.error(formatApiError(error as ApiError)),

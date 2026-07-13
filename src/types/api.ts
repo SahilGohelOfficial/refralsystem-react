@@ -39,6 +39,8 @@ export interface Admin {
   updatedAt: string;
 }
 
+export type AgentStatus = 'pending' | 'active' | 'inactive' | 'rejected';
+
 export interface Agent {
   id: string;
   agentLoginId: string;
@@ -48,7 +50,10 @@ export interface Agent {
   gender?: Gender | null;
   phoneNumber: string | null;
   email: string | null;
-  isActive: boolean;
+  status: AgentStatus;
+  note: string | null;
+  statusChangedById: string | null;
+  statusChangedAt: string | null;
   state: string | null;
   city: string | null;
   lastLogin: string | null;
@@ -56,6 +61,16 @@ export interface Agent {
   createdAt: string;
   updatedAt: string;
   bankDetails?: BankDetails | null;
+}
+
+export interface UpdateAgentStatusPayload {
+  status: Exclude<AgentStatus, 'pending'>;
+  note?: string;
+}
+
+export interface AgentSignUpResponse {
+  message: string;
+  agent: Agent;
 }
 
 export interface BankDetails {

@@ -1,4 +1,4 @@
-import type { SubmissionUserType, UserStatus } from '../types/api';
+import type { AgentStatus, SubmissionUserType, UserStatus } from '../types/api';
 
 export const queryKeys = {
   admins: {
@@ -7,6 +7,7 @@ export const queryKeys = {
   },
   agents: {
     all: ['agents'] as const,
+    list: (status?: AgentStatus) => ['agents', 'list', status ?? 'all'] as const,
     detail: (id: string) => ['agents', id] as const,
     users: (agentId: string, status?: UserStatus) =>
       ['agents', agentId, 'users', status ?? 'all'] as const,

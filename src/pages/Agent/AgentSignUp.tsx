@@ -24,7 +24,7 @@ import type { ApiError, City, State } from '../../types/api';
 import { choiceToGender } from '../../types/api';
 import { normalizePhone } from '../RegisterUser/useRegisterForm';
 
-type Step = 'details' | 'otp' | 'bank';
+type Step = 'details' | 'otp' | 'bank' | 'success';
 
 const IFSC_PATTERN = /^[A-Z]{4}0[A-Z0-9]{6}$/i;
 
@@ -37,12 +37,13 @@ const STEPS: { id: Step; labelKey: string; fallback: string; icon: typeof UserPl
 const AgentSignUp = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { isAuthenticated, user, loginWithAgentSession } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   const [step, setStep] = useState<Step>('details');
   const [submitting, setSubmitting] = useState(false);
   const [sendingOtp, setSendingOtp] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
+  const [registeredLoginId, setRegisteredLoginId] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const [firstName, setFirstName] = useState('');
@@ -251,7 +252,7 @@ const AgentSignUp = () => {
     const { state, city } = resolveLocationNames();
     setSubmitting(true);
     try {
-      const { accessToken, agent } = await agentSignUp({
+      const { message, agent } = await agentSignUp({
         firstName: firstName.trim(),
         middleName: middleName.trim() || undefined,
         lastName: lastName.trim(),
@@ -267,9 +268,15 @@ const AgentSignUp = () => {
         ifscCode: ifscCode.toUpperCase(),
         otp,
       });
-      loginWithAgentSession(accessToken, agent);
-      toast.success(t('agent.signup.success', 'Account created successfully'));
-      navigate('/agent/dashboard');
+      setRegisteredLoginId(agent.agentLoginId);
+      setStep('success');
+      toast.success(
+        message ||
+          t(
+            'agent.signup.pending_success',
+            'Registration submitted for admin approval',
+          ),
+      );
     } catch (error) {
       toast.error(formatApiError(error as ApiError));
     } finally {
@@ -303,42 +310,76 @@ const AgentSignUp = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          {STEPS.map((s, index) => {
-            const Icon = s.icon;
-            const isActive = s.id === step;
-            const isDone = stepIndex > index;
-            return (
-              <div key={s.id} className="flex flex-1 items-center gap-2 min-w-0">
-                <div
-                  className={`flex items-center justify-center size-8 shrink-0 rounded-full border text-xs font-medium transition-colors ${
-                    isActive
-                      ? 'border-primary bg-primary text-background'
-                      : isDone
-                        ? 'border-primary/50 bg-primary/10 text-primary'
-                        : 'border-border bg-surface text-text-secondary'
-                  }`}
-                >
-                  {isDone ? <CheckCircle2 size={14} /> : <Icon size={14} />}
+        {step !== 'success' ? (
+          <div className="flex items-center gap-2">
+            {STEPS.map((s, index) => {
+              const Icon = s.icon;
+              const isActive = s.id === step;
+              const isDone = stepIndex > index;
+              return (
+                <div key={s.id} className="flex flex-1 items-center gap-2 min-w-0">
+                  <div
+                    className={`flex items-center justify-center size-8 shrink-0 rounded-full border text-xs font-medium transition-colors ${
+                      isActive
+                        ? 'border-primary bg-primary text-background'
+                        : isDone
+                          ? 'border-primary/50 bg-primary/10 text-primary'
+                          : 'border-border bg-surface text-text-secondary'
+                    }`}
+                  >
+                    {isDone ? <CheckCircle2 size={14} /> : <Icon size={14} />}
+                  </div>
+                  <span
+                    className={`hidden sm:block text-xs truncate ${
+                      isActive ? 'text-text font-medium' : 'text-text-secondary'
+                    }`}
+                  >
+                    {t(s.labelKey, s.fallback)}
+                  </span>
+                  {index < STEPS.length - 1 && (
+                    <div className="hidden sm:block flex-1 h-px bg-border ml-1" />
+                  )}
                 </div>
-                <span
-                  className={`hidden sm:block text-xs truncate ${
-                    isActive ? 'text-text font-medium' : 'text-text-secondary'
-                  }`}
-                >
-                  {t(s.labelKey, s.fallback)}
-                </span>
-                {index < STEPS.length - 1 && (
-                  <div className="hidden sm:block flex-1 h-px bg-border ml-1" />
-                )}
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        ) : null}
 
         <Card>
           <CardContent className="pt-2">
-            {step === 'details' ? (
+            {step === 'success' ? (
+              <div className="space-y-5 text-center py-4">
+                <div className="inline-flex items-center justify-center size-14 rounded-full bg-warning-muted text-warning">
+                  <CheckCircle2 size={28} />
+                </div>
+                <div className="space-y-2">
+                  <h2 className="text-xl font-semibold text-text">
+                    {t('agent.signup.pending_title', 'Awaiting admin approval')}
+                  </h2>
+                  <p className="text-sm text-text-secondary max-w-md mx-auto">
+                    {t(
+                      'agent.signup.pending_body',
+                      'Your registration was submitted successfully. An admin will review your account. You can log in once it is approved.',
+                    )}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border bg-surface/50 px-4 py-3 text-left max-w-sm mx-auto">
+                  <p className="text-xs text-text-muted uppercase tracking-wide">
+                    {t('agent.signup.login_id_label', 'Your login ID')}
+                  </p>
+                  <p className="text-base font-mono font-semibold text-text mt-1">
+                    {registeredLoginId}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  className="w-full sm:w-auto"
+                  onClick={() => navigate('/agent/login')}
+                >
+                  {t('agent.signup.go_login', 'Go to login')}
+                </Button>
+              </div>
+            ) : step === 'details' ? (
               <form onSubmit={handleDetailsContinue} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <Input

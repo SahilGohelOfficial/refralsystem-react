@@ -21,6 +21,7 @@ import type { ApiError, ReferralUser, UserStatus } from '../../types/api';
 import { formatAgentName, formatGenderLabel, formatUserName } from '../../types/api';
 import { formatLocation } from '../../lib/location';
 import { formatLocalDate, formatLocalDateTime } from '../../lib/dates';
+import { agentStatusBadgeVariant, agentStatusLabel } from '../../lib/labels';
 
 type UserTab = 'approved' | 'pending' | 'rejected';
 type DetailTab = UserTab | 'chains';
@@ -123,8 +124,8 @@ const AgentDetail = () => {
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-2xl font-bold text-text truncate">{formatAgentName(agent)}</h1>
-                <Badge variant={agent.isActive ? 'success' : 'neutral'}>
-                  {agent.isActive ? 'Active' : 'Inactive'}
+                <Badge variant={agentStatusBadgeVariant(agent.status)} dot>
+                  {agentStatusLabel(agent.status)}
                 </Badge>
               </div>
               <p className="text-sm text-text-secondary font-mono mt-1">{agent.agentLoginId}</p>
@@ -183,6 +184,28 @@ const AgentDetail = () => {
               <dt className="text-xs text-text-secondary">Location</dt>
               <dd className="text-sm font-medium text-text mt-0.5">{formatLocation(agent.state, agent.city)}</dd>
             </div>
+            <div>
+              <dt className="text-xs text-text-secondary">Status</dt>
+              <dd className="text-sm font-medium text-text mt-0.5">
+                <Badge variant={agentStatusBadgeVariant(agent.status)} dot>
+                  {agentStatusLabel(agent.status)}
+                </Badge>
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-text-secondary">Status changed</dt>
+              <dd className="text-sm font-medium text-text mt-0.5">
+                {formatLocalDateTime(agent.statusChangedAt)}
+              </dd>
+            </div>
+            {agent.note ? (
+              <div className="sm:col-span-2 lg:col-span-3">
+                <dt className="text-xs text-text-secondary">Note</dt>
+                <dd className="text-sm font-medium text-text mt-0.5 whitespace-pre-wrap">
+                  {agent.note}
+                </dd>
+              </div>
+            ) : null}
             <div>
               <dt className="text-xs text-text-secondary">Last login</dt>
               <dd className="text-sm font-medium text-text mt-0.5">

@@ -2,6 +2,8 @@ import { api } from '../lib/api';
 import type {
   Agent,
   AgentLoginResponse,
+  AgentSignUpResponse,
+  AgentStatus,
   CreateAgentPayload,
   CreateAgentResponse,
   Form,
@@ -16,6 +18,7 @@ import type {
   SubmitFormResponsePayload,
   UpdateAgentPayload,
   UpdateAgentProfilePayload,
+  UpdateAgentStatusPayload,
   ReferralUser,
   UpdateUserPayload,
   UpdateUserStatusPayload,
@@ -27,8 +30,9 @@ import type {
   UpdatePaymentStatusPayload,
 } from '../types/api';
 
-export function listAgents() {
-  return api<Agent[]>('/agents');
+export function listAgents(status?: AgentStatus) {
+  const query = status ? `?status=${status}` : '';
+  return api<Agent[]>(`/agents${query}`);
 }
 
 export function getAgent(id: string) {
@@ -92,10 +96,10 @@ export function deleteAgent(id: string) {
   return api<MessageResponse>(`/agents/${id}`, { method: 'DELETE' });
 }
 
-export function updateAgentStatus(id: string, isActive: boolean) {
+export function updateAgentStatus(id: string, payload: UpdateAgentStatusPayload) {
   return api<Agent>(`/agents/${id}/status`, {
     method: 'PATCH',
-    body: JSON.stringify({ isActive }),
+    body: JSON.stringify(payload),
   });
 }
 
@@ -115,7 +119,7 @@ export function sendAgentRegistrationOtp(phoneNumber: string) {
 }
 
 export function agentSignUp(payload: SignUpAgentPayload) {
-  return api<AgentLoginResponse>('/agents/sign-up', {
+  return api<AgentSignUpResponse>('/agents/sign-up', {
     method: 'POST',
     body: JSON.stringify(payload),
     token: null,

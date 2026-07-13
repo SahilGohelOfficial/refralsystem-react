@@ -17,12 +17,24 @@ import { useAgents, useCreateAgent } from '../../hooks/queries';
 import { useLocationSelect } from '../../hooks/useLocationSelect';
 import { useToastOnError } from '../../hooks/useToastOnError';
 import { formatLocation } from '../../lib/location';
-import type { AgentCredentials } from '../../types/api';
+import { agentStatusBadgeVariant, agentStatusLabel } from '../../lib/labels';
+import type { AgentCredentials, AgentStatus } from '../../types/api';
 import { formatAgentName, choiceToGender } from '../../types/api';
+
+const STATUS_TABS: { id: AgentStatus | 'all'; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'pending', label: 'Pending' },
+  { id: 'active', label: 'Active' },
+  { id: 'inactive', label: 'Inactive' },
+  { id: 'rejected', label: 'Rejected' },
+];
 
 const Agents = () => {
   const navigate = useNavigate();
-  const { data: agents = [], isLoading, error } = useAgents();
+  const [statusFilter, setStatusFilter] = useState<AgentStatus | 'all'>('all');
+  const { data: agents = [], isLoading, error } = useAgents(
+    statusFilter === 'all' ? undefined : statusFilter,
+  );
   const createAgentMutation = useCreateAgent();
   useToastOnError(error);
 
@@ -117,7 +129,26 @@ const Agents = () => {
       />
 
       <Card padding="none" className="data-card">
-        <div className="table-toolbar">
+        <div className="table-toolbar flex-col items-stretch sm:items-center gap-3">
+          <div className="flex flex-wrap gap-2">
+            {STATUS_TABS.map((tab) => {
+              const selected = statusFilter === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setStatusFilter(tab.id)}
+                  className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                    selected
+                      ? 'border-primary/40 bg-primary-muted text-primary'
+                      : 'border-border bg-surface text-text-secondary hover:border-border-strong hover:text-text'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
           <div className="w-full sm:max-w-md">
             <Input
               icon={Search}
@@ -132,7 +163,11 @@ const Agents = () => {
           <Loader text="Loading agents..." />
         ) : filteredAgents.length === 0 ? (
           <div className="py-16 text-center text-sm text-text-secondary">
-            {search ? 'No agents match your search.' : 'No agents yet. Create your first agent.'}
+            {search
+              ? 'No agents match your search.'
+              : statusFilter === 'pending'
+                ? 'No pending agent requests.'
+                : 'No agents yet. Create your first agent.'}
           </div>
         ) : (
           <Table>
@@ -164,8 +199,8 @@ const Agents = () => {
                   <TableCell>{formatLocation(agent.state, agent.city)}</TableCell>
                   <TableCell>{agent.phoneNumber ?? '—'}</TableCell>
                   <TableCell>
-                    <Badge variant={agent.isActive ? 'success' : 'neutral'} dot>
-                      {agent.isActive ? 'Active' : 'Inactive'}
+                    <Badge variant={agentStatusBadgeVariant(agent.status)} dot>
+                      {agentStatusLabel(agent.status)}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>

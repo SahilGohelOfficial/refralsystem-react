@@ -29,6 +29,7 @@ import { formatApiError } from '../../lib/api';
 import { choiceToGender, formatAgentName, genderToChoice } from '../../types/api';
 import type { Agent, ApiError, City, State } from '../../types/api';
 import { formatLocalDate, formatLocalDateTime } from '../../lib/dates';
+import { agentStatusBadgeVariant, agentStatusLabel } from '../../lib/labels';
 
 function normalizePhone(value: string): string {
   return value.replace(/\D/g, '').slice(0, 10);
@@ -273,10 +274,8 @@ const AgentProfile = () => {
                 <h2 className="text-xl font-semibold text-text tracking-tight">
                   {formatAgentName(profile)}
                 </h2>
-                <Badge variant={profile.isActive ? 'success' : 'neutral'} dot>
-                  {profile.isActive
-                    ? t('agent.profile.active', 'Active')
-                    : t('agent.profile.inactive', 'Inactive')}
+                <Badge variant={agentStatusBadgeVariant(profile.status)} dot>
+                  {t(`agent.profile.status_${profile.status}`, agentStatusLabel(profile.status))}
                 </Badge>
               </div>
               <p className="text-sm text-text-secondary font-mono mt-1">

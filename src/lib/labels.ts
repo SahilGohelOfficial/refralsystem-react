@@ -1,5 +1,38 @@
+import type { AgentStatus } from '../types/api';
+
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function agentStatusLabel(status: AgentStatus): string {
+  switch (status) {
+    case 'pending':
+      return 'Pending';
+    case 'active':
+      return 'Active';
+    case 'inactive':
+      return 'Inactive';
+    case 'rejected':
+      return 'Rejected';
+    default:
+      return status;
+  }
+}
+
+export function agentStatusBadgeVariant(
+  status: AgentStatus,
+): 'success' | 'warning' | 'error' | 'neutral' {
+  switch (status) {
+    case 'active':
+      return 'success';
+    case 'pending':
+      return 'warning';
+    case 'rejected':
+      return 'error';
+    case 'inactive':
+    default:
+      return 'neutral';
+  }
+}
 
 export function isUuid(value: string): boolean {
   return UUID_REGEX.test(value);
