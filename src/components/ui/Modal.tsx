@@ -69,12 +69,12 @@ const Modal = ({
         className={`relative w-full ${maxWidthClasses[maxWidth]} bg-card border border-border rounded-xl shadow-xl flex flex-col max-h-[calc(100vh-2rem)]`}
       >
         <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-border shrink-0">
-          <div className="min-w-0">
-            <h3 id="modal-title" className="text-base font-semibold text-text">
+          <div className="min-w-0 text-left">
+            <h3 id="modal-title" className="text-base font-semibold text-text text-left">
               {title}
             </h3>
             {description && (
-              <p className="text-sm text-text-secondary mt-0.5">{description}</p>
+              <p className="text-sm text-text-secondary mt-0.5 text-left">{description}</p>
             )}
           </div>
           <button
@@ -86,7 +86,7 @@ const Modal = ({
           </button>
         </div>
 
-        <div className="p-5 overflow-y-auto">{children}</div>
+        <div className="p-5 overflow-y-auto text-left">{children}</div>
 
         {footer && (
           <div className="px-5 py-4 border-t border-border bg-surface/30 shrink-0">

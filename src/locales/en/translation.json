@@ -215,6 +215,8 @@
     "verify_continue": "Verify & Continue",
     "err_dob_required": "Date of birth is required",
     "err_dob_invalid": "Enter a valid date of birth",
+    "err_dob_min_age": "You must be at least 18 years old",
+    "date_placeholder": "Select date",
     "err_gender_required": "Please select gender",
     "err_married_required": "Please select an option",
     "err_marriage_date_required": "Marriage date is required when married",

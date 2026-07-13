@@ -19,7 +19,7 @@ import type {
   State,
 } from '../../types/api';
 import { choiceToGender } from '../../types/api';
-import { isPastOrTodayUtc } from '../../lib/dates';
+import { isAtLeastAgeUtc, isPastOrTodayUtc } from '../../lib/dates';
 
 export type RegisterStep = 'personal' | 'address' | 'bank' | 'otp' | 'agent' | 'success';
 
@@ -176,6 +176,11 @@ export function useRegisterForm({ t, isAgentPortal, agentUserId }: UseRegisterFo
       errors.dateOfBirth = t('register.err_dob_required', 'Date of birth is required');
     } else if (!isPastOrTodayUtc(dateOfBirth)) {
       errors.dateOfBirth = t('register.err_dob_invalid', 'Enter a valid date of birth');
+    } else if (!isAtLeastAgeUtc(dateOfBirth, 18)) {
+      errors.dateOfBirth = t(
+        'register.err_dob_min_age',
+        'You must be at least 18 years old',
+      );
     }
     if (!choiceToGender(genderChoice)) {
       errors.gender = t('register.err_gender_required', 'Please select gender');

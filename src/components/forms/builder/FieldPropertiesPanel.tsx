@@ -1,5 +1,6 @@
 import type { FormField, FieldValidation } from '../../../types/form'
 import { FIELD_TYPES_WITH_OPTIONS, FIELD_TYPE_LABELS } from '../../../types/form'
+import DatePicker from '../../ui/DatePicker'
 
 type FieldPropertiesPanelProps = {
   field: FormField | null
@@ -264,21 +265,21 @@ export default function FieldPropertiesPanel({
                   })
                 }
               />
-              <TextInput
+              <DatePicker
                 label="Min date"
-                type="date"
                 value={validation.minDate ?? ''}
                 onChange={(minDate) =>
                   onUpdateValidation({ minDate: minDate || undefined })
                 }
+                placeholder="Select min date"
               />
-              <TextInput
+              <DatePicker
                 label="Max date"
-                type="date"
                 value={validation.maxDate ?? ''}
                 onChange={(maxDate) =>
                   onUpdateValidation({ maxDate: maxDate || undefined })
                 }
+                placeholder="Select max date"
               />
             </>
           )}

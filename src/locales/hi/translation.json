@@ -212,6 +212,8 @@
     "verify_continue": "सत्यापित करें और जारी रखें",
     "err_dob_required": "जन्म तिथि आवश्यक है",
     "err_dob_invalid": "वैध जन्म तिथि दर्ज करें",
+    "err_dob_min_age": "आपकी आयु कम से कम 18 वर्ष होनी चाहिए",
+    "date_placeholder": "तारीख चुनें",
     "err_gender_required": "कृपया लिंग चुनें",
     "err_married_required": "कृपया एक विकल्प चुनें",
     "err_marriage_date_required": "विवाहित होने पर विवाह की तिथि आवश्यक है",

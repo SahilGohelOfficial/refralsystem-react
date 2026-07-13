@@ -9,6 +9,7 @@ import {
   Select,
   Textarea,
 } from '../form'
+import DatePicker from '../../ui/DatePicker'
 import { getEffectiveDateBounds } from '../../../lib/forms/dateBounds'
 import type { FormAnswerValue, FormAnswers, FormField } from '../../../types/form'
 
@@ -68,18 +69,18 @@ export default function DynamicFormRenderer({
           case 'date': {
             const { min, max } = getEffectiveDateBounds(field.validation)
             return (
-              <Input
+              <DatePicker
                 key={field.id}
                 id={field.id}
-                type="date"
                 label={field.label}
                 required={required}
                 error={error}
                 min={min}
                 max={max}
                 value={(answers[field.id] as string) ?? ''}
-                onChange={(e) => onChange(field.id, e.target.value)}
+                onChange={(val) => onChange(field.id, val)}
                 onBlur={() => onBlur(field.id)}
+                placeholder={field.placeholder ?? 'Select date'}
               />
             )
           }

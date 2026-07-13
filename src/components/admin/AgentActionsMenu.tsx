@@ -217,7 +217,7 @@ const AgentActionsMenu = ({
         </DropdownItem>
       </Dropdown>
 
-      <Modal isOpen={isEditOpen} onClose={closeEdit} title="Edit Agent">
+      <Modal isOpen={isEditOpen} onClose={closeEdit} title="Edit Agent" maxWidth="lg">
         <AgentFormFields
           firstName={formFirstName}
           setFirstName={setFormFirstName}

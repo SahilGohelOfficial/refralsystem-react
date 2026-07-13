@@ -16,13 +16,13 @@ export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ label, error, hint, options = [], className = '', ...props }, ref) => {
     return (
-      <div className="w-full">
-        {label && <label className="form-label">{label}</label>}
+      <div className="w-full text-left">
+        {label && <label className="form-label text-left">{label}</label>}
         <div className="relative">
           <select
             ref={ref}
             className={`
-              form-input appearance-none pr-10
+              form-input appearance-none pr-10 text-left
               ${error ? 'border-error/50 focus:border-error focus:ring-error/30' : ''}
               ${className}
             `}
@@ -38,8 +38,8 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
             <ChevronDown className="h-4 w-4 text-text-muted" />
           </div>
         </div>
-        {error && <p className="mt-1.5 text-xs text-error">{error}</p>}
-        {hint && !error && <p className="mt-1.5 text-xs text-text-muted">{hint}</p>}
+        {error && <p className="mt-1.5 text-xs text-error text-left">{error}</p>}
+        {hint && !error && <p className="mt-1.5 text-xs text-text-muted text-left">{hint}</p>}
       </div>
     );
   },

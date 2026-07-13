@@ -3,13 +3,20 @@ import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import Modal from '../ui/Modal';
 import Input from '../ui/Input';
+import DatePicker from '../ui/DatePicker';
 import Button from '../ui/Button';
 import { RadioGroup } from '../forms/form/Radio';
 import { useMyUser, useUpdateMyUser } from '../../hooks/queries';
 import { useConfirm } from '../../stores/confirmStore';
 import { useToastOnError } from '../../hooks/useToastOnError';
 import { choiceToGender, genderToChoice, type ReferralUser } from '../../types/api';
-import { isPastOrTodayUtc, todayUtcDateString, toDateInputValue } from '../../lib/dates';
+import {
+  isAtLeastAgeUtc,
+  isPastOrTodayUtc,
+  todayUtcDateString,
+  toDateInputValue,
+  yearsAgoUtcDateString,
+} from '../../lib/dates';
 
 interface AgentUserEditModalProps {
   user: ReferralUser | null;
@@ -78,6 +85,10 @@ const AgentUserEditModal = ({ user, isOpen, onClose, onSaved }: AgentUserEditMod
     }
     if (!isPastOrTodayUtc(dateOfBirth)) {
       toast.error(t('register.err_dob_invalid', 'Enter a valid date of birth'));
+      return;
+    }
+    if (!isAtLeastAgeUtc(dateOfBirth, 18)) {
+      toast.error(t('register.err_dob_min_age', 'You must be at least 18 years old'));
       return;
     }
     const gender = choiceToGender(genderChoice);
@@ -205,14 +216,14 @@ const AgentUserEditModal = ({ user, isOpen, onClose, onSaved }: AgentUserEditMod
                 disabled={submitting}
               />
             </div>
-            <Input
+            <DatePicker
               label={t('register.date_of_birth', 'Date of Birth')}
-              type="date"
               value={dateOfBirth}
-              onChange={(e) => setDateOfBirth(e.target.value)}
+              onChange={setDateOfBirth}
               required
               disabled={submitting}
-              max={todayUtcDateString()}
+              max={yearsAgoUtcDateString(18)}
+              placeholder={t('register.date_placeholder', 'Select date')}
             />
             <RadioGroup
               name="gender"
@@ -231,14 +242,14 @@ const AgentUserEditModal = ({ user, isOpen, onClose, onSaved }: AgentUserEditMod
               required
             />
             {isMarriedChoice === 'Yes' && (
-              <Input
+              <DatePicker
                 label={t('register.marriage_date', 'Marriage Date')}
-                type="date"
                 value={marriageDate}
-                onChange={(e) => setMarriageDate(e.target.value)}
+                onChange={setMarriageDate}
                 required
                 disabled={submitting}
                 max={todayUtcDateString()}
+                placeholder={t('register.date_placeholder', 'Select date')}
               />
             )}
           </div>

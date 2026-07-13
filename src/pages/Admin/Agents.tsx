@@ -178,7 +178,12 @@ const Agents = () => {
         )}
       </Card>
 
-      <Modal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} title="Add New Agent">
+      <Modal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        title="Add New Agent"
+        maxWidth="lg"
+      >
         <AgentFormFields
           firstName={formFirstName}
           setFirstName={setFormFirstName}

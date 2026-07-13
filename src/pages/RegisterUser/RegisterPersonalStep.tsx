@@ -2,9 +2,10 @@ import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight } from 'lucide-react';
 import Input from '../../components/ui/Input';
+import DatePicker from '../../components/ui/DatePicker';
 import Button from '../../components/ui/Button';
 import { RadioGroup } from '../../components/forms/form/Radio';
-import { todayUtcDateString } from '../../lib/dates';
+import { todayUtcDateString, yearsAgoUtcDateString } from '../../lib/dates';
 
 type RegisterPersonalStepProps = {
   isAgentPortal: boolean;
@@ -114,15 +115,15 @@ export default function RegisterPersonalStep({
         required
         disabled={submitting}
       />
-      <Input
+      <DatePicker
         label={t('register.date_of_birth', 'Date of Birth')}
-        type="date"
         value={dateOfBirth}
-        onChange={(e) => setDateOfBirth(e.target.value)}
+        onChange={setDateOfBirth}
         error={fieldErrors.dateOfBirth}
         required
         disabled={submitting}
-        max={todayUtcDateString()}
+        max={yearsAgoUtcDateString(18)}
+        placeholder={t('register.date_placeholder', 'Select date')}
       />
       <RadioGroup
         name="gender"
@@ -143,15 +144,15 @@ export default function RegisterPersonalStep({
         required
       />
       {isMarriedChoice === 'Yes' && (
-        <Input
+        <DatePicker
           label={t('register.marriage_date', 'Marriage Date')}
-          type="date"
           value={marriageDate}
-          onChange={(e) => setMarriageDate(e.target.value)}
+          onChange={setMarriageDate}
           error={fieldErrors.marriageDate}
           required
           disabled={submitting}
           max={todayUtcDateString()}
+          placeholder={t('register.date_placeholder', 'Select date')}
         />
       )}
       {!isAgentPortal ? (

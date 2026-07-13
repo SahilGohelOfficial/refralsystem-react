@@ -36,6 +36,18 @@ export function isPastOrTodayUtc(value: string): boolean {
   return parsed.isSameOrBefore(dayjs.utc(), 'day')
 }
 
+/** UTC calendar date string for N years before today (e.g. max DOB for age gates). */
+export function yearsAgoUtcDateString(years: number): string {
+  return dayjs.utc().subtract(years, 'year').format(ISO_DATE_FORMAT)
+}
+
+/** True when dateOfBirth is on or before (today − minAge years), day-precision UTC. */
+export function isAtLeastAgeUtc(dateOfBirth: string, minAge = 18): boolean {
+  const parsed = dayjs.utc(dateOfBirth, ISO_DATE_FORMAT, true)
+  if (!parsed.isValid()) return false
+  return parsed.isSameOrBefore(dayjs.utc().subtract(minAge, 'year'), 'day')
+}
+
 /** Display an API timestamp in the user's local timezone. */
 export function formatLocalDateTime(iso?: string | null): string {
   if (!iso) return '—'
