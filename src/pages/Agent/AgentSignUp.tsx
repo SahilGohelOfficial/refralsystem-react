@@ -19,6 +19,7 @@ import { RadioGroup } from '../../components/forms/form/Radio';
 import { Card, CardContent } from '../../components/ui/Card';
 import { agentSignUp, sendAgentRegistrationOtp } from '../../services/agents.service';
 import { listCities, listStates } from '../../services/location.service';
+import { validateRegistrationEmail } from '../../services/users.service';
 import { formatApiError } from '../../lib/api';
 import type { ApiError, City, State } from '../../types/api';
 import { choiceToGender } from '../../types/api';
@@ -209,11 +210,30 @@ const AgentSignUp = () => {
     return Object.keys(errors).length === 0;
   };
 
-  const handleDetailsContinue = (e: FormEvent) => {
+  const handleDetailsContinue = async (e: FormEvent) => {
     e.preventDefault();
     if (!validateDetails()) return;
-    setFieldErrors({});
-    setStep('bank');
+
+    setSubmitting(true);
+    try {
+      await validateRegistrationEmail(email.trim());
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next.email;
+        return next;
+      });
+      setStep('bank');
+    } catch (error) {
+      const message = formatApiError(error as ApiError);
+      setFieldErrors((prev) => ({
+        ...prev,
+        email:
+          message ||
+          t('register.err_email_exists', 'This email is already registered'),
+      }));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleBankContinue = (e: FormEvent) => {
@@ -237,9 +257,30 @@ const AgentSignUp = () => {
     try {
       await sendAgentRegistrationOtp(phoneNumber);
       setOtpSent(true);
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next.phoneNumber;
+        return next;
+      });
       toast.success(t('register.otp_sent', 'Verification code sent'));
     } catch (error) {
-      toast.error(formatApiError(error as ApiError));
+      const message = formatApiError(error as ApiError);
+      setFieldErrors((prev) => ({
+        ...prev,
+        phoneNumber:
+          message ||
+          t(
+            'register.err_phone_exists',
+            'This phone number is already registered',
+          ),
+      }));
+      toast.error(
+        message ||
+          t(
+            'register.err_phone_exists',
+            'This phone number is already registered',
+          ),
+      );
     } finally {
       setSendingOtp(false);
     }

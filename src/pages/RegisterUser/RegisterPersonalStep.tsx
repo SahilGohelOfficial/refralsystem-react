@@ -161,6 +161,7 @@ export default function RegisterPersonalStep({
           'register.referral_code_hint',
           "Optional — enter the referrer's user referral code",
         )}
+        error={fieldErrors.referralCode}
         disabled={submitting}
       />
       <div className="flex justify-end pt-2">

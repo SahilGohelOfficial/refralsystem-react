@@ -9,6 +9,8 @@ import {
   createUser,
   listAgentsByLocation,
   sendRegistrationOtp,
+  validateReferralCode,
+  validateRegistrationEmail,
 } from '../../services/users.service';
 import type {
   Agent,
@@ -51,7 +53,9 @@ export function useRegisterForm({ t, isAgentPortal, agentUserId }: UseRegisterFo
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [referralCode, setReferralCode] = useState('');
+  const [referralCode, setReferralCodeState] = useState('');
+  /** True after personal-step Continue successfully validated a non-empty referral code. */
+  const [referralValidated, setReferralValidated] = useState(false);
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [genderChoice, setGenderChoice] = useState('');
   const [isMarriedChoice, setIsMarriedChoice] = useState('');
@@ -199,6 +203,75 @@ export function useRegisterForm({ t, isAgentPortal, agentUserId }: UseRegisterFo
     return Object.keys(errors).length === 0;
   };
 
+  const setReferralCode = (value: string) => {
+    setReferralCodeState(value);
+    setReferralValidated(false);
+  };
+
+  const continueFromPersonal = async (): Promise<boolean> => {
+    if (!validatePersonal()) return false;
+
+    setSubmitting(true);
+    try {
+      await validateRegistrationEmail(email.trim());
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next.email;
+        return next;
+      });
+
+      const code = referralCode.trim();
+      if (!code) {
+        setReferralValidated(false);
+        setStep('address');
+        return true;
+      }
+
+      await validateReferralCode(code);
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next.referralCode;
+        return next;
+      });
+      setReferralValidated(true);
+      setStep('address');
+      return true;
+    } catch (error) {
+      const message = formatApiError(error as ApiError);
+      const apiError = error as ApiError;
+      const raw = Array.isArray(apiError.message)
+        ? apiError.message.join(' ')
+        : String(apiError.message ?? '');
+      const isEmailError =
+        /email/i.test(raw) ||
+        raw.includes('user.emailExists') ||
+        message.toLowerCase().includes('email');
+
+      if (isEmailError) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          email:
+            message ||
+            t('register.err_email_exists', 'This email is already registered'),
+        }));
+      } else {
+        setReferralValidated(false);
+        setFieldErrors((prev) => ({
+          ...prev,
+          referralCode:
+            message ||
+            t(
+              'register.err_referral_code_invalid',
+              'Referral code is invalid or not found',
+            ),
+        }));
+      }
+      return false;
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const validateAddress = () => {
     const errors: Record<string, string> = {};
     if (!addressLine1.trim()) {
@@ -306,12 +379,72 @@ export function useRegisterForm({ t, isAgentPortal, agentUserId }: UseRegisterFo
     try {
       await sendRegistrationOtp(phoneNumber);
       setOtpSent(true);
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next.phoneNumber;
+        return next;
+      });
       toast.success(t('register.otp_sent', 'Verification code sent'));
     } catch (error) {
-      toast.error(formatApiError(error as ApiError));
+      const message = formatApiError(error as ApiError);
+      setFieldErrors((prev) => ({
+        ...prev,
+        phoneNumber:
+          message ||
+          t(
+            'register.err_phone_exists',
+            'This phone number is already registered',
+          ),
+      }));
+      toast.error(
+        message ||
+          t(
+            'register.err_phone_exists',
+            'This phone number is already registered',
+          ),
+      );
     } finally {
       setSendingOtp(false);
     }
+  };
+
+  const goToAgentStep = async () => {
+    setLoadingAgents(true);
+    setSelectedAgentId('');
+    try {
+      const data = await listAgentsByLocation(
+        Number(formStateId),
+        Number(formCityId),
+      );
+      setAgents(data);
+    } catch (error) {
+      toast.error(formatApiError(error as ApiError));
+      setAgents([]);
+    } finally {
+      setLoadingAgents(false);
+    }
+    setStep('agent');
+  };
+
+  /** After bank: agent picker (public) or OTP when agent step is skipped. */
+  const continueFromBank = async () => {
+    if (!validateBank()) return false;
+    if (isAgentPortal || referralValidated) {
+      setStep('otp');
+      return true;
+    }
+    await goToAgentStep();
+    return true;
+  };
+
+  /** Agent selected → go to verify mobile (account not created yet). */
+  const continueFromAgent = () => {
+    if (!selectedAgentId) {
+      toast.error(t('register.select_agent', 'Select your referral agent'));
+      return false;
+    }
+    setStep('otp');
+    return true;
   };
 
   const completeRegistration = async () => {
@@ -323,6 +456,13 @@ export function useRegisterForm({ t, isAgentPortal, agentUserId }: UseRegisterFo
       setCreatedUser(user);
 
       if (isAgentPortal && agentUserId) {
+        if (user.agentId === agentUserId) {
+          setAssignedUser(user);
+          setStep('success');
+          toast.success(t('register.success', 'Registration completed successfully'));
+          return true;
+        }
+
         const result = await assignAgent(user.id, {
           agentId: agentUserId,
           stateId: Number(formStateId),
@@ -334,23 +474,57 @@ export function useRegisterForm({ t, isAgentPortal, agentUserId }: UseRegisterFo
         return true;
       }
 
-      setLoadingAgents(true);
-      setSelectedAgentId('');
-      try {
-        const data = await listAgentsByLocation(
-          Number(formStateId),
-          Number(formCityId),
-        );
-        setAgents(data);
-      } catch (error) {
-        toast.error(formatApiError(error as ApiError));
-        setAgents([]);
-      } finally {
-        setLoadingAgents(false);
+      // Public: referral auto-assigned agent on create
+      if (user.agentId && (referralValidated || !selectedAgentId)) {
+        setAssignedUser(user);
+        if (user.agentId) {
+          try {
+            const data = await listAgentsByLocation(
+              Number(formStateId),
+              Number(formCityId),
+            );
+            setAgents(data);
+            const match = data.find((a) => a.id === user.agentId);
+            if (match) setSelectedAgentId(match.id);
+          } catch {
+            // display may fall back to "Assigned via referral"
+          }
+        }
+        setStep('success');
+        toast.success(t('register.success', 'Registration completed successfully'));
+        return true;
       }
 
-      setStep('agent');
-      return true;
+      if (selectedAgentId && formStateId && formCityId) {
+        // Prefer keep auto-assigned agent if create already set one and it matches selection
+        if (user.agentId === selectedAgentId) {
+          setAssignedUser(user);
+          setStep('success');
+          toast.success(t('register.success', 'Registration completed successfully'));
+          return true;
+        }
+
+        const result = await assignAgent(user.id, {
+          agentId: selectedAgentId,
+          stateId: Number(formStateId),
+          cityId: Number(formCityId),
+        });
+        setAssignedUser(result);
+        setStep('success');
+        toast.success(t('register.success', 'Registration completed successfully'));
+        return true;
+      }
+
+      // Referral validated but no agent on referrer — still complete without assign
+      if (referralValidated) {
+        setAssignedUser(user);
+        setStep('success');
+        toast.success(t('register.success', 'Registration completed successfully'));
+        return true;
+      }
+
+      toast.error(t('register.select_agent', 'Select your referral agent'));
+      return false;
     } catch (error) {
       toast.error(formatApiError(error as ApiError));
       return false;
@@ -359,31 +533,14 @@ export function useRegisterForm({ t, isAgentPortal, agentUserId }: UseRegisterFo
     }
   };
 
-  const handleAssignAgent = async () => {
-    if (!createdUser || !selectedAgentId || !formStateId || !formCityId) return;
-
-    setSubmitting(true);
-    try {
-      const result = await assignAgent(createdUser.id, {
-        agentId: selectedAgentId,
-        stateId: Number(formStateId),
-        cityId: Number(formCityId),
-      });
-      setAssignedUser(result);
-      setStep('success');
-      toast.success(t('register.success', 'Registration completed successfully'));
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const goBack = () => {
     if (step === 'address') setStep('personal');
     else if (step === 'bank') setStep('address');
-    else if (step === 'otp') setStep('bank');
-    else if (step === 'agent') setStep('otp');
+    else if (step === 'agent') setStep('bank');
+    else if (step === 'otp') {
+      if (isAgentPortal || referralValidated) setStep('bank');
+      else setStep('agent');
+    }
   };
 
   const handleMarriedChange = (value: string) => {
@@ -468,13 +625,17 @@ export function useRegisterForm({ t, isAgentPortal, agentUserId }: UseRegisterFo
     selectedState,
     selectedCity,
     selectedAgent,
+    /** Hide Choose agent when a referral code was validated on personal step. */
+    skipAgentStep: isAgentPortal || referralValidated,
     validatePersonal,
+    continueFromPersonal,
+    continueFromBank,
+    continueFromAgent,
     validateAddress,
     validateBank,
     validateOtp,
     handleSendOtp,
     completeRegistration,
-    handleAssignAgent,
     goBack,
   };
 }

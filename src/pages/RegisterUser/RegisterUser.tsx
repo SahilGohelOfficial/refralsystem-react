@@ -29,8 +29,8 @@ const STEPS: {
   { id: 'personal', labelKey: 'register.step_personal', fallback: 'Personal', icon: User },
   { id: 'address', labelKey: 'register.step_address', fallback: 'Address', icon: Home },
   { id: 'bank', labelKey: 'register.step_bank', fallback: 'Bank', icon: Wallet },
-  { id: 'otp', labelKey: 'register.step_otp', fallback: 'Verify mobile', icon: Smartphone },
   { id: 'agent', labelKey: 'register.step_agent', fallback: 'Choose agent', icon: Users },
+  { id: 'otp', labelKey: 'register.step_otp', fallback: 'Verify mobile', icon: Smartphone },
 ];
 
 const AGENT_PORTAL_STEPS = STEPS.filter((s) => s.id !== 'agent');
@@ -112,16 +112,17 @@ const RegisterUser = () => {
     selectedState,
     selectedCity,
     selectedAgent,
-    validatePersonal,
+    skipAgentStep,
+    continueFromPersonal,
+    continueFromBank,
+    continueFromAgent,
     validateAddress,
-    validateBank,
     handleSendOtp,
     completeRegistration,
-    handleAssignAgent,
     goBack,
   } = form;
 
-  const visibleSteps = isAgentPortal ? AGENT_PORTAL_STEPS : STEPS;
+  const visibleSteps = skipAgentStep ? AGENT_PORTAL_STEPS : STEPS;
   const stepIndex = visibleSteps.findIndex((s) => s.id === step);
   const exitPath = isAgentPortal ? '/agent/dashboard' : '/choose-login';
   const assignedAgentDisplay = isAgentPortal ? agentProfile : selectedAgent;
@@ -154,37 +155,82 @@ const RegisterUser = () => {
         </div>
 
         {step !== 'success' && (
-          <div className="flex items-center gap-2">
-            {visibleSteps.map((s, index) => {
-              const Icon = s.icon;
-              const isActive = s.id === step;
-              const isDone = stepIndex > index;
-              return (
-                <div key={s.id} className="flex flex-1 items-center gap-2 min-w-0">
-                  <div
-                    className={`flex items-center justify-center size-8 shrink-0 rounded-full border text-xs font-medium transition-colors ${
-                      isActive
-                        ? 'border-primary bg-primary text-background'
-                        : isDone
-                          ? 'border-primary/50 bg-primary/10 text-primary'
-                          : 'border-border bg-surface text-text-secondary'
-                    }`}
-                  >
-                    {isDone ? <CheckCircle2 size={14} /> : <Icon size={14} />}
-                  </div>
-                  <span
-                    className={`hidden sm:block text-xs truncate ${
-                      isActive ? 'text-text font-medium' : 'text-text-secondary'
-                    }`}
-                  >
-                    {t(s.labelKey, s.fallback)}
-                  </span>
-                  {index < visibleSteps.length - 1 && (
-                    <div className="hidden sm:block flex-1 h-px bg-border ml-1" />
+          <div className="space-y-3 rounded-xl border border-border bg-surface/40 px-3 py-4 sm:px-4">
+            <ol className="flex w-full list-none p-0 m-0">
+              {visibleSteps.map((s, index) => {
+                const Icon = s.icon;
+                const isActive = s.id === step;
+                const isDone = stepIndex > index;
+                const label = t(s.labelKey, s.fallback);
+                return (
+                  <li key={s.id} className="flex flex-1 min-w-0 flex-col items-center">
+                    <div className="flex w-full items-center">
+                      <div
+                        className={`h-0.5 flex-1 ${
+                          index === 0
+                            ? 'bg-transparent'
+                            : stepIndex >= index
+                              ? 'bg-primary/50'
+                              : 'bg-border'
+                        }`}
+                        aria-hidden
+                      />
+                      <div
+                        className={`relative z-[1] flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-full border text-xs font-medium transition-colors ${
+                          isActive
+                            ? 'border-primary bg-primary text-background shadow-sm shadow-primary/25'
+                            : isDone
+                              ? 'border-primary/50 bg-primary/10 text-primary'
+                              : 'border-border bg-card text-text-secondary'
+                        }`}
+                        aria-current={isActive ? 'step' : undefined}
+                        title={label}
+                      >
+                        {isDone ? <CheckCircle2 size={16} /> : <Icon size={16} />}
+                      </div>
+                      <div
+                        className={`h-0.5 flex-1 ${
+                          index === visibleSteps.length - 1
+                            ? 'bg-transparent'
+                            : stepIndex > index
+                              ? 'bg-primary/50'
+                              : 'bg-border'
+                        }`}
+                        aria-hidden
+                      />
+                    </div>
+                    <span
+                      className={`mt-2 w-full max-w-[4.75rem] sm:max-w-none px-0.5 text-center text-[10px] sm:text-xs leading-snug ${
+                        isActive
+                          ? 'text-text font-semibold'
+                          : isDone
+                            ? 'text-primary font-medium'
+                            : 'text-text-secondary'
+                      }`}
+                    >
+                      {label}
+                    </span>
+                  </li>
+                );
+              })}
+            </ol>
+            {stepIndex >= 0 && (
+              <p className="text-center text-sm text-text-secondary border-t border-border pt-3">
+                <span className="text-text font-medium">
+                  {t('register.step_progress', 'Step {{current}} of {{total}}', {
+                    current: stepIndex + 1,
+                    total: visibleSteps.length,
+                  })}
+                </span>
+                <span className="mx-1.5 text-text-muted">·</span>
+                <span>
+                  {t(
+                    visibleSteps[stepIndex].labelKey,
+                    visibleSteps[stepIndex].fallback,
                   )}
-                </div>
-              );
-            })}
+                </span>
+              </p>
+            )}
           </div>
         )}
 
@@ -215,7 +261,7 @@ const RegisterUser = () => {
                 handleMarriedChange={handleMarriedChange}
                 fieldErrors={fieldErrors}
                 onContinue={() => {
-                  if (validatePersonal()) setStep('address');
+                  void continueFromPersonal();
                 }}
               />
             </CardContent>
@@ -272,28 +318,8 @@ const RegisterUser = () => {
                 fieldErrors={fieldErrors}
                 onBack={goBack}
                 onContinue={() => {
-                  if (validateBank()) setStep('otp');
+                  void continueFromBank();
                 }}
-              />
-            </CardContent>
-          </Card>
-        )}
-
-        {step === 'otp' && (
-          <Card>
-            <CardContent className="space-y-4 pt-2">
-              <RegisterOtpStep
-                submitting={submitting}
-                sendingOtp={sendingOtp}
-                otpSent={otpSent}
-                phoneNumber={phoneNumber}
-                setPhoneNumber={setPhoneNumber}
-                otp={otp}
-                setOtp={setOtp}
-                fieldErrors={fieldErrors}
-                onBack={goBack}
-                onSendOtp={handleSendOtp}
-                onSubmit={completeRegistration}
               />
             </CardContent>
           </Card>
@@ -378,14 +404,33 @@ const RegisterUser = () => {
                   </Button>
                   <Button
                     type="button"
-                    onClick={handleAssignAgent}
-                    isLoading={submitting}
+                    onClick={() => continueFromAgent()}
                     disabled={!selectedAgentId}
                   >
-                    {t('register.complete', 'Complete registration')}
+                    {t('register.continue', 'Continue')}
                   </Button>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        )}
+
+        {step === 'otp' && (
+          <Card>
+            <CardContent className="space-y-4 pt-2">
+              <RegisterOtpStep
+                submitting={submitting}
+                sendingOtp={sendingOtp}
+                otpSent={otpSent}
+                phoneNumber={phoneNumber}
+                setPhoneNumber={setPhoneNumber}
+                otp={otp}
+                setOtp={setOtp}
+                fieldErrors={fieldErrors}
+                onBack={goBack}
+                onSendOtp={handleSendOtp}
+                onSubmit={completeRegistration}
+              />
             </CardContent>
           </Card>
         )}
@@ -429,7 +474,11 @@ const RegisterUser = () => {
                 <div className="flex justify-between gap-4">
                   <span className="text-text-secondary">{t('register.agent', 'Agent')}</span>
                   <span className="text-text font-medium text-right">
-                    {assignedAgentDisplay ? formatAgentName(assignedAgentDisplay) : '—'}
+                    {assignedAgentDisplay
+                      ? formatAgentName(assignedAgentDisplay)
+                      : assignedUser.agentId
+                        ? t('register.agent_via_referral', 'Assigned via referral')
+                        : '—'}
                   </span>
                 </div>
               </div>

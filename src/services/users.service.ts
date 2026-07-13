@@ -28,6 +28,23 @@ export function sendRegistrationOtp(phoneNumber: string) {
   });
 }
 
+export function validateRegistrationEmail(email: string) {
+  return api<{ valid: true; message: string }>('/users/register/validate-email', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+    ...publicOpts,
+  });
+}
+
+export function validateReferralCode(referralCode: string) {
+  return api<{ valid: true; message: string }>('/users/register/validate-referral', {
+    method: 'POST',
+    body: JSON.stringify({ referralCode }),
+    // Keep auth token when present (agent portal scopes validation to that agent)
+    skipAuthHandler: true,
+  });
+}
+
 export function listAgentsByLocation(stateId: number, cityId: number) {
   const params = new URLSearchParams({
     stateId: String(stateId),
