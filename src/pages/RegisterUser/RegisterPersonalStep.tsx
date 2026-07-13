@@ -8,7 +8,6 @@ import { RadioGroup } from '../../components/forms/form/Radio';
 import { todayUtcDateString, yearsAgoUtcDateString } from '../../lib/dates';
 
 type RegisterPersonalStepProps = {
-  isAgentPortal: boolean;
   submitting: boolean;
   firstName: string;
   setFirstName: (v: string) => void;
@@ -35,7 +34,6 @@ type RegisterPersonalStepProps = {
 };
 
 export default function RegisterPersonalStep({
-  isAgentPortal,
   submitting,
   firstName,
   setFirstName,
@@ -155,18 +153,16 @@ export default function RegisterPersonalStep({
           placeholder={t('register.date_placeholder', 'Select date')}
         />
       )}
-      {!isAgentPortal ? (
-        <Input
-          label={t('register.referral_code', 'Referral code')}
-          value={referralCode}
-          onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
-          placeholder={t(
-            'register.referral_code_hint',
-            'Optional — enter a referrer code',
-          )}
-          disabled={submitting}
-        />
-      ) : null}
+      <Input
+        label={t('register.referral_code', "User's Referral code")}
+        value={referralCode}
+        onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+        placeholder={t(
+          'register.referral_code_hint',
+          "Optional — enter the referrer's user referral code",
+        )}
+        disabled={submitting}
+      />
       <div className="flex justify-end pt-2">
         <Button type="submit" isLoading={submitting} className="gap-2">
           {t('register.continue', 'Continue')}

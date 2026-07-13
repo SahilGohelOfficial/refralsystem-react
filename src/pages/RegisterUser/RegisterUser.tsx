@@ -192,7 +192,6 @@ const RegisterUser = () => {
           <Card>
             <CardContent className="space-y-4 pt-2">
               <RegisterPersonalStep
-                isAgentPortal={isAgentPortal}
                 submitting={submitting}
                 firstName={firstName}
                 setFirstName={setFirstName}
