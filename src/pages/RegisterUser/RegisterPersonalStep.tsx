@@ -107,7 +107,7 @@ export default function RegisterPersonalStep({
         onChange={(e) => setPassword(e.target.value)}
         placeholder={t(
           'register.password_hint',
-          'Minimum 8 characters with letters and numbers',
+          'Minimum 8 characters',
         )}
         error={fieldErrors.password}
         required

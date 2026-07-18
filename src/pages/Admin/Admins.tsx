@@ -43,8 +43,8 @@ const normalizePhone = (value: string) => value.replace(/\D/g, '').slice(0, 10);
 
 function validatePassword(value: string): string | undefined {
   if (!value.trim()) return 'Password is required';
-  if (value.length < 8 || !/[a-zA-Z]/.test(value) || !/[0-9]/.test(value)) {
-    return 'Password must be at least 8 characters with one letter and one number';
+  if (value.length < 8) {
+    return 'Password must be at least 8 characters';
   }
   return undefined;
 }
@@ -357,7 +357,7 @@ const Admins = () => {
                 disabled={submitting}
               />
               <p className="text-xs text-text-secondary -mt-2">
-                At least 8 characters with one letter and one number.
+                At least 8 characters.
               </p>
             </>
           )}
@@ -421,7 +421,7 @@ const Admins = () => {
             autoComplete="new-password"
           />
           <p className="text-xs text-text-secondary -mt-2">
-            At least 8 characters with one letter and one number.
+            At least 8 characters.
           </p>
           <div className="flex justify-end gap-2 pt-2">
             <Button

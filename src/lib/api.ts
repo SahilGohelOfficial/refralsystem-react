@@ -30,6 +30,19 @@ export function formatApiError(error: ApiError): string {
   return error.message;
 }
 
+export async function parseJsonResponse(res: Response): Promise<unknown> {
+  const text = await res.text();
+  if (!text) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return {};
+  }
+}
+
 export async function api<T>(
   path: string,
   options: RequestInit & { token?: string | null; skipAuthHandler?: boolean } = {},
@@ -47,7 +60,7 @@ export async function api<T>(
     },
   });
 
-  const data = await res.json().catch(() => ({}));
+  const data = await parseJsonResponse(res);
 
   if (!res.ok) {
     const error = data as ApiError;

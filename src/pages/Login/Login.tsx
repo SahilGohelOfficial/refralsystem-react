@@ -123,7 +123,7 @@ const Login = () => {
 
     setIsLoading(true);
     try {
-      await login(normalizedIdentifier, password.trim(), portal);
+      await login(normalizedIdentifier, password, portal);
       toast.success('Successfully logged in!');
       navigate(getDashboardPath(portal === 'admin' ? 'admin' : portal));
     } catch (error: unknown) {

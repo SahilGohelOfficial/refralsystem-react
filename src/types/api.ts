@@ -203,8 +203,26 @@ export type PaymentStatus = 'pending' | 'received' | 'not_received';
 export interface Payment {
   id: string;
   userId: string;
+  agentId: string | null;
   screenShot: string;
   status: PaymentStatus;
+  note: string | null;
+  statusUpdatedBy: string | null;
+  statusUpdatedAt: string | null;
+  createdAt: string;
+}
+
+export interface PaymentHistory {
+  id: string;
+  userId: string;
+  agentId: string | null;
+  agentName: string | null;
+  screenShot: string;
+  screenshotDownloadUrl: string;
+  status: PaymentStatus;
+  note: string | null;
+  statusUpdatedBy: string | null;
+  statusUpdatedByName: string | null;
   statusUpdatedAt: string | null;
   createdAt: string;
 }
@@ -227,6 +245,7 @@ export interface ConfirmPaymentPayload {
 
 export interface UpdatePaymentStatusPayload {
   status: 'received' | 'not_received';
+  note?: string;
 }
 
 export interface PaymentScreenshotDownloadResponse {
@@ -258,6 +277,7 @@ export interface ReferralUser {
   marriageDate?: string | null;
   createdAt: string;
   updatedAt: string;
+  bankDetails?: BankDetails | null;
   filledFormsCount?: number;
   totalFormsCount?: number;
 }

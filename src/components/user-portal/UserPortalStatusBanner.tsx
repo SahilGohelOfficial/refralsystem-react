@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle, CheckCircle, Clock, X } from 'lucide-react';
 import { useAuth } from '../../stores/authStore';
 import {
-  selectNeedsPaymentSubmission,
+  selectHasPayment,
+  selectPaymentLoaded,
   selectPaymentStatus,
   useUserPortalStore,
 } from '../../stores/userPortalStore';
@@ -37,14 +37,67 @@ const bannerStyles = {
   },
 };
 
+type BannerStyleKey = keyof typeof bannerStyles;
+
+const StatusBanner = ({
+  styleKey,
+  icon: Icon,
+  title,
+  description,
+  note,
+  noteLabel,
+  dismissible,
+  onDismiss,
+  dismissLabel,
+}: {
+  styleKey: BannerStyleKey;
+  icon: typeof AlertCircle;
+  title: string;
+  description?: string;
+  note?: string | null;
+  noteLabel?: string;
+  dismissible?: boolean;
+  onDismiss?: () => void;
+  dismissLabel?: string;
+}) => {
+  const styles = bannerStyles[styleKey];
+
+  return (
+    <div className={`mb-6 rounded-xl border p-4 flex gap-3 items-start ${styles.container}`}>
+      <Icon className={`${styles.icon} shrink-0 mt-0.5`} size={18} />
+      <div className="flex-1 min-w-0">
+        <p className={`font-medium text-sm ${styles.title}`}>{title}</p>
+        {description && (
+          <p className="text-sm text-text-secondary mt-1 leading-relaxed">{description}</p>
+        )}
+        {note && (
+          <p className="text-sm text-text-secondary mt-2 leading-relaxed">
+            {noteLabel && (
+              <span className="font-medium text-text">{noteLabel} </span>
+            )}
+            {note}
+          </p>
+        )}
+      </div>
+      {dismissible && onDismiss && (
+        <IconButton size="sm" onClick={onDismiss} aria-label={dismissLabel ?? 'Dismiss'}>
+          <X size={16} />
+        </IconButton>
+      )}
+    </div>
+  );
+};
+
 const UserPortalStatusBanner = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [dismissedApproved, setDismissedApproved] = useState(false);
 
   const storeUserStatus = useUserPortalStore((state) => state.userStatus);
+  const payment = useUserPortalStore((state) => state.payment);
+  const hasPayment = useUserPortalStore(selectHasPayment);
   const paymentStatus = useUserPortalStore(selectPaymentStatus);
-  const needsPaymentSubmission = useUserPortalStore(selectNeedsPaymentSubmission);
+  const paymentLoaded = useUserPortalStore(selectPaymentLoaded);
 
   const status = (storeUserStatus ?? user?.status) as UserStatus | null | undefined;
   const note = user?.note;
@@ -63,132 +116,113 @@ const UserPortalStatusBanner = () => {
     return null;
   }
 
-  if (needsPaymentSubmission && status == null) {
-    const styles = bannerStyles.payment;
-    return (
-      <div className={`mb-6 rounded-xl border p-4 flex gap-3 items-start ${styles.container}`}>
-        <AlertCircle className={`${styles.icon} shrink-0 mt-0.5`} size={18} />
-        <div className="flex-1 min-w-0">
-          <p className={`font-medium text-sm ${styles.title}`}>
-            {t('user_portal.status.payment_required', 'Complete your payment to submit your request')}
-          </p>
-          <p className="text-sm text-text-secondary mt-1 leading-relaxed">
-            {t(
-              'user_portal.status.payment_required_desc',
-              'Upload your payment screenshot to send your registration request to your agent.',
-            )}
-          </p>
-          <Link
-            to="/user/payment"
-            className="inline-block mt-3 text-sm font-medium text-primary hover:underline"
-          >
-            {t('user_portal.status.go_to_payment', 'Submit payment')}
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  if (status === 'pending' && paymentStatus === 'not_received') {
-    const styles = bannerStyles.rejected;
-    return (
-      <div className={`mb-6 rounded-xl border p-4 flex gap-3 items-start ${styles.container}`}>
-        <AlertCircle className={`${styles.icon} shrink-0 mt-0.5`} size={18} />
-        <div className="flex-1 min-w-0">
-          <p className={`font-medium text-sm ${styles.title}`}>
-            {t(
-              'user_portal.status.payment_not_received',
-              'Payment not verified — please upload again',
-            )}
-          </p>
-          <p className="text-sm text-text-secondary mt-1 leading-relaxed">
-            {t(
-              'user_portal.status.payment_not_received_desc',
-              'Your agent could not verify your payment. Upload a new screenshot to continue.',
-            )}
-          </p>
-          <Link
-            to="/user/payment"
-            className="inline-block mt-3 text-sm font-medium text-primary hover:underline"
-          >
-            {t('user_portal.status.go_to_payment', 'Submit payment')}
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  if (status === 'pending') {
-    const styles = bannerStyles.pending;
-    return (
-      <div className={`mb-6 rounded-xl border p-4 flex gap-3 items-start ${styles.container}`}>
-        <Clock className={`${styles.icon} shrink-0 mt-0.5`} size={18} />
-        <div>
-          <p className={`font-medium text-sm ${styles.title}`}>
-            {t('user_portal.status.pending', 'Your request is pending')}
-          </p>
-          <p className="text-sm text-text-secondary mt-1 leading-relaxed">
-            {t(
-              'user_portal.status.pending_desc',
-              'Your registration request is awaiting review by your assigned agent.',
-            )}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   if (status === 'rejected') {
-    const styles = bannerStyles.rejected;
     return (
-      <div className={`mb-6 rounded-xl border p-4 flex gap-3 items-start ${styles.container}`}>
-        <AlertCircle className={`${styles.icon} shrink-0 mt-0.5`} size={18} />
-        <div className="flex-1 min-w-0">
-          <p className={`font-medium text-sm ${styles.title}`}>
-            {t('user_portal.status.rejected', 'Your request was rejected by your agent')}
-          </p>
-          {note && (
-            <p className="text-sm text-text-secondary mt-2 leading-relaxed">
-              <span className="font-medium text-text">
-                {t('user_portal.status.rejected_note', 'Reason:')}
-              </span>{' '}
-              {note}
-            </p>
-          )}
-        </div>
-      </div>
+      <StatusBanner
+        styleKey="rejected"
+        icon={AlertCircle}
+        title={t('user_portal.status.rejected', 'Your request was rejected by your agent')}
+        note={note}
+        noteLabel={t('user_portal.status.rejected_note', 'Reason:')}
+      />
     );
   }
 
   if (status === 'approved' && !dismissedApproved) {
-    const styles = bannerStyles.approved;
     return (
-      <div className={`mb-6 rounded-xl border p-4 flex gap-3 items-start ${styles.container}`}>
-        <CheckCircle className={`${styles.icon} shrink-0 mt-0.5`} size={18} />
-        <div className="flex-1 min-w-0">
-          <p className={`font-medium text-sm ${styles.title}`}>
-            {t('user_portal.status.approved_once', 'Your request has been approved!')}
-          </p>
-          <p className="text-sm text-text-secondary mt-1 leading-relaxed">
-            {t(
-              'user_portal.status.approved_once_desc',
-              'Your agent has approved your registration. You now have full access.',
-            )}
-          </p>
-        </div>
-        <IconButton
-          size="sm"
-          onClick={() => {
-            if (user.id) {
-              localStorage.setItem(APPROVAL_SHOWN_KEY(user.id), 'true');
-            }
-            setDismissedApproved(true);
-          }}
-          aria-label={t('common.cancel', 'Dismiss')}
-        >
-          <X size={16} />
-        </IconButton>
-      </div>
+      <StatusBanner
+        styleKey="approved"
+        icon={CheckCircle}
+        title={t('user_portal.status.approved_once', 'Your request has been approved!')}
+        description={t(
+          'user_portal.status.approved_once_desc',
+          'Your registration has been approved. You now have full access.',
+        )}
+        dismissible
+        dismissLabel={t('common.cancel', 'Dismiss')}
+        onDismiss={() => {
+          if (user.id) {
+            localStorage.setItem(APPROVAL_SHOWN_KEY(user.id), 'true');
+          }
+          setDismissedApproved(true);
+        }}
+      />
+    );
+  }
+
+  if ((status === 'pending' || status == null) && !hasPayment) {
+    return (
+      <StatusBanner
+        styleKey="payment"
+        icon={AlertCircle}
+        title={t('user_portal.status.awaiting_agent_payment', 'Registration complete')}
+        description={t(
+          'user_portal.status.awaiting_agent_payment_desc',
+          'Please contact your agent to submit your payment proof for verification.',
+        )}
+      />
+    );
+  }
+
+  if (!paymentLoaded) {
+    return null;
+  }
+
+  if (status === 'pending' && paymentStatus === 'not_received') {
+    return (
+      <StatusBanner
+        styleKey="rejected"
+        icon={AlertCircle}
+        title={t('user_portal.status.payment_not_received', 'Payment not accepted')}
+        description={t(
+          'user_portal.status.payment_not_received_desc',
+          'Admin could not verify your payment. Please contact your agent to submit payment proof again.',
+        )}
+        note={payment?.note}
+        noteLabel={t('user_portal.status.rejected_note', 'Reason:')}
+      />
+    );
+  }
+
+  if (status === 'pending' && paymentStatus === 'pending') {
+    return (
+      <StatusBanner
+        styleKey="pending"
+        icon={Clock}
+        title={t('user_portal.status.payment_verifying', 'Payment proof under review')}
+        description={t(
+          'user_portal.status.payment_verifying_desc',
+          'Your agent submitted your payment proof. Admin verification is in progress.',
+        )}
+      />
+    );
+  }
+
+  if (status === 'pending' && paymentStatus === 'received') {
+    return (
+      <StatusBanner
+        styleKey="pending"
+        icon={Clock}
+        title={t('user_portal.status.payment_verified_pending', 'Payment verified')}
+        description={t(
+          'user_portal.status.payment_verified_pending_desc',
+          'Your payment has been verified. Final registration approval is in progress.',
+        )}
+      />
+    );
+  }
+
+  if (status === 'pending') {
+    return (
+      <StatusBanner
+        styleKey="pending"
+        icon={Clock}
+        title={t('user_portal.status.pending', 'Your request is pending')}
+        description={t(
+          'user_portal.status.pending_desc',
+          'Your registration request is awaiting admin review.',
+        )}
+      />
     );
   }
 

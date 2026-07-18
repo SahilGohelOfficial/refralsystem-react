@@ -42,7 +42,6 @@ const UserProfile = lazy(() => import('../pages/User/UserProfile'));
 const UserSettings = lazy(() => import('../pages/User/UserSettings'));
 const UserForms = lazy(() => import('../pages/User/UserForms'));
 const UserFormSubmit = lazy(() => import('../pages/User/UserFormSubmit'));
-const UserPayment = lazy(() => import('../pages/User/UserPayment'));
 
 const RegisterUser = lazy(() => import('../pages/RegisterUser/RegisterUser'));
 
@@ -153,7 +152,6 @@ const AppRoutes = () => {
         }>
           <Route index element={<Navigate to="/user/dashboard" replace />} />
           <Route path="dashboard" element={<UserDashboard />} />
-          <Route path="payment" element={<UserPayment />} />
           <Route path="forms" element={<UserForms />} />
           <Route path="forms/:formId" element={<UserFormSubmit />} />
           <Route path="profile" element={<UserProfile />} />

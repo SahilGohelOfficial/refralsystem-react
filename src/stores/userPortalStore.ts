@@ -28,7 +28,7 @@ export const useUserPortalStore = create<UserPortalState>((set, get) => ({
   fetchPayment: async () => {
     try {
       const payment = await getMyPayment();
-      set({ payment, paymentLoaded: true });
+      set({ payment: payment ?? null, paymentLoaded: true });
     } catch {
       set({ payment: null, paymentLoaded: true });
     }
@@ -70,7 +70,8 @@ export const useUserPortalStore = create<UserPortalState>((set, get) => ({
   },
 }));
 
-export const selectNeedsPaymentSubmission = (state: UserPortalState) =>
-  state.userStatus == null || state.payment?.status === 'not_received';
-
 export const selectPaymentStatus = (state: UserPortalState) => state.payment?.status ?? null;
+
+export const selectPaymentLoaded = (state: UserPortalState) => state.paymentLoaded;
+
+export const selectHasPayment = (state: UserPortalState) => Boolean(state.payment?.id);

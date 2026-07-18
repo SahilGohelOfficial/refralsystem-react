@@ -65,8 +65,17 @@ export function getMyProfile() {
   return api<ReferralUser>('/users/me');
 }
 
+export function normalizePayment(data: unknown): Payment | null {
+  if (data == null || typeof data !== 'object') {
+    return null;
+  }
+
+  const payment = data as Partial<Payment>;
+  return payment.id ? (payment as Payment) : null;
+}
+
 export function getMyPayment() {
-  return api<Payment | null>('/users/me/payment');
+  return api<Payment | null>('/users/me/payment').then(normalizePayment);
 }
 
 export function presignPaymentUpload(payload: PresignPaymentUploadPayload) {

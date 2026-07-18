@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Eye, Search } from 'lucide-react';
@@ -9,19 +9,24 @@ import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Loader from '../../components/ui/Loader';
+import Modal from '../../components/ui/Modal';
+import Textarea from '../../components/forms/form/Textarea';
 import PortalFormViewModal from '../../components/forms/portal/PortalFormViewModal';
 import { useAgentUser, useAgentUserForms } from '../../hooks/queries';
 import { useToastOnError } from '../../hooks/useToastOnError';
+import { useConfirm } from '../../stores/confirmStore';
 import { formatApiError } from '../../lib/api';
 import type { ApiError, UserStatus } from '../../types/api';
 import { formatGenderLabel, formatUserName } from '../../types/api';
 import { formatCalendarDate, formatLocalDate, formatLocalDateTime } from '../../lib/dates';
 import {
   getAgentUserPayment,
+  getAgentUserPaymentHistory,
   getAgentUserPaymentScreenshotUrl,
   updateAgentUserPaymentStatus,
 } from '../../services/agents.service';
 import {
+  PaymentHistorySection,
   PaymentReviewSection,
   usePaymentReview,
 } from '../../components/agent/PaymentReviewSection';
@@ -40,25 +45,30 @@ const statusLabelKey = (status: UserStatus | null) => {
 
 const AdminAgentUserDetail = () => {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const { agentId = '', userId = '' } = useParams();
   const navigate = useNavigate();
   const backListPath = `/admin/agents/${agentId}`;
   const [search, setSearch] = useState('');
   const [viewFormId, setViewFormId] = useState<string | null>(null);
+  const [paymentNoteOpen, setPaymentNoteOpen] = useState(false);
+  const [paymentNote, setPaymentNote] = useState('');
 
   const { data: user, isLoading: loadingUser, error: userError } = useAgentUser(agentId, userId);
   const showForms = user != null && user.status !== 'pending';
   const showPaymentReview = user != null && user.status === 'pending';
+  const showPaymentSection = user != null;
 
   const paymentReview = usePaymentReview({
-    enabled: showPaymentReview,
+    enabled: showPaymentSection,
     reloadKey: `${agentId}:${userId}`,
     fetchPayment: () => getAgentUserPayment(agentId, userId),
+    fetchHistory: () => getAgentUserPaymentHistory(agentId, userId),
     fetchScreenshotUrl: async () => {
       const response = await getAgentUserPaymentScreenshotUrl(agentId, userId);
       return response.downloadUrl;
     },
-    updateStatus: (status) => updateAgentUserPaymentStatus(agentId, userId, { status }),
+    updateStatus: (payload) => updateAgentUserPaymentStatus(agentId, userId, payload),
   });
 
   const { data: forms = [], isLoading: loadingForms, error: formsError } = useAgentUserForms(
@@ -73,6 +83,32 @@ const AdminAgentUserDetail = () => {
     toast.error(formatApiError(userError as ApiError));
     navigate(backListPath);
   }, [userError, backListPath, navigate]);
+
+  const handleMarkReceived = async () => {
+    const accepted = await confirm({
+      title: t('agent.payment.confirm_received_title', 'Mark payment as received?'),
+      message: t(
+        'agent.payment.confirm_received_message',
+        'Confirm that you have verified this payment screenshot.',
+      ),
+      confirmLabel: t('agent.payment.mark_received', 'Mark received'),
+    });
+    if (!accepted) return;
+    await paymentReview.handleMarkReceived();
+  };
+
+  const handleOpenNotReceived = () => {
+    setPaymentNoteOpen(true);
+  };
+
+  const handleNotReceivedConfirm = async (event: FormEvent) => {
+    event.preventDefault();
+    const note = paymentNote.trim();
+    if (!note) return;
+    await paymentReview.handleMarkNotReceived(note);
+    setPaymentNote('');
+    setPaymentNoteOpen(false);
+  };
 
   const filteredForms = useMemo(() => {
     const query = search.toLowerCase();
@@ -135,8 +171,8 @@ const AdminAgentUserDetail = () => {
           screenshotUrl={paymentReview.screenshotUrl}
           loadingScreenshot={paymentReview.loadingScreenshot}
           submitting={paymentReview.submitting}
-          onMarkReceived={paymentReview.handleMarkReceived}
-          onMarkNotReceived={paymentReview.handleMarkNotReceived}
+          onMarkReceived={() => void handleMarkReceived()}
+          onMarkNotReceived={handleOpenNotReceived}
         />
       ) : null}
 
@@ -366,6 +402,13 @@ const AdminAgentUserDetail = () => {
         </Card>
       ) : null}
 
+      {showPaymentSection ? (
+        <PaymentHistorySection
+          paymentHistory={paymentReview.history}
+          loadingHistory={paymentReview.loadingHistory}
+        />
+      ) : null}
+
       {showForms ? (
         <PortalFormViewModal
           isOpen={viewFormId !== null}
@@ -375,6 +418,49 @@ const AdminAgentUserDetail = () => {
           userId={userId}
         />
       ) : null}
+
+      <Modal
+        isOpen={paymentNoteOpen}
+        onClose={() => {
+          setPaymentNoteOpen(false);
+          setPaymentNote('');
+        }}
+        title={t('agent.payment.mark_not_received', 'Mark not received')}
+      >
+        <form onSubmit={handleNotReceivedConfirm} className="space-y-4">
+          <p className="text-sm text-text-secondary">
+            {t(
+              'agent.payment.not_received_note_prompt',
+              'Provide a note so the agent can re-submit with corrections.',
+            )}
+          </p>
+          <Textarea
+            id="payment-note"
+            label={t('agent.payment.admin_note', 'Admin note')}
+            value={paymentNote}
+            onChange={(e) => setPaymentNote(e.target.value)}
+            required
+            rows={4}
+            disabled={paymentReview.submitting}
+          />
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setPaymentNoteOpen(false);
+                setPaymentNote('');
+              }}
+              disabled={paymentReview.submitting}
+            >
+              {t('common.cancel', 'Cancel')}
+            </Button>
+            <Button type="submit" isLoading={paymentReview.submitting}>
+              {t('agent.payment.mark_not_received', 'Mark not received')}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

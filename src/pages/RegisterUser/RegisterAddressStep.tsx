@@ -4,11 +4,8 @@ import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import Button from '../../components/ui/Button';
 import type { City, State } from '../../types/api';
-import { formatAgentName } from '../../types/api';
-import type { Agent } from '../../types/api';
 
 type RegisterAddressStepProps = {
-  isAgentPortal: boolean;
   submitting: boolean;
   addressLine1: string;
   setAddressLine1: (v: string) => void;
@@ -25,16 +22,12 @@ type RegisterAddressStepProps = {
   states: State[];
   cities: City[];
   loadingCities: boolean;
-  loadingAgentProfile: boolean;
-  locationLocked: boolean;
-  agentProfile: Agent | null;
   fieldErrors: Record<string, string>;
   onBack: () => void;
   onContinue: () => void;
 };
 
 export default function RegisterAddressStep({
-  isAgentPortal,
   submitting,
   addressLine1,
   setAddressLine1,
@@ -51,9 +44,6 @@ export default function RegisterAddressStep({
   states,
   cities,
   loadingCities,
-  loadingAgentProfile,
-  locationLocked,
-  agentProfile,
   fieldErrors,
   onBack,
   onContinue,
@@ -62,20 +52,6 @@ export default function RegisterAddressStep({
 
   return (
     <div className="space-y-4">
-      {isAgentPortal && agentProfile && (
-        <p className="text-sm text-text-secondary bg-surface/50 border border-border rounded-lg px-3 py-2">
-          {t('register.agent_self_assign', 'You will be assigned as the referral agent')}:{' '}
-          <span className="text-text font-medium">{formatAgentName(agentProfile)}</span>
-        </p>
-      )}
-      {locationLocked && (
-        <p className="text-sm text-text-secondary bg-primary/5 border border-primary/20 rounded-lg px-3 py-2">
-          {t(
-            'register.agent_location_locked',
-            'Location is set to your registered service area.',
-          )}
-        </p>
-      )}
       <Input
         label={t('register.address_line1', 'Address Line 1')}
         value={addressLine1}
@@ -122,15 +98,13 @@ export default function RegisterAddressStep({
           {
             value: '',
             label:
-              loadingAgentProfile
-                ? t('common.loading', 'Loading...')
-                : states.length === 0
-                  ? t('register.no_states', 'No states available')
-                  : t('register.select_state', 'Select state'),
+              states.length === 0
+                ? t('register.no_states', 'No states available')
+                : t('register.select_state', 'Select state'),
           },
           ...states.map((s) => ({ value: s.id, label: `${s.name} (${s.stateCode})` })),
         ]}
-        disabled={locationLocked || loadingAgentProfile || states.length === 0}
+        disabled={states.length === 0}
         required
       />
       <Select
@@ -150,7 +124,7 @@ export default function RegisterAddressStep({
           },
           ...cities.map((c) => ({ value: c.id, label: c.name })),
         ]}
-        disabled={locationLocked || !formStateId || loadingCities}
+        disabled={!formStateId || loadingCities}
         required
       />
       {fieldErrors.location && (

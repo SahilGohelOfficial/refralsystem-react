@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -9,6 +10,7 @@ import {
   Users,
   Wallet,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { Card, CardContent } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
@@ -38,8 +40,10 @@ const AGENT_PORTAL_STEPS = STEPS.filter((s) => s.id !== 'agent');
 const RegisterUser = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const isAgentPortal = user?.role === 'agent';
+  const [redirectingToDashboard, setRedirectingToDashboard] = useState(false);
+  const autoLoginAttemptedRef = useRef(false);
 
   const form = useRegisterForm({
     t,
@@ -107,8 +111,6 @@ const RegisterUser = () => {
     selectedAgentId,
     setSelectedAgentId,
     agentProfile,
-    loadingAgentProfile,
-    locationLocked,
     selectedState,
     selectedCity,
     selectedAgent,
@@ -126,6 +128,48 @@ const RegisterUser = () => {
   const stepIndex = visibleSteps.findIndex((s) => s.id === step);
   const exitPath = isAgentPortal ? '/agent/dashboard' : '/choose-login';
   const assignedAgentDisplay = isAgentPortal ? agentProfile : selectedAgent;
+
+  useEffect(() => {
+    if (isAgentPortal || step !== 'success' || !assignedUser || autoLoginAttemptedRef.current) {
+      return;
+    }
+
+    autoLoginAttemptedRef.current = true;
+    let cancelled = false;
+    const redirectToDashboard = async () => {
+      setRedirectingToDashboard(true);
+      try {
+        await login(phoneNumber, password, 'user');
+        if (!cancelled) {
+          navigate('/user/dashboard', { replace: true });
+        }
+      } catch (error) {
+        if (!cancelled) {
+          const message =
+            error instanceof Error
+              ? error.message
+              : t('register.auto_login_failed', 'Registration successful. Please sign in.');
+          toast.error(message);
+          setRedirectingToDashboard(false);
+          autoLoginAttemptedRef.current = false;
+        }
+      }
+    };
+
+    void redirectToDashboard();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    isAgentPortal,
+    step,
+    assignedUser,
+    login,
+    phoneNumber,
+    password,
+    navigate,
+    t,
+  ]);
 
   return (
     <div className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8">
@@ -272,7 +316,6 @@ const RegisterUser = () => {
           <Card>
             <CardContent className="space-y-4 pt-2">
               <RegisterAddressStep
-                isAgentPortal={isAgentPortal}
                 submitting={submitting}
                 addressLine1={addressLine1}
                 setAddressLine1={setAddressLine1}
@@ -289,9 +332,6 @@ const RegisterUser = () => {
                 states={states}
                 cities={cities}
                 loadingCities={loadingCities}
-                loadingAgentProfile={loadingAgentProfile}
-                locationLocked={locationLocked}
-                agentProfile={agentProfile}
                 fieldErrors={fieldErrors}
                 onBack={goBack}
                 onContinue={() => {
@@ -435,7 +475,7 @@ const RegisterUser = () => {
           </Card>
         )}
 
-        {step === 'success' && assignedUser && (
+        {isAgentPortal && step === 'success' && assignedUser && (
           <Card>
             <CardContent className="py-8 text-center space-y-4">
               <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-success/15 border border-success/30">
@@ -482,16 +522,14 @@ const RegisterUser = () => {
                   </span>
                 </div>
               </div>
-              <p className="text-sm text-text-secondary bg-primary/5 border border-primary/20 rounded-lg px-4 py-3">
-                {t(
-                  'register.agent_contact_note',
-                  'Your assigned agent will contact you as soon as possible.',
-                )}
-              </p>
-              <Button onClick={() => navigate(exitPath)} className="w-full sm:w-auto">
+              <Button
+                onClick={() => navigate(isAgentPortal ? exitPath : '/user/login')}
+                isLoading={redirectingToDashboard}
+                className="w-full sm:w-auto"
+              >
                 {isAgentPortal
                   ? t('register.back_dashboard', 'Back to dashboard')
-                  : t('register.done', 'Done')}
+                  : t('register.sign_in', 'Sign in')}
               </Button>
             </CardContent>
           </Card>

@@ -133,14 +133,10 @@ const AgentSignUp = () => {
         'Passwords do not match',
       );
     }
-    if (
-      password.length < 8 ||
-      !/[a-zA-Z]/.test(password) ||
-      !/[0-9]/.test(password)
-    ) {
+    if (password.length < 8) {
       errors.password = t(
         'agent.signup.err_password_rules',
-        'Password must be at least 8 characters with one letter and one number',
+        'Password must be at least 8 characters',
       );
     }
     const { state, city } = resolveLocationNames();

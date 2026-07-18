@@ -95,7 +95,7 @@ const ChangePassword = () => {
                 disabled={isLoading}
               />
               <p className="mt-2 text-xs text-text-secondary">
-                At least 8 characters with one letter and one number.
+                At least 8 characters.
               </p>
             </div>
             <Input

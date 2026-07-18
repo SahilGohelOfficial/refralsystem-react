@@ -6,6 +6,7 @@ import {
   ChevronRight,
   Clock,
   Fingerprint,
+  Landmark,
   Mail,
   MapPin,
   Phone,
@@ -333,6 +334,47 @@ const AgentProfile = () => {
                   value={formatLocation(profile)}
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="space-y-5">
+              <SectionHeading
+                icon={Landmark}
+                title={t('agent.profile.bank_info', 'Bank details')}
+                description={t(
+                  'agent.profile.bank_info_desc',
+                  'Read-only payout account details registered during sign up.',
+                )}
+              />
+              {profile.bankDetails ? (
+                <div className="space-y-4">
+                  <InfoRow
+                    icon={User}
+                    label={t('agent.profile.account_holder_name', 'Account holder name')}
+                    value={profile.bankDetails.accountHolderName}
+                  />
+                  <InfoRow
+                    icon={Fingerprint}
+                    label={t('agent.profile.account_number', 'Account number')}
+                    value={profile.bankDetails.accountNumber}
+                  />
+                  <InfoRow
+                    icon={Landmark}
+                    label={t('agent.profile.ifsc_code', 'IFSC code')}
+                    value={profile.bankDetails.ifscCode}
+                  />
+                  <InfoRow
+                    icon={Calendar}
+                    label={t('agent.profile.bank_submitted_at', 'Submitted')}
+                    value={formatLocalDateTime(profile.bankDetails.createdAt)}
+                  />
+                </div>
+              ) : (
+                <p className="text-sm text-text-secondary">
+                  {t('agent.profile.bank_not_available', 'Bank details are not available.')}
+                </p>
+              )}
             </CardContent>
           </Card>
 

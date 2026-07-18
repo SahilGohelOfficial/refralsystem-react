@@ -12,11 +12,9 @@ import {
   ShieldCheck,
   Link2,
   ClipboardList,
-  Wallet,
 } from 'lucide-react';
 import { useAuth } from '../stores/authStore';
 import { useMyUsers } from '../hooks/queries';
-import { selectNeedsPaymentSubmission, useUserPortalStore } from '../stores/userPortalStore';
 
 const adminNavItems = [
   { path: '/admin/dashboard', labelKey: 'nav.admin.dashboard', icon: LayoutDashboard },
@@ -44,7 +42,6 @@ const agentNavItems = [
 
 const userNavItems = [
   { path: '/user/dashboard', labelKey: 'nav.user_portal.dashboard', icon: LayoutDashboard },
-  { path: '/user/payment', labelKey: 'nav.user_portal.payment', icon: Wallet, paymentRequired: true },
   { path: '/user/forms', labelKey: 'nav.user_portal.forms', icon: FileText },
   { path: '/user/profile', labelKey: 'nav.user_portal.profile', icon: Users },
   { path: '/user/settings', labelKey: 'nav.user_portal.settings', icon: Settings },
@@ -58,7 +55,6 @@ interface SidebarProps {
 const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { user, logout } = useAuth();
-  const needsPaymentSubmission = useUserPortalStore(selectNeedsPaymentSubmission);
   const isAgent = user?.role === 'agent';
   const { data: pendingUsers = [] } = useMyUsers('pending', isAgent);
   const pendingUserCount = pendingUsers.length;
@@ -73,9 +69,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
     navItems = agentNavItems;
     title = 'Agent Portal';
   } else if (user?.role === 'user') {
-    navItems = userNavItems.filter(
-      (item) => !item.paymentRequired || needsPaymentSubmission,
-    );
+    navItems = userNavItems;
     title = 'User Portal';
   } else {
     navItems =

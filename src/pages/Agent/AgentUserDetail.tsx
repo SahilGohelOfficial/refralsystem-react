@@ -1,7 +1,15 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, CheckCircle, Edit2, Eye, Search, Trash2, XCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Edit2, Eye, ImagePlus, Search, Trash2, Upload, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Table, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
@@ -19,22 +27,48 @@ import { queryClient } from '../../lib/queryClient';
 import { queryKeys } from '../../lib/queryKeys';
 import { useAgentUserPaths } from '../../lib/agentUserPaths';
 import {
+  confirmMyUserPayment,
   deleteMyUser,
-  getMyUser,
   getApprovalInfo,
+  getMyUser,
   getMyUserPayment,
+  getMyUserPaymentHistory,
   getMyUserPaymentScreenshotUrl,
   listUserForms,
-  updateMyUserPaymentStatus,
+  presignMyUserPaymentUpload,
   updateMyUserStatus,
 } from '../../services/agents.service';
-import type { ApiError, ApprovalInfo, FormSummary, ReferralUser, UserStatus } from '../../types/api';
+import type {
+  ApiError,
+  ApprovalInfo,
+  FormSummary,
+  PaymentHistory,
+  ReferralUser,
+  UserStatus,
+} from '../../types/api';
 import { formatGenderLabel, formatUserName } from '../../types/api';
 import { formatCalendarDate, formatLocalDate, formatLocalDateTime } from '../../lib/dates';
 import {
-  PaymentReviewSection,
+  PaymentHistorySection,
   usePaymentReview,
 } from '../../components/agent/PaymentReviewSection';
+
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const MAX_SIZE_BYTES = 10 * 1024 * 1024;
+
+async function uploadFileToPresignedUrl(uploadUrl: string, file: File): Promise<void> {
+  const response = await fetch(uploadUrl, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': file.type || 'application/octet-stream',
+    },
+    body: file,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Upload failed (${response.status})`);
+  }
+}
 
 const statusVariant = (status: UserStatus | null) => {
   if (status === 'pending') return 'warning';
@@ -52,6 +86,7 @@ const AgentUserDetail = () => {
   const { t } = useTranslation();
   const confirm = useConfirm();
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { userId, fromUserRequests, backListPath, formSubmitPath } = useAgentUserPaths();
   const [user, setUser] = useState<ReferralUser | null>(null);
   const [forms, setForms] = useState<FormSummary[]>([]);
@@ -59,22 +94,28 @@ const AgentUserDetail = () => {
   const [submitting, setSubmitting] = useState(false);
   const [search, setSearch] = useState('');
   const [viewFormId, setViewFormId] = useState<string | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [paymentHistory, setPaymentHistory] = useState<PaymentHistory[]>([]);
+  const [paymentHistoryLoading, setPaymentHistoryLoading] = useState(false);
+  const [uploadingPayment, setUploadingPayment] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [submittingStatus, setSubmittingStatus] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectNote, setRejectNote] = useState('');
   const [approveOpen, setApproveOpen] = useState(false);
   const [approvalInfo, setApprovalInfo] = useState<ApprovalInfo | null>(null);
   const [selectedChainId, setSelectedChainId] = useState('');
-  const [editOpen, setEditOpen] = useState(false);
 
   const paymentReview = usePaymentReview({
-    enabled: Boolean(userId && fromUserRequests),
+    enabled: Boolean(userId),
     reloadKey: userId,
     fetchPayment: () => getMyUserPayment(userId!),
     fetchScreenshotUrl: async () => {
       const response = await getMyUserPaymentScreenshotUrl(userId!);
       return response.downloadUrl;
     },
-    updateStatus: (status) => updateMyUserPaymentStatus(userId!, { status }),
+    fetchHistory: () => getMyUserPaymentHistory(userId!),
   });
 
   const fetchData = useCallback(async () => {
@@ -100,6 +141,21 @@ const AgentUserDetail = () => {
     void fetchData();
   }, [fetchData]);
 
+  useEffect(() => {
+    if (!selectedFile) {
+      setPreviewUrl(null);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(selectedFile);
+    setPreviewUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [selectedFile]);
+
+  useEffect(() => {
+    setPaymentHistory(paymentReview.history);
+    setPaymentHistoryLoading(paymentReview.loadingHistory);
+  }, [paymentReview.history, paymentReview.loadingHistory]);
+
   const filteredForms = useMemo(() => {
     const query = search.toLowerCase();
     return forms.filter(
@@ -113,44 +169,60 @@ const AgentUserDetail = () => {
     void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUsersPrefix });
   };
 
-  const handleApprove = async () => {
-    if (!user) return;
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-    setSubmitting(true);
-    try {
-      const info = await getApprovalInfo(user.id);
-      if (!info.requiresChainSelection) {
-        await updateMyUserStatus(user.id, { status: 'approved' });
-        refreshMyUserLists();
-        toast.success(t('agent.user_request_detail.approve_success', 'User approved successfully'));
-        navigate(backListPath);
-      } else {
-        setApprovalInfo(info);
-        setSelectedChainId(info.suggestedChainId ?? '');
-        setApproveOpen(true);
-      }
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError));
-    } finally {
-      setSubmitting(false);
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      toast.error(
+        t(
+          'user_portal.payment.invalid_type',
+          'Please upload a JPEG, PNG, WebP, or GIF image.',
+        ),
+      );
+      event.target.value = '';
+      return;
     }
+
+    if (file.size > MAX_SIZE_BYTES) {
+      toast.error(
+        t('user_portal.payment.too_large', 'Image must be 10 MB or smaller.'),
+      );
+      event.target.value = '';
+      return;
+    }
+
+    setSelectedFile(file);
   };
 
-  const handleApproveConfirm = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!user || !selectedChainId) return;
+  const handleSubmitPayment = async () => {
+    if (!userId || !selectedFile) {
+      toast.error(
+        t('user_portal.payment.file_required', 'Please select a payment screenshot.'),
+      );
+      return;
+    }
 
-    setSubmitting(true);
+    setUploadingPayment(true);
     try {
-      await updateMyUserStatus(user.id, { status: 'approved', chainId: selectedChainId });
+      const presign = await presignMyUserPaymentUpload(userId, {
+        fileName: selectedFile.name,
+        contentType: selectedFile.type,
+        size: selectedFile.size,
+      });
+      await uploadFileToPresignedUrl(presign.uploadUrl, selectedFile);
+      await confirmMyUserPayment(userId, { screenShot: presign.key });
+      await paymentReview.reloadPayment();
+      setSelectedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      toast.success(
+        t('user_portal.payment.submit_success', 'Payment submitted successfully.'),
+      );
       refreshMyUserLists();
-      toast.success(t('agent.user_request_detail.approve_success', 'User approved successfully'));
-      setApproveOpen(false);
-      navigate(backListPath);
     } catch (error) {
       toast.error(formatApiError(error as ApiError));
     } finally {
-      setSubmitting(false);
+      setUploadingPayment(false);
     }
   };
 
@@ -182,28 +254,72 @@ const AgentUserDetail = () => {
     }
   };
 
-  const handleReject = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-
-    const note = rejectNote.trim();
-    if (!note) {
-      toast.error(t('agent.user_request_detail.note_required', 'Rejection note is required'));
-      return;
-    }
-
-    setSubmitting(true);
+  const handleOpenApprove = async () => {
+    if (!user || !userId) return;
+    setSubmittingStatus(true);
     try {
-      await updateMyUserStatus(user.id, { status: 'rejected', note });
+      const info = await getApprovalInfo(userId);
+      if (!info.requiresChainSelection) {
+        await updateMyUserStatus(userId, { status: 'approved' });
+        toast.success(
+          t('agent.user_request_detail.approve_success', 'User approved successfully'),
+        );
+        refreshMyUserLists();
+        navigate(backListPath);
+      } else {
+        setApprovalInfo(info);
+        setSelectedChainId(info.suggestedChainId ?? '');
+        setApproveOpen(true);
+      }
+    } catch (error) {
+      toast.error(formatApiError(error as ApiError));
+    } finally {
+      setSubmittingStatus(false);
+    }
+  };
+
+  const handleApproveConfirm = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!user || !userId || !selectedChainId) return;
+    setSubmittingStatus(true);
+    try {
+      await updateMyUserStatus(userId, {
+        status: 'approved',
+        chainId: selectedChainId,
+      });
+      toast.success(
+        t('agent.user_request_detail.approve_success', 'User approved successfully'),
+      );
+      setApproveOpen(false);
       refreshMyUserLists();
-      toast.success(t('agent.user_request_detail.reject_success', 'User rejected successfully'));
-      setRejectOpen(false);
-      setRejectNote('');
       navigate(backListPath);
     } catch (error) {
       toast.error(formatApiError(error as ApiError));
     } finally {
-      setSubmitting(false);
+      setSubmittingStatus(false);
+    }
+  };
+
+  const handleRejectConfirm = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!user || !userId || !rejectNote.trim()) return;
+    setSubmittingStatus(true);
+    try {
+      await updateMyUserStatus(userId, {
+        status: 'rejected',
+        note: rejectNote.trim(),
+      });
+      toast.success(
+        t('agent.user_request_detail.reject_success', 'User rejected successfully'),
+      );
+      setRejectOpen(false);
+      setRejectNote('');
+      refreshMyUserLists();
+      navigate(backListPath);
+    } catch (error) {
+      toast.error(formatApiError(error as ApiError));
+    } finally {
+      setSubmittingStatus(false);
     }
   };
 
@@ -224,7 +340,10 @@ const AgentUserDetail = () => {
     : (user.filledFormsCount ?? forms.filter((f) => f.isSubmitted === true).length);
   const totalCount = fromUserRequests ? 0 : (user.totalFormsCount ?? forms.length);
   const isPending = user.status === 'pending';
-  const canApprove = isPending && paymentReview.payment?.status === 'received';
+  const canUploadPayment =
+    fromUserRequests &&
+    isPending &&
+    (!paymentReview.payment || paymentReview.payment.status === 'not_received');
 
   return (
     <div className="space-y-6">
@@ -259,14 +378,14 @@ const AgentUserDetail = () => {
         </div>
 
         <div className="flex gap-2 shrink-0">
-          {isPending && fromUserRequests ? (
+          {fromUserRequests && isPending ? (
             <>
               <Button
                 type="button"
                 variant="secondary"
                 className="gap-2 text-error border-error/30 hover:bg-error/10"
                 onClick={() => setRejectOpen(true)}
-                disabled={submitting}
+                disabled={submittingStatus}
               >
                 <XCircle size={16} />
                 {t('agent.user_request_detail.reject', 'Reject')}
@@ -274,11 +393,11 @@ const AgentUserDetail = () => {
               <Button
                 type="button"
                 className="gap-2"
-                onClick={() => void handleApprove()}
-                isLoading={submitting}
-                disabled={!canApprove}
+                onClick={() => void handleOpenApprove()}
+                isLoading={submittingStatus}
+                disabled={paymentReview.payment?.status !== 'received'}
                 title={
-                  !canApprove
+                  paymentReview.payment?.status !== 'received'
                     ? t(
                         'agent.payment.approve_blocked',
                         'Mark payment as received before approving this user.',
@@ -319,14 +438,86 @@ const AgentUserDetail = () => {
       </div>
 
       {fromUserRequests && isPending ? (
-        <PaymentReviewSection
-          payment={paymentReview.payment}
-          screenshotUrl={paymentReview.screenshotUrl}
-          loadingScreenshot={paymentReview.loadingScreenshot}
-          submitting={paymentReview.submitting}
-          onMarkReceived={paymentReview.handleMarkReceived}
-          onMarkNotReceived={paymentReview.handleMarkNotReceived}
-        />
+        <>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle>{t('agent.payment.upload_title', 'Upload payment screenshot')}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {paymentReview.payment?.status === 'not_received' ? (
+                <div className="rounded-lg border border-warning/30 bg-warning/10 p-3">
+                  <p className="text-sm font-medium text-text">
+                    {t(
+                      'agent.payment.resubmit_required',
+                      'Admin marked this payment as not received. Please submit again.',
+                    )}
+                  </p>
+                  {paymentReview.payment.note ? (
+                    <p className="mt-1 text-sm text-text-secondary">
+                      {t('agent.payment.admin_note', 'Admin note')}: {paymentReview.payment.note}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={ALLOWED_TYPES.join(',')}
+                className="hidden"
+                onChange={handleFileChange}
+              />
+
+              {previewUrl ? (
+                <div className="rounded-lg border border-border overflow-hidden bg-surface-muted">
+                  <img
+                    src={previewUrl}
+                    alt={t('user_portal.payment.preview_alt', 'Payment screenshot preview')}
+                    className="max-h-80 w-full object-contain"
+                  />
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={!canUploadPayment}
+                  className="w-full rounded-xl border-2 border-dashed border-border p-8 flex flex-col items-center gap-3 text-text-secondary hover:border-primary/50 hover:text-text transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <ImagePlus size={30} className="text-primary" />
+                  <span className="text-sm font-medium">
+                    {t('user_portal.payment.choose_file', 'Choose an image')}
+                  </span>
+                  <span className="text-xs">
+                    {t('user_portal.payment.file_hint', 'JPEG, PNG, WebP, or GIF up to 10 MB')}
+                  </span>
+                </button>
+              )}
+
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={!canUploadPayment || uploadingPayment}
+                >
+                  <Upload size={16} className="mr-2" />
+                  {selectedFile
+                    ? t('user_portal.payment.change_file', 'Change image')
+                    : t('user_portal.payment.choose_file', 'Choose an image')}
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => void handleSubmitPayment()}
+                  disabled={!canUploadPayment || uploadingPayment || !selectedFile}
+                >
+                  {uploadingPayment
+                    ? t('common.submitting', 'Submitting...')
+                    : t('agent.payment.submit_for_verification', 'Submit for verification')}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </>
       ) : null}
 
       <Card>
@@ -569,6 +760,11 @@ const AgentUserDetail = () => {
         </Card>
       ) : null}
 
+      <PaymentHistorySection
+        paymentHistory={paymentHistory}
+        loadingHistory={paymentHistoryLoading}
+      />
+
       <AgentUserEditModal
         user={user}
         isOpen={editOpen}
@@ -593,7 +789,7 @@ const AgentUserDetail = () => {
         }}
         title={t('agent.user_request_detail.reject_title', 'Reject User Request')}
       >
-        <form onSubmit={handleReject} className="space-y-4">
+        <form onSubmit={handleRejectConfirm} className="space-y-4">
           <p className="text-sm text-text-secondary">
             {t(
               'agent.user_request_detail.reject_desc',
@@ -601,13 +797,13 @@ const AgentUserDetail = () => {
             )}
           </p>
           <Textarea
-            id="reject-note"
+            id="agent-reject-note"
             label={t('agent.user_request_detail.note_label', 'Rejection note')}
             value={rejectNote}
             onChange={(e) => setRejectNote(e.target.value)}
             required
-            disabled={submitting}
             rows={4}
+            disabled={submittingStatus}
           />
           <div className="flex justify-end gap-2 pt-2">
             <Button
@@ -617,11 +813,16 @@ const AgentUserDetail = () => {
                 setRejectOpen(false);
                 setRejectNote('');
               }}
-              disabled={submitting}
+              disabled={submittingStatus}
             >
               {t('common.cancel', 'Cancel')}
             </Button>
-            <Button type="submit" variant="secondary" className="text-error border-error/30" isLoading={submitting}>
+            <Button
+              type="submit"
+              variant="secondary"
+              className="text-error border-error/30"
+              isLoading={submittingStatus}
+            >
               {t('agent.user_request_detail.confirm_reject', 'Confirm Reject')}
             </Button>
           </div>
@@ -649,7 +850,7 @@ const AgentUserDetail = () => {
             value={selectedChainId}
             onChange={(e) => setSelectedChainId(e.target.value)}
             required
-            disabled={submitting}
+            disabled={submittingStatus}
             options={[
               { value: '', label: t('agent.approval_modal.select_chain', '— Select a chain —') },
               ...(approvalInfo?.chains.map((chain) => ({
@@ -667,16 +868,17 @@ const AgentUserDetail = () => {
                 setSelectedChainId('');
                 setApprovalInfo(null);
               }}
-              disabled={submitting}
+              disabled={submittingStatus}
             >
               {t('common.cancel', 'Cancel')}
             </Button>
-            <Button type="submit" isLoading={submitting} disabled={!selectedChainId}>
+            <Button type="submit" isLoading={submittingStatus} disabled={!selectedChainId}>
               {t('agent.approval_modal.confirm', 'Confirm Approve')}
             </Button>
           </div>
         </form>
       </Modal>
+
     </div>
   );
 };

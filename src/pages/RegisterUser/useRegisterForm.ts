@@ -84,8 +84,6 @@ export function useRegisterForm({ t, isAgentPortal, agentUserId }: UseRegisterFo
   const [agentProfile, setAgentProfile] = useState<Agent | null>(null);
   const [loadingAgentProfile, setLoadingAgentProfile] = useState(false);
 
-  const locationLocked = isAgentPortal && !!agentProfile?.state && !!agentProfile?.city;
-
   const fetchStates = useCallback(async () => {
     try {
       const data = await listStates();
@@ -117,18 +115,6 @@ export function useRegisterForm({ t, isAgentPortal, agentUserId }: UseRegisterFo
       cancelled = true;
     };
   }, [isAgentPortal]);
-
-  useEffect(() => {
-    if (!isAgentPortal || !agentProfile?.state || states.length === 0) return;
-    const matchedState = states.find((s) => s.name === agentProfile.state);
-    if (matchedState) setFormStateId(String(matchedState.id));
-  }, [isAgentPortal, agentProfile, states]);
-
-  useEffect(() => {
-    if (!isAgentPortal || !agentProfile?.city || cities.length === 0) return;
-    const matchedCity = cities.find((c) => c.name === agentProfile.city);
-    if (matchedCity) setFormCityId(String(matchedCity.id));
-  }, [isAgentPortal, agentProfile, cities]);
 
   useEffect(() => {
     if (!formStateId) {
@@ -166,14 +152,10 @@ export function useRegisterForm({ t, isAgentPortal, agentUserId }: UseRegisterFo
     }
     if (!password.trim()) {
       errors.password = t('register.err_password_required', 'Password is required');
-    } else if (
-      password.length < 8 ||
-      !/[a-zA-Z]/.test(password) ||
-      !/[0-9]/.test(password)
-    ) {
+    } else if (password.length < 8) {
       errors.password = t(
         'register.err_password_rules',
-        'Password must be at least 8 characters and include letters and numbers',
+        'Password must be at least 8 characters',
       );
     }
     if (!dateOfBirth) {
@@ -621,7 +603,6 @@ export function useRegisterForm({ t, isAgentPortal, agentUserId }: UseRegisterFo
     setSelectedAgentId,
     agentProfile,
     loadingAgentProfile,
-    locationLocked,
     selectedState,
     selectedCity,
     selectedAgent,

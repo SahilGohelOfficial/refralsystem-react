@@ -7,6 +7,7 @@ import {
   Fingerprint,
   Heart,
   Home,
+  Landmark,
   Mail,
   MapPin,
   Phone,
@@ -168,6 +169,47 @@ const UserProfile = () => {
                   value={profile.referredByName ?? '—'}
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="space-y-5">
+              <SectionHeading
+                icon={Landmark}
+                title={t('user_portal.profile.bank_info', 'Bank details')}
+                description={t(
+                  'user_portal.profile.bank_info_desc',
+                  'Read-only bank account details registered during sign up.',
+                )}
+              />
+              {profile.bankDetails ? (
+                <div className="space-y-4">
+                  <InfoRow
+                    icon={User}
+                    label={t('user_portal.profile.account_holder_name', 'Account holder name')}
+                    value={profile.bankDetails.accountHolderName}
+                  />
+                  <InfoRow
+                    icon={Fingerprint}
+                    label={t('user_portal.profile.account_number', 'Account number')}
+                    value={profile.bankDetails.accountNumber}
+                  />
+                  <InfoRow
+                    icon={Landmark}
+                    label={t('user_portal.profile.ifsc_code', 'IFSC code')}
+                    value={profile.bankDetails.ifscCode}
+                  />
+                  <InfoRow
+                    icon={Calendar}
+                    label={t('user_portal.profile.bank_submitted_at', 'Submitted')}
+                    value={formatLocalDateTime(profile.bankDetails.createdAt)}
+                  />
+                </div>
+              ) : (
+                <p className="text-sm text-text-secondary">
+                  {t('user_portal.profile.bank_not_available', 'Bank details are not available.')}
+                </p>
+              )}
             </CardContent>
           </Card>
 

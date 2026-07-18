@@ -26,8 +26,11 @@ import type {
   ApprovalInfo,
   ChainWithUsers,
   Payment,
+  PaymentHistory,
   PaymentScreenshotDownloadResponse,
   UpdatePaymentStatusPayload,
+  PresignPaymentUploadPayload,
+  ConfirmPaymentPayload,
 } from '../types/api';
 
 export function listAgents(status?: AgentStatus) {
@@ -229,24 +232,45 @@ export function getMyUserPayment(userId: string) {
   return api<Payment | null>(`/agents/me/users/${userId}/payment`);
 }
 
+export function getMyUserPaymentHistory(userId: string) {
+  return api<PaymentHistory[]>(`/agents/me/users/${userId}/payment/history`);
+}
+
 export function getMyUserPaymentScreenshotUrl(userId: string) {
   return api<PaymentScreenshotDownloadResponse>(
     `/agents/me/users/${userId}/payment/screenshot`,
   );
 }
 
-export function updateMyUserPaymentStatus(
+export function presignMyUserPaymentUpload(
   userId: string,
-  payload: UpdatePaymentStatusPayload,
+  payload: PresignPaymentUploadPayload,
 ) {
-  return api<Payment>(`/agents/me/users/${userId}/payment/status`, {
-    method: 'PATCH',
+  return api<{ uploadUrl: string; key: string; url: string; expiresIn: number }>(
+    `/agents/me/users/${userId}/payment/presign`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export function confirmMyUserPayment(
+  userId: string,
+  payload: ConfirmPaymentPayload,
+) {
+  return api<Payment>(`/agents/me/users/${userId}/payment/confirm`, {
+    method: 'POST',
     body: JSON.stringify(payload),
   });
 }
 
 export function getAgentUserPayment(agentId: string, userId: string) {
   return api<Payment | null>(`/agents/${agentId}/users/${userId}/payment`);
+}
+
+export function getAgentUserPaymentHistory(agentId: string, userId: string) {
+  return api<PaymentHistory[]>(`/agents/${agentId}/users/${userId}/payment/history`);
 }
 
 export function getAgentUserPaymentScreenshotUrl(agentId: string, userId: string) {
