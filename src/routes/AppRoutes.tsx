@@ -15,6 +15,7 @@ const AgentDetail = lazy(() => import('../pages/Admin/AgentDetail'));
 const AdminAgentUserDetail = lazy(() => import('../pages/Admin/AdminAgentUserDetail'));
 const Admins = lazy(() => import('../pages/Admin/Admins'));
 const Chains = lazy(() => import('../pages/Admin/Chains'));
+const Locations = lazy(() => import('../pages/Admin/Locations'));
 const Forms = lazy(() => import('../pages/Admin/Forms'));
 const FormBuilderPage = lazy(() => import('../pages/Admin/FormBuilderPage'));
 const FormResponses = lazy(() => import('../pages/Admin/FormResponses'));
@@ -89,6 +90,7 @@ const AppRoutes = () => {
               </ProtectedRoute>
             }
           />
+          <Route path="locations" element={<Locations />} />
           <Route path="forms" element={<Forms />} />
           <Route path="forms/:formId/responses" element={<FormResponses />} />
           <Route

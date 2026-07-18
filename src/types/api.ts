@@ -187,6 +187,7 @@ export interface State {
   id: number;
   name: string;
   stateCode: string;
+  cityCount?: number;
 }
 
 export interface City {
@@ -194,6 +195,27 @@ export interface City {
   name: string;
   stateId: number;
   shortCode: string | null;
+}
+
+export interface CreateStatePayload {
+  name: string;
+  stateCode: string;
+}
+
+export interface UpdateStatePayload {
+  name?: string;
+  stateCode?: string;
+}
+
+export interface CreateCityPayload {
+  name: string;
+  shortCode?: string | null;
+}
+
+export interface UpdateCityPayload {
+  name?: string;
+  shortCode?: string | null;
+  stateId?: number;
 }
 
 export type UserStatus = 'pending' | 'approved' | 'rejected';

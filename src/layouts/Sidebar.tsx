@@ -11,6 +11,7 @@ import {
   LogOut,
   ShieldCheck,
   Link2,
+  MapPin,
   ClipboardList,
 } from 'lucide-react';
 import { useAuth } from '../stores/authStore';
@@ -21,6 +22,7 @@ const adminNavItems = [
   { path: '/admin/agents', labelKey: 'nav.admin.agents', icon: Users },
   { path: '/admin/admins', labelKey: 'nav.admin.admins', icon: ShieldCheck, superAdminOnly: true },
   { path: '/admin/chains', labelKey: 'nav.admin.chains', icon: Link2, superAdminOnly: true },
+  { path: '/admin/locations', labelKey: 'nav.admin.locations', icon: MapPin },
   { path: '/admin/forms', labelKey: 'nav.admin.forms', icon: FileText },
   { path: '/admin/settings', labelKey: 'nav.admin.settings', icon: Settings },
 ];
