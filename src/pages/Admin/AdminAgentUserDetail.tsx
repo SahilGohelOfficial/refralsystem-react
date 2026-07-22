@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Eye, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
@@ -16,6 +17,7 @@ import { useAgentUser, useAgentUserForms } from '../../hooks/queries';
 import { useToastOnError } from '../../hooks/useToastOnError';
 import { useConfirm } from '../../stores/confirmStore';
 import { formatApiError } from '../../lib/api';
+import { queryKeys } from '../../lib/queryKeys';
 import type { ApiError, UserStatus } from '../../types/api';
 import { formatGenderLabel, formatUserName } from '../../types/api';
 import { formatCalendarDate, formatLocalDate, formatLocalDateTime } from '../../lib/dates';
@@ -46,6 +48,7 @@ const statusLabelKey = (status: UserStatus | null) => {
 const AdminAgentUserDetail = () => {
   const { t } = useTranslation();
   const confirm = useConfirm();
+  const queryClient = useQueryClient();
   const { agentId = '', userId = '' } = useParams();
   const navigate = useNavigate();
   const backListPath = `/admin/agents/${agentId}`;
@@ -58,6 +61,10 @@ const AdminAgentUserDetail = () => {
   const showForms = user != null && user.status !== 'pending';
   const showPaymentReview = user != null && user.status === 'pending';
   const showPaymentSection = user != null;
+
+  const invalidatePaymentQueries = () => {
+    void queryClient.invalidateQueries({ queryKey: queryKeys.agents.all });
+  };
 
   const paymentReview = usePaymentReview({
     enabled: showPaymentSection,
@@ -95,6 +102,7 @@ const AdminAgentUserDetail = () => {
     });
     if (!accepted) return;
     await paymentReview.handleMarkReceived();
+    invalidatePaymentQueries();
   };
 
   const handleOpenNotReceived = () => {
@@ -108,6 +116,7 @@ const AdminAgentUserDetail = () => {
     await paymentReview.handleMarkNotReceived(note);
     setPaymentNote('');
     setPaymentNoteOpen(false);
+    invalidatePaymentQueries();
   };
 
   const filteredForms = useMemo(() => {

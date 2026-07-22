@@ -24,6 +24,7 @@
       "referrals": "Referrals",
       "forms": "Forms",
       "withdrawals": "Withdrawals",
+      "user_payment_requests": "User Payment Requests",
       "settings": "Settings",
       "profile": "Profile",
       "change_password": "Change Password"
@@ -465,6 +466,28 @@
     "agent_detail": {
       "chain_view": "Chain View",
       "chain_view_desc": "All chains and this agent's referral positions within each."
+    },
+    "payment_requests": {
+      "title": "User Payment Requests",
+      "subtitle": "Review and manage payment requests submitted by agents for their users.",
+      "tab_pending": "Pending",
+      "tab_received": "Received",
+      "tab_not_received": "Not received",
+      "tab_all": "All",
+      "search": "Search by user, agent, phone, or email...",
+      "col_user": "User",
+      "col_agent": "Agent",
+      "col_phone": "Phone",
+      "col_status": "Payment Status",
+      "col_submitted": "Submitted",
+      "status_pending": "Pending",
+      "status_received": "Received",
+      "status_not_received": "Not received",
+      "no_results": "No payment requests match your search.",
+      "empty_pending": "No pending payment requests.",
+      "empty_received": "No received payment requests.",
+      "empty_not_received": "No not-received payment requests.",
+      "empty_all": "No payment requests yet."
     }
   },
   "chains": {

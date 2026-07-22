@@ -15,6 +15,9 @@ import {
   listAgentUsers,
   listAgents,
   listMyUsers,
+  listPaymentRequests,
+  getMyUserRequestCounts,
+  getPaymentRequestCounts,
   resetAgentPassword,
   updateAgent,
   updateAgentProfile,
@@ -28,6 +31,7 @@ import type {
   AgentStatus,
   ApiError,
   CreateAgentPayload,
+  PaymentStatus,
   UpdateAgentPayload,
   UpdateAgentProfilePayload,
   UpdateAgentStatusPayload,
@@ -40,6 +44,22 @@ export function useAgents(status?: AgentStatus) {
   return useQuery({
     queryKey: queryKeys.agents.list(status),
     queryFn: () => listAgents(status),
+  });
+}
+
+export function usePaymentRequests(status?: PaymentStatus, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.agents.paymentRequests(status),
+    queryFn: () => listPaymentRequests(status),
+    enabled,
+  });
+}
+
+export function usePaymentRequestCounts(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.agents.paymentRequestCounts,
+    queryFn: getPaymentRequestCounts,
+    enabled,
   });
 }
 
@@ -90,6 +110,14 @@ export function useMyUsers(status?: UserStatus, enabled = true) {
   return useQuery({
     queryKey: queryKeys.agents.myUsers(status),
     queryFn: () => listMyUsers(status),
+    enabled,
+  });
+}
+
+export function useMyUserRequestCounts(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.agents.myUserRequestCounts,
+    queryFn: getMyUserRequestCounts,
     enabled,
   });
 }

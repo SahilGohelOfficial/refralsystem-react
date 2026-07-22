@@ -8,11 +8,11 @@ import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import { formatApiError } from '../../lib/api';
 import { formatLocalDateTime } from '../../lib/dates';
+import { paymentStatusBadgeVariant, paymentStatusLabel } from '../../lib/labels';
 import type {
   ApiError,
   Payment,
   PaymentHistory,
-  PaymentStatus,
   UpdatePaymentStatusPayload,
 } from '../../types/api';
 
@@ -29,22 +29,6 @@ type PaymentReviewSectionProps = {
 type PaymentHistorySectionProps = {
   paymentHistory?: PaymentHistory[];
   loadingHistory?: boolean;
-};
-
-const paymentStatusVariant = (status: PaymentStatus) => {
-  if (status === 'received') return 'success' as const;
-  if (status === 'not_received') return 'error' as const;
-  return 'warning' as const;
-};
-
-const paymentStatusLabel = (status: PaymentStatus, t: (key: string, fallback: string) => string) => {
-  if (status === 'received') {
-    return t('agent.payment.status_received', 'Received');
-  }
-  if (status === 'not_received') {
-    return t('agent.payment.status_not_received', 'Not received');
-  }
-  return t('agent.payment.status_pending', 'Pending');
 };
 
 export function PaymentHistorySection({
@@ -77,8 +61,8 @@ export function PaymentHistorySection({
                         ? t('agent.payment.history_status_changed', 'Status changed')
                         : t('agent.payment.history_submitted', 'Screenshot submitted')}
                     </span>
-                    <Badge variant={paymentStatusVariant(entry.status)} dot>
-                      {paymentStatusLabel(entry.status, t)}
+                    <Badge variant={paymentStatusBadgeVariant(entry.status)} dot>
+                      {paymentStatusLabel(entry.status)}
                     </Badge>
                   </div>
                   <p className="text-xs text-text-secondary mt-1">
@@ -176,8 +160,8 @@ export function PaymentReviewSection({
       <CardHeader className="pb-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <CardTitle>{t('agent.payment.title', 'Payment')}</CardTitle>
-          <Badge variant={paymentStatusVariant(payment.status)} dot>
-            {paymentStatusLabel(payment.status, t)}
+          <Badge variant={paymentStatusBadgeVariant(payment.status)} dot>
+            {paymentStatusLabel(payment.status)}
           </Badge>
         </div>
       </CardHeader>

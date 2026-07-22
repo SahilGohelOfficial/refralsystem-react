@@ -24,6 +24,7 @@
       "referrals": "रेफरल",
       "forms": "फॉर्म",
       "withdrawals": "निकासी",
+      "user_payment_requests": "उपयोगकर्ता भुगतान अनुरोध",
       "settings": "सेटिंग्स",
       "change_password": "पासवर्ड बदलें"
     },
@@ -425,6 +426,28 @@
     "agent_detail": {
       "chain_view": "चेन दृश्य",
       "chain_view_desc": "सभी चेन और प्रत्येक में इस एजेंट की रेफरल स्थिति।"
+    },
+    "payment_requests": {
+      "title": "उपयोगकर्ता भुगतान अनुरोध",
+      "subtitle": "एजेंट्स द्वारा उनके उपयोगकर्ताओं के लिए सबमिट किए गए भुगतान अनुरोध देखें और प्रबंधित करें।",
+      "tab_pending": "लंबित",
+      "tab_received": "प्राप्त",
+      "tab_not_received": "प्राप्त नहीं",
+      "tab_all": "सभी",
+      "search": "उपयोगकर्ता, एजेंट, फ़ोन या ईमेल से खोजें...",
+      "col_user": "उपयोगकर्ता",
+      "col_agent": "एजेंट",
+      "col_phone": "फ़ोन",
+      "col_status": "भुगतान स्थिति",
+      "col_submitted": "सबमिट किया",
+      "status_pending": "लंबित",
+      "status_received": "प्राप्त",
+      "status_not_received": "प्राप्त नहीं",
+      "no_results": "आपकी खोज से कोई भुगतान अनुरोध मेल नहीं खाता।",
+      "empty_pending": "कोई लंबित भुगतान अनुरोध नहीं।",
+      "empty_received": "कोई प्राप्त भुगतान अनुरोध नहीं।",
+      "empty_not_received": "कोई प्राप्त-नहीं भुगतान अनुरोध नहीं।",
+      "empty_all": "अभी कोई भुगतान अनुरोध नहीं।"
     }
   },
   "chains": {

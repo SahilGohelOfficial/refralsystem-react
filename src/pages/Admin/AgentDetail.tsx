@@ -17,11 +17,17 @@ import {
 } from '../../hooks/queries';
 import { useToastOnError } from '../../hooks/useToastOnError';
 import { formatApiError } from '../../lib/api';
-import type { ApiError, ReferralUser, UserStatus } from '../../types/api';
+import type { ApiError, UserStatus } from '../../types/api';
 import { formatAgentName, formatGenderLabel, formatUserName } from '../../types/api';
 import { formatLocation } from '../../lib/location';
 import { formatLocalDate, formatLocalDateTime } from '../../lib/dates';
-import { agentStatusBadgeVariant, agentStatusLabel } from '../../lib/labels';
+import {
+  agentStatusBadgeVariant,
+  agentStatusLabel,
+  paymentStatusBadgeVariant,
+  paymentStatusLabel,
+} from '../../lib/labels';
+import TabCount from '../../components/ui/TabCount';
 
 type UserTab = 'approved' | 'pending' | 'rejected';
 type DetailTab = UserTab | 'chains';
@@ -74,10 +80,22 @@ const AgentDetail = () => {
     );
   });
 
-  const tabs: { id: DetailTab; label: string }[] = [
-    { id: 'approved', label: 'Accepted Users' },
-    { id: 'pending', label: 'Pending Users' },
-    { id: 'rejected', label: 'Rejected Users' },
+  const tabs: { id: DetailTab; label: string; count?: number }[] = [
+    {
+      id: 'approved',
+      label: 'Accepted Users',
+      count: agent?.approvedUsersCount ?? 0,
+    },
+    {
+      id: 'pending',
+      label: 'Pending Users',
+      count: agent?.pendingUsersCount ?? 0,
+    },
+    {
+      id: 'rejected',
+      label: 'Rejected Users',
+      count: agent?.rejectedUsersCount ?? 0,
+    },
     {
       id: 'chains',
       label: t('admin.agent_detail.chain_view', 'Chain View'),
@@ -276,6 +294,9 @@ const AgentDetail = () => {
                 }`}
             >
               {tab.label}
+              {tab.count !== undefined ? (
+                <TabCount count={tab.count} active={activeTab === tab.id} />
+              ) : null}
             </button>
           ))}
         </div>
@@ -323,6 +344,7 @@ const AgentDetail = () => {
                     <TableHead>Phone</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Status</TableHead>
+                    {activeTab === 'pending' ? <TableHead>Payment Status</TableHead> : null}
                     <TableHead>Registered</TableHead>
                     <TableHead>Forms</TableHead>
                   </TableRow>
@@ -348,6 +370,17 @@ const AgentDetail = () => {
                               : 'Accepted'}
                         </Badge>
                       </TableCell>
+                      {activeTab === 'pending' ? (
+                        <TableCell>
+                          {user.payment ? (
+                            <Badge variant={paymentStatusBadgeVariant(user.payment.status)} dot>
+                              {paymentStatusLabel(user.payment.status)}
+                            </Badge>
+                          ) : (
+                            <span className="text-sm text-text-secondary">—</span>
+                          )}
+                        </TableCell>
+                      ) : null}
                       <TableCell>{formatLocalDate(user.createdAt)}</TableCell>
                       <TableCell>
                         <span className="font-medium text-text">

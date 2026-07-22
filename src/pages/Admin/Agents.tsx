@@ -177,6 +177,11 @@ const Agents = () => {
                 <TableHead>Login ID</TableHead>
                 <TableHead>Location</TableHead>
                 <TableHead>Phone</TableHead>
+                <TableHead className="text-center">All Users</TableHead>
+                <TableHead className="text-center">Pending Users</TableHead>
+                <TableHead className="text-center">Accepted Users</TableHead>
+                <TableHead className="text-center">Rejected Users</TableHead>
+                <TableHead className="text-center">Payment Requests</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -198,6 +203,11 @@ const Agents = () => {
                   </TableCell>
                   <TableCell>{formatLocation(agent.state, agent.city)}</TableCell>
                   <TableCell>{agent.phoneNumber ?? '—'}</TableCell>
+                  <TableCell className="text-center">{agent.allUsersCount ?? 0}</TableCell>
+                  <TableCell className="text-center">{agent.pendingUsersCount ?? 0}</TableCell>
+                  <TableCell className="text-center">{agent.approvedUsersCount ?? 0}</TableCell>
+                  <TableCell className="text-center">{agent.rejectedUsersCount ?? 0}</TableCell>
+                  <TableCell className="text-center">{agent.paymentRequestsCount ?? 0}</TableCell>
                   <TableCell>
                     <Badge variant={agentStatusBadgeVariant(agent.status)} dot>
                       {agentStatusLabel(agent.status)}

@@ -7,13 +7,17 @@ import { Table, TableHeader, TableRow, TableHead, TableCell } from '../../compon
 import Badge from '../../components/ui/Badge';
 import Input from '../../components/ui/Input';
 import Loader from '../../components/ui/Loader';
-import { useMyUsers } from '../../hooks/queries';
+import TabCount from '../../components/ui/TabCount';
+import { useMyUserRequestCounts, useMyUsers } from '../../hooks/queries';
 import { useToastOnError } from '../../hooks/useToastOnError';
-import type { UserStatus, PaymentStatus } from '../../types/api';
+import { paymentStatusBadgeVariant, paymentStatusLabel } from '../../lib/labels';
+import type { UserStatus } from '../../types/api';
 import { formatUserName } from '../../types/api';
 import { formatLocalDate } from '../../lib/dates';
 
 type RequestTab = 'pending' | 'rejected';
+
+const EMPTY_COUNTS = { pending: 0, rejected: 0 };
 
 const statusVariant = (status: UserStatus | null) => {
   if (status === 'pending') return 'warning';
@@ -21,28 +25,18 @@ const statusVariant = (status: UserStatus | null) => {
   return 'success';
 };
 
-const paymentStatusVariant = (status: PaymentStatus) => {
-  if (status === 'received') return 'success';
-  if (status === 'not_received') return 'error';
-  return 'warning';
-};
-
-const paymentStatusLabel = (status: PaymentStatus) => {
-  if (status === 'received') return 'Received';
-  if (status === 'not_received') return 'Not received';
-  return 'Pending';
-};
-
 const UserRequests = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<RequestTab>('pending');
   const [search, setSearch] = useState('');
+  const { data: counts = EMPTY_COUNTS, error: countsError } = useMyUserRequestCounts();
   const { data: users = [], isLoading, error } = useMyUsers(activeTab);
   useToastOnError(error);
+  useToastOnError(countsError);
 
+  const query = search.toLowerCase();
   const filteredUsers = users.filter((user) => {
-    const query = search.toLowerCase();
     const fullName = formatUserName(user).toLowerCase();
     return (
       fullName.includes(query) ||
@@ -51,16 +45,24 @@ const UserRequests = () => {
     );
   });
 
-  const tabs: { id: RequestTab; label: string }[] = [
-    { id: 'pending', label: t('agent.user_requests.tab_pending', 'Pending') },
-    { id: 'rejected', label: t('agent.user_requests.tab_rejected', 'Rejected') },
+  const tabs: { id: RequestTab; label: string; count: number }[] = [
+    {
+      id: 'pending',
+      label: t('agent.user_requests.tab_pending', 'Pending'),
+      count: counts.pending,
+    },
+    {
+      id: 'rejected',
+      label: t('agent.user_requests.tab_rejected', 'Rejected'),
+      count: counts.rejected,
+    },
   ];
 
-  const emptyMessage = () => {
-    if (search) return t('agent.user_requests.no_results', 'No users match your search.');
-    if (activeTab === 'pending') return t('agent.user_requests.empty_pending', 'No pending requests.');
-    return t('agent.user_requests.empty_rejected', 'No rejected requests.');
-  };
+  const emptyMessage = search
+    ? t('agent.user_requests.no_results', 'No users match your search.')
+    : activeTab === 'pending'
+      ? t('agent.user_requests.empty_pending', 'No pending requests.')
+      : t('agent.user_requests.empty_rejected', 'No rejected requests.');
 
   return (
     <div className="page-shell space-y-6">
@@ -86,6 +88,7 @@ const UserRequests = () => {
             }`}
           >
             {tab.label}
+            <TabCount count={tab.count} active={activeTab === tab.id} />
           </button>
         ))}
       </div>
@@ -105,7 +108,7 @@ const UserRequests = () => {
         {isLoading ? (
           <Loader text={t('common.loading', 'Loading...')} />
         ) : filteredUsers.length === 0 ? (
-          <div className="py-16 text-center text-sm text-text-secondary">{emptyMessage()}</div>
+          <div className="py-16 text-center text-sm text-text-secondary">{emptyMessage}</div>
         ) : (
           <Table>
             <TableHeader>
@@ -136,7 +139,7 @@ const UserRequests = () => {
                   </TableCell>
                   <TableCell>
                     {user.payment ? (
-                      <Badge variant={paymentStatusVariant(user.payment.status)} dot>
+                      <Badge variant={paymentStatusBadgeVariant(user.payment.status)} dot>
                         {paymentStatusLabel(user.payment.status)}
                       </Badge>
                     ) : (

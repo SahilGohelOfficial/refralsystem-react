@@ -24,6 +24,7 @@
       "referrals": "રેફરલ્સ",
       "forms": "ફોર્મ",
       "withdrawals": "ઉપાડ",
+      "user_payment_requests": "વપરાશકર્તા પેમેન્ટ વિનંતીઓ",
       "settings": "સેટિંગ્સ",
       "change_password": "પાસવર્ડ બદલો"
     },
@@ -425,6 +426,28 @@
     "agent_detail": {
       "chain_view": "ચેઇન દૃશ્ય",
       "chain_view_desc": "બધી ચેઇન અને દરેકમાં આ એજન્ટની રેફરલ સ્થિતિ."
+    },
+    "payment_requests": {
+      "title": "વપરાશકર્તા પેમેન્ટ વિનંતીઓ",
+      "subtitle": "એજન્ટ્સ દ્વારા તેમના વપરાશકર્તાઓ માટે સબમિટ કરેલી પેમેન્ટ વિનંતીઓ જુઓ અને મેનેજ કરો.",
+      "tab_pending": "બાકી",
+      "tab_received": "પ્રાપ્ત",
+      "tab_not_received": "પ્રાપ્ત નથી",
+      "tab_all": "બધા",
+      "search": "વપરાશકર્તા, એજન્ટ, ફોન અથવા ઈમેલથી શોધો...",
+      "col_user": "વપરાશકર્તા",
+      "col_agent": "એજન્ટ",
+      "col_phone": "ફોન",
+      "col_status": "પેમેન્ટ સ્થિતિ",
+      "col_submitted": "સબમિટ",
+      "status_pending": "બાકી",
+      "status_received": "પ્રાપ્ત",
+      "status_not_received": "પ્રાપ્ત નથી",
+      "no_results": "તમારી શોધ સાથે કોઈ પેમેન્ટ વિનંતી મેળ ખાતી નથી.",
+      "empty_pending": "કોઈ બાકી પેમેન્ટ વિનંતીઓ નથી.",
+      "empty_received": "કોઈ પ્રાપ્ત પેમેન્ટ વિનંતીઓ નથી.",
+      "empty_not_received": "કોઈ પ્રાપ્ત-નથી પેમેન્ટ વિનંતીઓ નથી.",
+      "empty_all": "હજુ કોઈ પેમેન્ટ વિનંતીઓ નથી."
     }
   },
   "chains": {

@@ -4,6 +4,7 @@ import type {
   AgentLoginResponse,
   AgentSignUpResponse,
   AgentStatus,
+  AdminPaymentRequest,
   CreateAgentPayload,
   CreateAgentResponse,
   Form,
@@ -27,7 +28,10 @@ import type {
   ChainWithUsers,
   Payment,
   PaymentHistory,
+  PaymentRequestCounts,
   PaymentScreenshotDownloadResponse,
+  PaymentStatus,
+  AgentUserRequestCounts,
   UpdatePaymentStatusPayload,
   PresignPaymentUploadPayload,
   ConfirmPaymentPayload,
@@ -144,6 +148,10 @@ export function updateAgentProfile(payload: UpdateAgentProfilePayload) {
 export function listMyUsers(status?: UserStatus) {
   const query = status ? `?status=${status}` : '';
   return api<ReferralUser[]>(`/agents/me/users${query}`);
+}
+
+export function getMyUserRequestCounts() {
+  return api<AgentUserRequestCounts>('/agents/me/users/counts');
 }
 
 export function getMyUser(id: string) {
@@ -288,4 +296,13 @@ export function updateAgentUserPaymentStatus(
     method: 'PATCH',
     body: JSON.stringify(payload),
   });
+}
+
+export function listPaymentRequests(status?: PaymentStatus) {
+  const query = status ? `?status=${status}` : '';
+  return api<AdminPaymentRequest[]>(`/agents/payment-requests${query}`);
+}
+
+export function getPaymentRequestCounts() {
+  return api<PaymentRequestCounts>('/agents/payment-requests/counts');
 }

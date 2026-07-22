@@ -13,13 +13,29 @@ import {
   Link2,
   MapPin,
   ClipboardList,
+  Wallet,
+  type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../stores/authStore';
-import { useMyUsers } from '../hooks/queries';
+import { useMyUserRequestCounts, usePaymentRequestCounts } from '../hooks/queries';
 
-const adminNavItems = [
+type NavItem = {
+  path: string;
+  labelKey: string;
+  icon: LucideIcon;
+  superAdminOnly?: boolean;
+  badge?: 'pendingUsers' | 'pendingPayments';
+};
+
+const adminNavItems: NavItem[] = [
   { path: '/admin/dashboard', labelKey: 'nav.admin.dashboard', icon: LayoutDashboard },
   { path: '/admin/agents', labelKey: 'nav.admin.agents', icon: Users },
+  {
+    path: '/admin/payment-requests',
+    labelKey: 'nav.admin.user_payment_requests',
+    icon: Wallet,
+    badge: 'pendingPayments',
+  },
   { path: '/admin/admins', labelKey: 'nav.admin.admins', icon: ShieldCheck, superAdminOnly: true },
   { path: '/admin/chains', labelKey: 'nav.admin.chains', icon: Link2, superAdminOnly: true },
   { path: '/admin/locations', labelKey: 'nav.admin.locations', icon: MapPin },
@@ -27,14 +43,14 @@ const adminNavItems = [
   { path: '/admin/settings', labelKey: 'nav.admin.settings', icon: Settings },
 ];
 
-const agentNavItems = [
+const agentNavItems: NavItem[] = [
   { path: '/agent/dashboard', labelKey: 'nav.agent.dashboard', icon: LayoutDashboard },
   { path: '/agent/users', labelKey: 'nav.agent.my_users', icon: Users },
   {
     path: '/agent/user-requests',
     labelKey: 'nav.agent.user_requests',
     icon: ClipboardList,
-    pendingCount: true,
+    badge: 'pendingUsers',
   },
   { path: '/agent/your-chains', labelKey: 'nav.agent.your_chains', icon: Link2 },
   { path: '/agent/forms', labelKey: 'nav.agent.forms', icon: FileText },
@@ -42,7 +58,7 @@ const agentNavItems = [
   { path: '/agent/settings', labelKey: 'nav.agent.settings', icon: Settings },
 ];
 
-const userNavItems = [
+const userNavItems: NavItem[] = [
   { path: '/user/dashboard', labelKey: 'nav.user_portal.dashboard', icon: LayoutDashboard },
   { path: '/user/forms', labelKey: 'nav.user_portal.forms', icon: FileText },
   { path: '/user/profile', labelKey: 'nav.user_portal.profile', icon: Users },
@@ -54,15 +70,21 @@ interface SidebarProps {
   setIsMobileOpen: (isOpen: boolean) => void;
 }
 
+const formatBadge = (count: number) => (count > 99 ? '99+' : String(count));
+
 const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { user, logout } = useAuth();
-  const isAgent = user?.role === 'agent';
-  const { data: pendingUsers = [] } = useMyUsers('pending', isAgent);
-  const pendingUserCount = pendingUsers.length;
   const { t } = useTranslation();
+  const isAgent = user?.role === 'agent';
+  const isAdmin = user?.role === 'admin' || user?.role === 'superAdmin';
+  const { data: userRequestCounts } = useMyUserRequestCounts(isAgent);
+  const { data: paymentRequestCounts } = usePaymentRequestCounts(isAdmin);
 
-  const toggleSidebar = () => setIsCollapsed(!isCollapsed);
+  const badgeCounts = {
+    pendingUsers: userRequestCounts?.pending ?? 0,
+    pendingPayments: paymentRequestCounts?.pending ?? 0,
+  };
 
   let navItems = adminNavItems;
   let title = 'Admin';
@@ -73,11 +95,8 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
   } else if (user?.role === 'user') {
     navItems = userNavItems;
     title = 'User Portal';
-  } else {
-    navItems =
-      user?.role === 'superAdmin'
-        ? adminNavItems
-        : adminNavItems.filter((item) => !item.superAdminOnly);
+  } else if (user?.role !== 'superAdmin') {
+    navItems = adminNavItems.filter((item) => !item.superAdminOnly);
   }
 
   return (
@@ -117,7 +136,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
           )}
 
           <button
-            onClick={toggleSidebar}
+            onClick={() => setIsCollapsed((prev) => !prev)}
             className="hidden lg:flex icon-btn-sm absolute -right-3 top-1/2 -translate-y-1/2 bg-card border border-border shadow-sm"
             aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
@@ -132,48 +151,47 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
             </p>
           )}
           {navItems.map((item) => {
-            const showPendingCount =
-              isAgent && 'pendingCount' in item && item.pendingCount && pendingUserCount > 0;
-            const pendingCountLabel =
-              pendingUserCount > 99 ? '99+' : String(pendingUserCount);
+            const badgeCount = item.badge ? badgeCounts[item.badge] : 0;
+            const showBadge = badgeCount > 0;
+            const badgeLabel = formatBadge(badgeCount);
 
             return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              onClick={() => setIsMobileOpen(false)}
-              title={
-                isCollapsed
-                  ? showPendingCount
-                    ? `${t(item.labelKey)} (${pendingCountLabel})`
-                    : t(item.labelKey)
-                  : undefined
-              }
-              className={({ isActive }) =>
-                `nav-item w-full ${isActive ? 'nav-item-active' : 'nav-item-inactive'} ${
-                  isCollapsed ? 'justify-center px-2' : ''
-                }`
-              }
-            >
-              <span className="relative shrink-0">
-                <item.icon size={18} strokeWidth={1.75} />
-                {isCollapsed && showPendingCount ? (
-                  <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-warning text-[10px] font-bold leading-4 text-center text-background">
-                    {pendingCountLabel}
-                  </span>
-                ) : null}
-              </span>
-              {!isCollapsed && (
-                <>
-                  <span className="truncate">{t(item.labelKey)}</span>
-                  {showPendingCount ? (
-                    <span className="ml-auto min-w-[20px] h-5 px-1.5 rounded-full bg-warning/15 text-warning text-[11px] font-semibold leading-5 text-center border border-warning/30">
-                      {pendingCountLabel}
+              <NavLink
+                key={item.path}
+                to={item.path}
+                onClick={() => setIsMobileOpen(false)}
+                title={
+                  isCollapsed
+                    ? showBadge
+                      ? `${t(item.labelKey)} (${badgeLabel})`
+                      : t(item.labelKey)
+                    : undefined
+                }
+                className={({ isActive }) =>
+                  `nav-item w-full ${isActive ? 'nav-item-active' : 'nav-item-inactive'} ${
+                    isCollapsed ? 'justify-center px-2' : ''
+                  }`
+                }
+              >
+                <span className="relative shrink-0">
+                  <item.icon size={18} strokeWidth={1.75} />
+                  {isCollapsed && showBadge ? (
+                    <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-warning text-[10px] font-bold leading-4 text-center text-background">
+                      {badgeLabel}
                     </span>
                   ) : null}
-                </>
-              )}
-            </NavLink>
+                </span>
+                {!isCollapsed && (
+                  <>
+                    <span className="truncate">{t(item.labelKey)}</span>
+                    {showBadge ? (
+                      <span className="ml-auto min-w-[20px] h-5 px-1.5 rounded-full bg-warning/15 text-warning text-[11px] font-semibold leading-5 text-center border border-warning/30">
+                        {badgeLabel}
+                      </span>
+                    ) : null}
+                  </>
+                )}
+              </NavLink>
             );
           })}
         </nav>

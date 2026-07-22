@@ -61,6 +61,11 @@ export interface Agent {
   createdAt: string;
   updatedAt: string;
   bankDetails?: BankDetails | null;
+  allUsersCount?: number;
+  pendingUsersCount?: number;
+  approvedUsersCount?: number;
+  rejectedUsersCount?: number;
+  paymentRequestsCount?: number;
 }
 
 export interface UpdateAgentStatusPayload {
@@ -273,6 +278,38 @@ export interface UpdatePaymentStatusPayload {
 export interface PaymentScreenshotDownloadResponse {
   downloadUrl: string;
   expiresIn: number;
+}
+
+export interface AdminPaymentRequest {
+  id: string;
+  userId: string;
+  userFirstName: string;
+  userMiddleName: string | null;
+  userLastName: string;
+  userPhoneNumber: string;
+  userEmail: string;
+  userStatus: UserStatus | null;
+  agentId: string | null;
+  agentFirstName: string | null;
+  agentMiddleName: string | null;
+  agentLastName: string | null;
+  agentLoginId: string | null;
+  status: PaymentStatus;
+  note: string | null;
+  statusUpdatedAt: string | null;
+  createdAt: string;
+}
+
+export interface PaymentRequestCounts {
+  pending: number;
+  received: number;
+  notReceived: number;
+  all: number;
+}
+
+export interface AgentUserRequestCounts {
+  pending: number;
+  rejected: number;
 }
 
 export interface ReferralUser {

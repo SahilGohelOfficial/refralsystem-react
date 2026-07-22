@@ -1,4 +1,4 @@
-import type { AgentStatus, SubmissionUserType, UserStatus } from '../types/api';
+import type { AgentStatus, PaymentStatus, SubmissionUserType, UserStatus } from '../types/api';
 
 export const queryKeys = {
   admins: {
@@ -18,10 +18,14 @@ export const queryKeys = {
     userForm: (agentId: string, userId: string, formId: string) =>
       ['agents', agentId, 'users', userId, 'forms', formId] as const,
     chainReferrals: (agentId: string) => ['agents', agentId, 'chain-referrals'] as const,
+    paymentRequests: (status?: PaymentStatus) =>
+      ['agents', 'payment-requests', status ?? 'all'] as const,
+    paymentRequestCounts: ['agents', 'payment-requests', 'counts'] as const,
     myProfile: ['agents', 'me', 'profile'] as const,
     myUsersPrefix: ['agents', 'me', 'users'] as const,
     myUsers: (status?: UserStatus) =>
       [...queryKeys.agents.myUsersPrefix, status ?? 'all'] as const,
+    myUserRequestCounts: ['agents', 'me', 'users', 'counts'] as const,
     myUser: (userId: string) => ['agents', 'me', 'users', userId] as const,
     myChainReferrals: ['agents', 'me', 'chain-referrals'] as const,
     approvalInfo: (userId: string) => ['agents', 'me', 'users', userId, 'approval-info'] as const,
