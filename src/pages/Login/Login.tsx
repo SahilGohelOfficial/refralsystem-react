@@ -194,6 +194,23 @@ const Login = () => {
               disabled={isLoading}
             />
 
+            {(portal === 'user' || portal === 'agent') && (
+              <div className="flex justify-end -mt-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate(
+                      portal === 'agent' ? '/agent/forgot-password' : '/user/forgot-password',
+                    )
+                  }
+                  className="text-sm text-primary hover:underline font-medium"
+                  disabled={isLoading}
+                >
+                  {t('auth.forgot.link', 'Forgot password?')}
+                </button>
+              </div>
+            )}
+
             <Button
               type="submit"
               fullWidth

@@ -65,3 +65,45 @@ export function changeUserPassword(currentPassword: string, newPassword: string)
     body: JSON.stringify({ currentPassword, newPassword }),
   });
 }
+
+const publicOpts = { token: null as null, skipAuthHandler: true as const };
+
+export function userForgotPassword(phoneNumber: string) {
+  return api<MessageResponse>('/users/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ phoneNumber }),
+    ...publicOpts,
+  });
+}
+
+export function userResetPassword(payload: {
+  phoneNumber: string;
+  otp: string;
+  newPassword: string;
+}) {
+  return api<MessageResponse>('/users/reset-password', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+    ...publicOpts,
+  });
+}
+
+export function agentForgotPassword(phoneNumber: string) {
+  return api<MessageResponse>('/agents/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ phoneNumber }),
+    ...publicOpts,
+  });
+}
+
+export function agentResetPassword(payload: {
+  phoneNumber: string;
+  otp: string;
+  newPassword: string;
+}) {
+  return api<MessageResponse>('/agents/reset-password', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+    ...publicOpts,
+  });
+}

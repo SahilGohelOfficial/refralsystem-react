@@ -8,10 +8,38 @@
     "cancel": "Cancel",
     "confirm": "Confirm",
     "delete": "Delete",
+    "back": "Back",
     "confirm_delete_title": "Confirm Delete",
     "confirm_edit_title": "Confirm Changes",
     "loading": "Loading...",
     "coming_soon": "Coming Soon"
+  },
+  "auth": {
+    "forgot": {
+      "link": "Forgot password?",
+      "user_title": "User — Forgot password",
+      "agent_title": "Agent — Forgot password",
+      "subtitle_phone": "Enter your registered mobile number to receive a verification code.",
+      "subtitle_reset": "Enter the code sent to your phone and choose a new password.",
+      "phone_label": "Mobile number",
+      "otp_label": "Verification code",
+      "new_password": "New password",
+      "confirm_password": "Confirm password",
+      "send_otp": "Send OTP",
+      "resend_otp": "Resend code",
+      "reset_button": "Reset password",
+      "back_to_login": "Back to sign in",
+      "change_number": "Change",
+      "code_sent_to": "Code sent to",
+      "otp_sent": "If this number is registered, an OTP has been sent",
+      "reset_success": "Password reset successfully. Please sign in.",
+      "otp_hint": "Use the same 4-digit OTP flow as signup (demo code: 1111).",
+      "form_errors": "Please fix the highlighted fields",
+      "err_phone": "Enter a valid 10-digit mobile number",
+      "err_otp": "Enter the 4-digit verification code",
+      "err_password": "Password must be at least 8 characters",
+      "err_password_match": "Passwords do not match"
+    }
   },
   "nav": {
     "admin": {

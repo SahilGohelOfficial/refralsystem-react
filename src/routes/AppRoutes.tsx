@@ -7,6 +7,7 @@ import ChooseLogin from '../pages/Login/ChooseLogin';
 
 // Auth Pages
 const Login = lazy(() => import('../pages/Login/Login'));
+const ForgotPassword = lazy(() => import('../pages/Login/ForgotPassword'));
 
 // Admin Pages
 const AdminDashboard = lazy(() => import('../pages/Admin/AdminDashboard'));
@@ -60,8 +61,10 @@ const AppRoutes = () => {
         {/* Public Login Routes */}
         <Route path="/admin/login" element={<Login />} />
         <Route path="/agent/login" element={<Login />} />
+        <Route path="/agent/forgot-password" element={<ForgotPassword />} />
         <Route path="/agent/sign-up" element={<AgentSignUp />} />
         <Route path="/user/login" element={<Login />} />
+        <Route path="/user/forgot-password" element={<ForgotPassword />} />
         <Route path="/withdrawal/login" element={<Navigate to="/user/login" replace />} />
         
         {/* Admin Protected Routes */}
