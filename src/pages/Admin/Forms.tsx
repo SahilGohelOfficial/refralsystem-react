@@ -14,6 +14,7 @@ import { useConfirm } from '../../stores/confirmStore'
 import IconButton from '../../components/ui/IconButton'
 import Loader from '../../components/ui/Loader'
 import { useAuth } from '../../stores/authStore'
+import { isSuperAdmin as checkIsSuperAdmin } from '../../lib/roles'
 import { useDeleteForm, useForms } from '../../hooks/queries'
 import { useToastOnError } from '../../hooks/useToastOnError'
 import type { FormSummary } from '../../types/api'
@@ -24,7 +25,7 @@ const Forms = () => {
   const { t } = useTranslation()
   const confirm = useConfirm()
   const { user } = useAuth()
-  const isSuperAdmin = user?.role === 'superAdmin'
+  const isSuperAdmin = checkIsSuperAdmin(user?.role)
   const { data: forms = [], isLoading, error } = useForms()
   const deleteFormMutation = useDeleteForm()
   useToastOnError(error)
@@ -96,7 +97,9 @@ const Forms = () => {
           <div className="py-16 text-center text-sm text-text-secondary">
             {search
               ? t('forms.no_results', 'No forms match your search.')
-              : t('forms.empty', 'No forms yet. Create your first form.')}
+              : isSuperAdmin
+                ? t('forms.empty', 'No forms yet. Create your first form.')
+                : t('forms.empty_readonly', 'No forms available yet.')}
           </div>
         ) : (
           <Table>

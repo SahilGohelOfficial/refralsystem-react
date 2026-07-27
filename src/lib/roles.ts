@@ -4,6 +4,10 @@ export function isAdminPortalRole(role: string): role is 'admin' | 'superAdmin' 
   return role === 'admin' || role === 'superAdmin';
 }
 
+export function isSuperAdmin(role?: string | null): boolean {
+  return role === 'superAdmin';
+}
+
 export function formatRoleLabel(role?: PortalRole | AdminRole | null): string {
   if (role === 'superAdmin') return 'Super Admin';
   if (!role) return 'Admin';

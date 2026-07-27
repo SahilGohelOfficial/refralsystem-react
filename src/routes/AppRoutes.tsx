@@ -87,14 +87,7 @@ const AppRoutes = () => {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="chains"
-            element={
-              <ProtectedRoute allowedRoles={['superAdmin']}>
-                <Chains />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="chains" element={<Chains />} />
           <Route path="locations" element={<Locations />} />
           <Route path="forms" element={<Forms />} />
           <Route path="forms/:formId/responses" element={<FormResponses />} />

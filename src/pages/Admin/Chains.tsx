@@ -19,6 +19,8 @@ import {
 } from '../../hooks/queries';
 import { useConfirm } from '../../stores/confirmStore';
 import { useToastOnError } from '../../hooks/useToastOnError';
+import { useAuth } from '../../stores/authStore';
+import { isSuperAdmin } from '../../lib/roles';
 import type { Chain } from '../../types/api';
 import { formatLocalDate } from '../../lib/dates';
 
@@ -27,6 +29,8 @@ type ChainModal = { mode: 'create' } | { mode: 'edit'; chain: Chain };
 const Chains = () => {
   const { t } = useTranslation();
   const confirm = useConfirm();
+  const { user } = useAuth();
+  const canManage = isSuperAdmin(user?.role);
   const { data: chains = [], isLoading, error } = useChains();
   const createChainMutation = useCreateChain();
   const updateChainMutation = useUpdateChain();
@@ -40,11 +44,13 @@ const Chains = () => {
   const submitting = createChainMutation.isPending || updateChainMutation.isPending;
 
   const openCreate = () => {
+    if (!canManage) return;
     setFormName('');
     setModal({ mode: 'create' });
   };
 
   const openEdit = (chain: Chain) => {
+    if (!canManage) return;
     setFormName(chain.name);
     setModal({ mode: 'edit', chain });
   };
@@ -56,7 +62,7 @@ const Chains = () => {
 
   const handleSave = async (e: FormEvent) => {
     e.preventDefault();
-    if (!modal) return;
+    if (!modal || !canManage) return;
 
     if (modal.mode === 'edit') {
       const confirmed = await confirm({
@@ -84,6 +90,7 @@ const Chains = () => {
   };
 
   const handleDelete = async (chain: Chain) => {
+    if (!canManage) return;
     const confirmed = await confirm({
       title: t('chains.delete', 'Delete Chain'),
       message: t('chains.deleteConfirm', { name: chain.name }),
@@ -109,10 +116,12 @@ const Chains = () => {
         title={t('chains.title')}
         description={t('chains.subtitle')}
         actions={
-          <Button onClick={openCreate}>
-            <Plus size={16} />
-            {t('chains.create')}
-          </Button>
+          canManage ? (
+            <Button onClick={openCreate}>
+              <Plus size={16} />
+              {t('chains.create')}
+            </Button>
+          ) : undefined
         }
       />
 
@@ -142,7 +151,9 @@ const Chains = () => {
                 <TableHead>{t('chains.name')}</TableHead>
                 <TableHead>{t('chains.created')}</TableHead>
                 <TableHead>{t('chains.updated')}</TableHead>
-                <TableHead className="text-right">{t('chains.actions')}</TableHead>
+                {canManage ? (
+                  <TableHead className="text-right">{t('chains.actions')}</TableHead>
+                ) : null}
               </TableRow>
             </TableHeader>
             <tbody>
@@ -154,23 +165,25 @@ const Chains = () => {
                   </TableCell>
                   <TableCell>{formatLocalDate(chain.createdAt)}</TableCell>
                   <TableCell>{formatLocalDate(chain.updatedAt)}</TableCell>
-                  <TableCell className="text-right">
-                    <Dropdown
-                      align="right"
-                      trigger={
-                        <IconButton size="sm" aria-label={t('chains.actions')}>
-                          <MoreVertical size={16} />
-                        </IconButton>
-                      }
-                    >
-                      <DropdownItem onClick={() => openEdit(chain)}>
-                        <Edit2 size={14} /> {t('chains.edit')}
-                      </DropdownItem>
-                      <DropdownItem danger onClick={() => void handleDelete(chain)}>
-                        <Trash2 size={14} /> {t('chains.delete')}
-                      </DropdownItem>
-                    </Dropdown>
-                  </TableCell>
+                  {canManage ? (
+                    <TableCell className="text-right">
+                      <Dropdown
+                        align="right"
+                        trigger={
+                          <IconButton size="sm" aria-label={t('chains.actions')}>
+                            <MoreVertical size={16} />
+                          </IconButton>
+                        }
+                      >
+                        <DropdownItem onClick={() => openEdit(chain)}>
+                          <Edit2 size={14} /> {t('chains.edit')}
+                        </DropdownItem>
+                        <DropdownItem danger onClick={() => void handleDelete(chain)}>
+                          <Trash2 size={14} /> {t('chains.delete')}
+                        </DropdownItem>
+                      </Dropdown>
+                    </TableCell>
+                  ) : null}
                 </TableRow>
               ))}
             </tbody>
@@ -179,7 +192,7 @@ const Chains = () => {
       </Card>
 
       <Modal
-        isOpen={!!modal}
+        isOpen={!!modal && canManage}
         onClose={closeModal}
         title={modal?.mode === 'create' ? t('chains.create') : t('chains.edit')}
       >
