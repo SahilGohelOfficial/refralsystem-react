@@ -1,15 +1,214 @@
-import PageHeader from '../../components/ui/PageHeader';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import {
+  ClipboardList,
+  FileText,
+  Link2,
+  UserPlus,
+  Users,
+  XCircle,
+} from 'lucide-react';
+import PageHeader from '../../components/ui/PageHeader';
+import Badge from '../../components/ui/Badge';
+import Loader from '../../components/ui/Loader';
+import StatCard from '../../components/dashboard/StatCard';
+import DashboardSection from '../../components/dashboard/DashboardSection';
+import QuickActions from '../../components/dashboard/QuickActions';
+import {
+  useMyUserRequestCounts,
+  useMyUsers,
+} from '../../hooks/queries';
+import { useToastOnError } from '../../hooks/useToastOnError';
+import { useAuth } from '../../stores/authStore';
+import {
+  paymentStatusBadgeVariant,
+  paymentStatusLabel,
+} from '../../lib/labels';
+import { formatUserName } from '../../types/api';
+import { formatLocalDate } from '../../lib/dates';
 
 const AgentDashboard = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const { data: counts, error: countsError, isLoading: countsLoading } =
+    useMyUserRequestCounts();
+  const { data: allUsers = [], error: usersError, isLoading: usersLoading } =
+    useMyUsers(undefined);
+  const { data: pendingUsers = [], error: pendingError } = useMyUsers('pending');
+  useToastOnError(countsError);
+  useToastOnError(usersError);
+  useToastOnError(pendingError);
+
+  if (countsLoading || usersLoading) {
+    return <Loader text={t('common.loading', 'Loading...')} />;
+  }
+
+  const pending = counts?.pending ?? 0;
+  const rejected = counts?.rejected ?? 0;
+  const totalUsers = allUsers.length;
+  const attention = pendingUsers.slice(0, 5);
 
   return (
-    <div className="page-shell">
+    <div className="page-shell space-y-6">
       <PageHeader
-        title={t('nav.agent.dashboard', 'Dashboard')}
-        description="Welcome to the agent portal."
+        title={t('agent.dashboard.welcome', 'Welcome, {{name}}', {
+          name: user?.name ?? t('nav.agent.dashboard', 'Dashboard'),
+        })}
+        description={t(
+          'agent.dashboard.subtitle',
+          'Overview of your users, requests, and next actions.',
+        )}
       />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          title={t('agent.dashboard.pending', 'Pending requests')}
+          value={pending}
+          description={t(
+            'agent.dashboard.pending_desc',
+            'Awaiting review or payment',
+          )}
+          to="/agent/user-requests"
+          icon={<ClipboardList size={18} />}
+          accent="warning"
+        />
+        <StatCard
+          title={t('agent.dashboard.rejected', 'Rejected')}
+          value={rejected}
+          description={t(
+            'agent.dashboard.rejected_desc',
+            'Need fixes or resubmit',
+          )}
+          to="/agent/user-requests"
+          icon={<XCircle size={18} />}
+          accent="error"
+        />
+        <StatCard
+          title={t('agent.dashboard.my_users', 'My users')}
+          value={totalUsers}
+          description={t('agent.dashboard.my_users_desc', 'All assigned users')}
+          to="/agent/users"
+          icon={<Users size={18} />}
+          accent="primary"
+        />
+        <StatCard
+          title={t('agent.dashboard.ready_to_approve', 'Payment received')}
+          value={
+            pendingUsers.filter((u) => u.payment?.status === 'received').length
+          }
+          description={t(
+            'agent.dashboard.ready_to_approve_desc',
+            'Pending users ready to approve',
+          )}
+          to="/agent/user-requests"
+          icon={<ClipboardList size={18} />}
+          accent="success"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <DashboardSection
+          title={t('agent.dashboard.needs_attention', 'Needs attention')}
+          actionLabel={t('agent.dashboard.view_all', 'View all')}
+          actionTo="/agent/user-requests"
+          className="lg:col-span-2"
+        >
+          {attention.length === 0 ? (
+            <p className="text-sm text-text-secondary py-4">
+              {t(
+                'agent.dashboard.no_pending',
+                'No pending user requests right now.',
+              )}
+            </p>
+          ) : (
+            <ul className="divide-y divide-border">
+              {attention.map((u) => (
+                <li key={u.id}>
+                  <Link
+                    to={`/agent/user-requests/${u.id}`}
+                    className="flex flex-wrap items-center justify-between gap-2 py-3 hover:bg-surface/50 -mx-1 px-1 rounded-lg"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-text truncate">
+                        {formatUserName(u)}
+                      </p>
+                      <p className="text-xs text-text-secondary mt-0.5">
+                        {u.phoneNumber} · {formatLocalDate(u.createdAt)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {u.payment ? (
+                        <Badge
+                          variant={paymentStatusBadgeVariant(u.payment.status)}
+                          dot
+                        >
+                          {paymentStatusLabel(u.payment.status)}
+                        </Badge>
+                      ) : (
+                        <Badge variant="neutral" dot>
+                          {t('agent.dashboard.no_payment', 'No payment')}
+                        </Badge>
+                      )}
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </DashboardSection>
+
+        <QuickActions
+          title={t('agent.dashboard.quick_actions', 'Quick actions')}
+          actions={[
+            {
+              to: '/register',
+              label: t('nav.agent.register_user', 'Register User'),
+              description: t(
+                'agent.dashboard.action_register_desc',
+                'Add a new user under your account',
+              ),
+              icon: <UserPlus size={18} />,
+              primary: true,
+            },
+            {
+              to: '/agent/user-requests',
+              label: t('nav.agent.user_requests', 'User Requests'),
+              description: t(
+                'agent.dashboard.action_requests_desc',
+                'Review pending and rejected users',
+              ),
+              icon: <ClipboardList size={18} />,
+            },
+            {
+              to: '/agent/users',
+              label: t('nav.agent.my_users', 'My Users'),
+              description: t(
+                'agent.dashboard.action_users_desc',
+                'Browse all assigned users',
+              ),
+              icon: <Users size={18} />,
+            },
+            {
+              to: '/agent/forms',
+              label: t('nav.agent.forms', 'Forms'),
+              description: t(
+                'agent.dashboard.action_forms_desc',
+                'Open forms available to agents',
+              ),
+              icon: <FileText size={18} />,
+            },
+            {
+              to: '/agent/your-chains',
+              label: t('nav.agent.your_chains', 'Your Chains'),
+              description: t(
+                'agent.dashboard.action_chains_desc',
+                'View referral chain positions',
+              ),
+              icon: <Link2 size={18} />,
+            },
+          ]}
+        />
+      </div>
     </div>
   );
 };

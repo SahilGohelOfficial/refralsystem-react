@@ -278,6 +278,28 @@
     "err_otp": "Enter the 4-digit verification code"
   },
   "agent": {
+    "dashboard": {
+      "welcome": "Welcome, {{name}}",
+      "subtitle": "Overview of your users, requests, and next actions.",
+      "pending": "Pending requests",
+      "pending_desc": "Awaiting review or payment",
+      "rejected": "Rejected",
+      "rejected_desc": "Need fixes or resubmit",
+      "my_users": "My users",
+      "my_users_desc": "All assigned users",
+      "ready_to_approve": "Payment received",
+      "ready_to_approve_desc": "Pending users ready to approve",
+      "needs_attention": "Needs attention",
+      "view_all": "View all",
+      "no_pending": "No pending user requests right now.",
+      "no_payment": "No payment",
+      "quick_actions": "Quick actions",
+      "action_register_desc": "Add a new user under your account",
+      "action_requests_desc": "Review pending and rejected users",
+      "action_users_desc": "Browse all assigned users",
+      "action_forms_desc": "Open forms available to agents",
+      "action_chains_desc": "View referral chain positions"
+    },
     "signup": {
       "title": "Agent Sign Up",
       "subtitle": "Create your agent account to access the partner portal.",
@@ -509,6 +531,32 @@
     }
   },
   "admin": {
+    "dashboard": {
+      "welcome": "Welcome, {{name}}",
+      "subtitle": "Overview of agents, payments, and forms.",
+      "pending_agents": "Pending agents",
+      "pending_agents_desc": "Awaiting approval",
+      "active_agents": "Active agents",
+      "active_agents_desc": "Network size",
+      "pending_payments": "Pending payments",
+      "pending_payments_desc": "Need verification",
+      "forms": "Forms",
+      "forms_desc": "{{count}} submissions",
+      "payments_received": "Payments received",
+      "payments_not_received": "Not received",
+      "payments_all": "All payment requests",
+      "needs_attention": "Pending payment requests",
+      "view_all": "View all",
+      "no_pending_payments": "No pending payment requests.",
+      "unknown_user": "User",
+      "quick_actions": "Quick actions",
+      "action_payments_desc": "Review and verify payment screenshots",
+      "action_agents_desc": "Manage agent accounts and status",
+      "action_forms_desc": "Browse forms and view responses",
+      "action_chains_desc": "View referral chain structure",
+      "action_admins_desc": "Manage admin and super admin accounts",
+      "action_create_form_desc": "Build a new dynamic form"
+    },
     "agent_detail": {
       "chain_view": "Chain View",
       "chain_view_desc": "All chains and this agent's referral positions within each."
@@ -601,6 +649,35 @@
     "citiesEmpty": "No cities in this state yet."
   },
   "user_portal": {
+    "dashboard": {
+      "welcome": "Welcome, {{name}}",
+      "subtitle": "Track your registration status and contact your agent.",
+      "status_approved": "Your account is approved",
+      "status_approved_desc": "You have full access to forms and your referral code.",
+      "status_rejected": "Your registration was rejected",
+      "status_rejected_desc": "Review the reason below. Contact your agent or resubmit for review.",
+      "status_pending": "Your registration is pending",
+      "status_awaiting_payment": "Contact your agent to submit payment proof for verification.",
+      "status_payment_not_received": "Payment was not accepted. Contact your agent to resubmit proof.",
+      "status_payment_received": "Payment verified. Final approval is in progress.",
+      "status_payment_pending": "Payment proof is under review.",
+      "status_unknown": "Pending",
+      "payment_label": "Payment",
+      "your_agent": "Your agent",
+      "agent_id": "ID",
+      "call": "Call",
+      "email_action": "Email",
+      "no_agent": "No agent assigned yet. Contact support if you need help.",
+      "forms": "Forms",
+      "forms_desc": "Completed / available",
+      "referral": "Referral code",
+      "referral_none": "—",
+      "referral_ready": "Share this code with new users.",
+      "referral_locked": "Available after approval.",
+      "account": "Account",
+      "account_desc": "Registration status",
+      "quick_actions": "Quick actions"
+    },
     "profile": {
       "subtitle": "View your account details. Contact your agent to request changes.",
       "account_info": "Account information",

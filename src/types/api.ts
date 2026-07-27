@@ -314,6 +314,17 @@ export interface AgentUserRequestCounts {
   rejected: number;
 }
 
+/** Safe agent summary returned on user profile for contact card. */
+export interface UserAssignedAgent {
+  id: string;
+  fullName: string;
+  phoneNumber: string | null;
+  email: string | null;
+  agentLoginId: string;
+  state: string | null;
+  city: string | null;
+}
+
 export interface ReferralUser {
   id: string;
   firstName: string;
@@ -322,6 +333,7 @@ export interface ReferralUser {
   phoneNumber: string;
   email: string;
   agentId: string | null;
+  agent?: UserAssignedAgent | null;
   status: UserStatus | null;
   note: string | null;
   referralCode: string | null;

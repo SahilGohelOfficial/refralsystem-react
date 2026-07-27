@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import ProtectedRoute from '../components/auth/ProtectedRoute';
+import GuestOnlyRoute from '../components/auth/GuestOnlyRoute';
 import Loader from '../components/ui/Loader';
 import ChooseLogin from '../pages/Login/ChooseLogin';
 
@@ -54,18 +55,88 @@ const AppRoutes = () => {
   return (
     <Suspense fallback={<Loader size="lg" className="min-h-screen" />}>
       <Routes>
-        <Route path="/" element={<Navigate to="/choose-login" replace />} />
-        <Route path="/choose-login" element={<ChooseLogin />} />
-        <Route path="/register" element={<RegisterUser />} />
-        
-        {/* Public Login Routes */}
-        <Route path="/admin/login" element={<Login />} />
-        <Route path="/agent/login" element={<Login />} />
-        <Route path="/agent/forgot-password" element={<ForgotPassword />} />
-        <Route path="/agent/sign-up" element={<AgentSignUp />} />
-        <Route path="/user/login" element={<Login />} />
-        <Route path="/user/forgot-password" element={<ForgotPassword />} />
-        <Route path="/withdrawal/login" element={<Navigate to="/user/login" replace />} />
+        {/* Guest auth entry points — logged-in users redirect to their dashboard */}
+        <Route
+          path="/"
+          element={
+            <GuestOnlyRoute>
+              <Navigate to="/choose-login" replace />
+            </GuestOnlyRoute>
+          }
+        />
+        <Route
+          path="/choose-login"
+          element={
+            <GuestOnlyRoute>
+              <ChooseLogin />
+            </GuestOnlyRoute>
+          }
+        />
+        {/* Agents may register users while logged in; other roles are redirected */}
+        <Route
+          path="/register"
+          element={
+            <GuestOnlyRoute allowRoles={['agent']}>
+              <RegisterUser />
+            </GuestOnlyRoute>
+          }
+        />
+        <Route
+          path="/admin/login"
+          element={
+            <GuestOnlyRoute>
+              <Login />
+            </GuestOnlyRoute>
+          }
+        />
+        <Route
+          path="/agent/login"
+          element={
+            <GuestOnlyRoute>
+              <Login />
+            </GuestOnlyRoute>
+          }
+        />
+        <Route
+          path="/agent/forgot-password"
+          element={
+            <GuestOnlyRoute>
+              <ForgotPassword />
+            </GuestOnlyRoute>
+          }
+        />
+        <Route
+          path="/agent/sign-up"
+          element={
+            <GuestOnlyRoute>
+              <AgentSignUp />
+            </GuestOnlyRoute>
+          }
+        />
+        <Route
+          path="/user/login"
+          element={
+            <GuestOnlyRoute>
+              <Login />
+            </GuestOnlyRoute>
+          }
+        />
+        <Route
+          path="/user/forgot-password"
+          element={
+            <GuestOnlyRoute>
+              <ForgotPassword />
+            </GuestOnlyRoute>
+          }
+        />
+        <Route
+          path="/withdrawal/login"
+          element={
+            <GuestOnlyRoute>
+              <Navigate to="/user/login" replace />
+            </GuestOnlyRoute>
+          }
+        />
         
         {/* Admin Protected Routes */}
         <Route path="/admin" element={
