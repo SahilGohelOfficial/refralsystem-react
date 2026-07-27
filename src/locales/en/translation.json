@@ -129,7 +129,10 @@
       "view_title": "Submitted form",
       "view_submitted_at": "Submitted at",
       "view_empty": "No submission found.",
+      "preview_unavailable": "Preview unavailable",
+      "view_full": "View full",
       "submit": "Submit",
+      "preparing_image": "Preparing image…",
       "submit_success": "Form submitted successfully.",
       "submit_error": "Failed to submit form. Please try again.",
       "type_mismatch": "This form is not available for your account type."
@@ -430,7 +433,11 @@
       "note_label": "Rejection note",
       "note_required": "Rejection note is required",
       "confirm_reject": "Confirm Reject",
-      "reject_success": "User rejected successfully"
+      "reject_success": "User rejected successfully",
+      "resubmit": "Resubmit for review",
+      "resubmit_confirm_title": "Resubmit for review?",
+      "resubmit_confirm_message": "This will move the user back to pending so you can review and approve them again.",
+      "resubmit_success": "Account resubmitted for review successfully"
     },
     "user_detail": {
       "forms_section": "Forms",
@@ -578,6 +585,7 @@
       "address": "Full address",
       "postal_code": "PIN code",
       "rejection_note": "Rejection note",
+      "rejection_note_empty": "Your registration was rejected. Contact your agent for details.",
       "bank_info": "Bank details",
       "bank_info_desc": "Read-only bank account details registered during sign up.",
       "account_holder_name": "Account holder name",
@@ -601,7 +609,10 @@
       "payment_not_received": "Payment not accepted",
       "payment_not_received_desc": "Admin could not verify your payment. Please contact your agent to submit payment proof again.",
       "rejected": "Your request was rejected by your agent",
+      "rejected_desc": "Review the reason below. You can resubmit your account for your agent to review again, or contact your agent to update your details first.",
       "rejected_note": "Reason:",
+      "resubmit": "Resubmit account for review",
+      "resubmit_success": "Account resubmitted for review successfully",
       "approved_once": "Your request has been approved!",
       "approved_once_desc": "Your registration has been approved. You now have full access."
     },
@@ -615,6 +626,19 @@
       "not_eligible_pending": "Your registration is awaiting admin approval. You can fill forms once approved.",
       "not_eligible_rejected": "Your registration was rejected by your agent. You cannot fill forms until you are approved.",
       "back_to_forms": "Back to forms"
+    },
+    "payment": {
+      "invalid_type": "Please upload a JPEG, PNG, WebP, GIF, or iPhone (HEIC) image.",
+      "too_large": "Image must be 10 MB or smaller after compression.",
+      "prepare_failed": "Could not process this image. Try a screenshot or export as JPEG/PNG.",
+      "preparing": "Preparing image…",
+      "preparing_hint": "Compressing and converting iPhone photos if needed.",
+      "choose_file": "Choose an image",
+      "change_file": "Change image",
+      "file_hint": "JPEG, PNG, WebP, GIF, or iPhone HEIC · compressed on upload",
+      "file_required": "Please select a payment screenshot.",
+      "submit_success": "Payment submitted successfully.",
+      "preview_alt": "Payment screenshot preview"
     }
   }
 }

@@ -28,6 +28,10 @@ import type {
   SubmittedAnswerValue,
 } from '../../../types/api';
 import type { FormAnswerValue, FormAnswers, FormField } from '../../../types/form';
+import {
+  isImageFile,
+  prepareImageForUpload,
+} from '../../../lib/images/prepareImageForUpload';
 
 type PortalFormSubmitProps = {
   userType: SubmissionUserType;
@@ -136,6 +140,10 @@ export default function PortalFormSubmit({
   const [submitting, setSubmitting] = useState(false);
   const [answers, setAnswers] = useState<FormAnswers>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [preparingFileFields, setPreparingFileFields] = useState<Record<string, boolean>>(
+    {},
+  );
+  const isPreparingFiles = Object.values(preparingFileFields).some(Boolean);
 
   const fields = useMemo<FormField[]>(
     () => (form ? toFormFields(form) : []),
@@ -188,10 +196,25 @@ export default function PortalFormSubmit({
     });
   }, []);
 
+  const handleFilePreparingChange = useCallback((fieldId: string, preparing: boolean) => {
+    setPreparingFileFields((prev) => {
+      if (!preparing) {
+        if (!(fieldId in prev)) return prev;
+        const next = { ...prev };
+        delete next[fieldId];
+        return next;
+      }
+      if (prev[fieldId]) return prev;
+      return { ...prev, [fieldId]: true };
+    });
+  }, []);
+
   const handleBlur = useCallback(
     (fieldId: string) => {
       const field = fields.find((f) => f.id === fieldId);
       if (!field) return;
+      // Skip validation while this field's image is still being prepared.
+      if (preparingFileFields[fieldId]) return;
       const error = validateField(field, answers[fieldId]);
       setErrors((prev) => {
         const next = { ...prev };
@@ -200,7 +223,7 @@ export default function PortalFormSubmit({
         return next;
       });
     },
-    [answers, fields],
+    [answers, fields, preparingFileFields],
   );
 
   const buildSubmissionAnswers = useCallback(async (): Promise<Record<string, SubmittedAnswerValue>> => {
@@ -214,28 +237,33 @@ export default function PortalFormSubmit({
       const value = answers[field.id];
 
       if (value instanceof File) {
+        const uploadFile = isImageFile(value)
+          ? await prepareImageForUpload(value)
+          : value;
+
+        const contentType = uploadFile.type || 'application/octet-stream';
         const presign = userId
           ? await presignUserFormUpload(userId, form.id, {
               fieldId: field.id,
-              fileName: value.name,
-              contentType: value.type || 'application/octet-stream',
-              size: value.size,
+              fileName: uploadFile.name,
+              contentType,
+              size: uploadFile.size,
             })
           : await presignFormUpload(form.id, {
               fieldId: field.id,
-              fileName: value.name,
-              contentType: value.type || 'application/octet-stream',
-              size: value.size,
+              fileName: uploadFile.name,
+              contentType,
+              size: uploadFile.size,
             });
 
-        await uploadFileToPresignedUrl(presign.uploadUrl, value);
+        await uploadFileToPresignedUrl(presign.uploadUrl, uploadFile);
 
         const storedMeta: StoredFileMeta = {
           kind: 'file',
           key: presign.key,
-          name: value.name,
-          size: value.size,
-          type: value.type || 'application/octet-stream',
+          name: uploadFile.name,
+          size: uploadFile.size,
+          type: contentType,
         };
         payloadAnswers[field.id] = storedMeta;
         continue;
@@ -257,7 +285,7 @@ export default function PortalFormSubmit({
   }, [answers, fields, form, userId]);
 
   const handleSubmit = useCallback(async () => {
-    if (!form) return;
+    if (!form || isPreparingFiles) return;
 
     const formErrors = validateForm(fields, answers);
     setErrors(formErrors);
@@ -292,7 +320,17 @@ export default function PortalFormSubmit({
     } finally {
       setSubmitting(false);
     }
-  }, [answers, buildSubmissionAnswers, fields, form, listPath, navigate, t, userId]);
+  }, [
+    answers,
+    buildSubmissionAnswers,
+    fields,
+    form,
+    isPreparingFiles,
+    listPath,
+    navigate,
+    t,
+    userId,
+  ]);
 
   const pageTitle = userId
     ? t('agent.my_users.submit_title', 'Fill User Form')
@@ -344,6 +382,7 @@ export default function PortalFormSubmit({
           errors={errors}
           onChange={handleChange}
           onBlur={handleBlur}
+          onFilePreparingChange={handleFilePreparingChange}
         />
 
         <div className="flex flex-col sm:flex-row gap-3 pt-2">
@@ -351,12 +390,19 @@ export default function PortalFormSubmit({
             type="button"
             variant="secondary"
             onClick={() => navigate(listPath)}
-            disabled={submitting}
+            disabled={submitting || isPreparingFiles}
           >
             {t('common.cancel', 'Cancel')}
           </Button>
-          <Button type="button" onClick={() => void handleSubmit()} isLoading={submitting}>
-            {t('forms.portal.submit', 'Submit')}
+          <Button
+            type="button"
+            onClick={() => void handleSubmit()}
+            isLoading={submitting}
+            disabled={isPreparingFiles}
+          >
+            {isPreparingFiles
+              ? t('forms.portal.preparing_image', 'Preparing image…')
+              : t('forms.portal.submit', 'Submit')}
           </Button>
         </div>
       </Card>

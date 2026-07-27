@@ -1,6 +1,11 @@
-import { forwardRef, type ChangeEvent, useRef } from 'react'
+import { forwardRef, type ChangeEvent, useEffect, useRef, useState } from 'react'
 import { Upload } from 'lucide-react'
 import { cn } from '../../../lib/forms/cn'
+import {
+  isImageFile,
+  prepareImageForUpload,
+  withHeicAccept,
+} from '../../../lib/images/prepareImageForUpload'
 import Field from './Field'
 import type { StoredFileAnswer } from '../../../types/form'
 
@@ -15,7 +20,19 @@ type FileInputProps = {
   value?: File | StoredFileAnswer | null
   onChange: (file: File | null) => void
   onBlur?: () => void
+  onPreparingChange?: (preparing: boolean) => void
   className?: string
+}
+
+function ensureFile(file: File): File {
+  if (file instanceof File) return file
+  const blob = file as unknown as Blob
+  const name =
+    typeof (file as { name?: string }).name === 'string'
+      ? (file as { name: string }).name
+      : 'upload'
+  const type = blob.type || 'application/octet-stream'
+  return new File([blob], name, { type, lastModified: Date.now() })
 }
 
 const FileInput = forwardRef<HTMLInputElement, FileInputProps>(function FileInput(
@@ -30,15 +47,60 @@ const FileInput = forwardRef<HTMLInputElement, FileInputProps>(function FileInpu
     value,
     onChange,
     onBlur,
+    onPreparingChange,
     className,
   },
   ref,
 ) {
   const inputRef = useRef<HTMLInputElement | null>(null)
+  const [preparing, setPreparing] = useState(false)
+  const resolvedAccept = withHeicAccept(accept)
+  const prepareGenRef = useRef(0)
 
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    onPreparingChange?.(preparing)
+  }, [preparing, onPreparingChange])
+
+  useEffect(() => {
+    return () => {
+      onPreparingChange?.(false)
+    }
+  }, [onPreparingChange])
+
+  const handleChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null
-    onChange(file)
+    if (!file) {
+      prepareGenRef.current += 1
+      setPreparing(false)
+      onChange(null)
+      return
+    }
+
+    // Set the original file immediately so required validation never sees empty mid-process.
+    const original = ensureFile(file)
+    onChange(original)
+
+    if (!isImageFile(original)) {
+      setPreparing(false)
+      return
+    }
+
+    const gen = ++prepareGenRef.current
+    setPreparing(true)
+    try {
+      const prepared = ensureFile(await prepareImageForUpload(original))
+      // Ignore stale async results if the user picked another file.
+      if (gen !== prepareGenRef.current) return
+      onChange(prepared)
+    } catch {
+      if (gen !== prepareGenRef.current) return
+      // Keep the original file so the field stays valid.
+      onChange(original)
+    } finally {
+      if (gen === prepareGenRef.current) {
+        setPreparing(false)
+      }
+    }
   }
 
   const setRefs = (node: HTMLInputElement | null) => {
@@ -54,11 +116,12 @@ const FileInput = forwardRef<HTMLInputElement, FileInputProps>(function FileInpu
         type="file"
         id={id}
         required={required && !value}
-        accept={accept?.join(',')}
+        accept={resolvedAccept?.join(',')}
         aria-invalid={error ? true : undefined}
-        onChange={handleChange}
+        onChange={(e) => void handleChange(e)}
         onBlur={onBlur}
         className="sr-only"
+        disabled={preparing}
       />
       <label
         htmlFor={id}
@@ -66,6 +129,7 @@ const FileInput = forwardRef<HTMLInputElement, FileInputProps>(function FileInpu
           'flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed',
           'px-4 py-6 sm:py-8 cursor-pointer transition-colors text-center',
           'hover:border-primary/50 hover:bg-primary/5',
+          preparing && 'pointer-events-none opacity-70',
           error
             ? 'border-error/50 bg-error/5'
             : value
@@ -75,11 +139,24 @@ const FileInput = forwardRef<HTMLInputElement, FileInputProps>(function FileInpu
       >
         <div className={cn(
           'flex h-11 w-11 items-center justify-center rounded-full',
-          value ? 'bg-primary/15 text-primary' : 'bg-surface text-text-secondary',
+          value || preparing ? 'bg-primary/15 text-primary' : 'bg-surface text-text-secondary',
         )}>
-          <Upload size={20} />
+          {preparing ? (
+            <div className="h-5 w-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+          ) : (
+            <Upload size={20} />
+          )}
         </div>
-        {value ? (
+        {preparing ? (
+          <>
+            <span className="text-sm font-medium text-text">Preparing image…</span>
+            {value && 'name' in value ? (
+              <span className="text-xs text-text-secondary break-all max-w-full px-2">
+                {value.name}
+              </span>
+            ) : null}
+          </>
+        ) : value ? (
           <>
             <span className="text-sm font-medium text-text break-all max-w-full px-2">
               {value.name}

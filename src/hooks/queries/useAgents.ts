@@ -24,6 +24,7 @@ import {
   updateAgentStatus,
   updateMyUser,
   updateMyUserStatus,
+  resubmitMyUser,
 } from '../../services/agents.service';
 import { formatApiError } from '../../lib/api';
 import { queryKeys } from '../../lib/queryKeys';
@@ -258,6 +259,19 @@ export function useUpdateMyUserStatus() {
     onSuccess: (_data, { id }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUsersPrefix });
       void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUser(id) });
+    },
+    onError: (error) => toast.error(formatApiError(error as ApiError)),
+  });
+}
+
+export function useResubmitMyUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => resubmitMyUser(id),
+    onSuccess: (_data, id) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUsersPrefix });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUser(id) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUserRequestCounts });
     },
     onError: (error) => toast.error(formatApiError(error as ApiError)),
   });

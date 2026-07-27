@@ -12,12 +12,21 @@ function isStoredFileAnswer(value: unknown): boolean {
   )
 }
 
+/** True for File, or Blob/file-like objects that carry a name (some compressors). */
+function isFileLike(value: unknown): value is File {
+  if (typeof File !== 'undefined' && value instanceof File) return true
+  if (typeof Blob !== 'undefined' && value instanceof Blob) {
+    return typeof (value as File).name === 'string'
+  }
+  return false
+}
+
 function isEmpty(value: FormAnswerValue | undefined): boolean {
   if (value === null || value === undefined) return true
   if (typeof value === 'string') return value.trim() === ''
   if (typeof value === 'boolean') return value === false
   if (Array.isArray(value)) return value.length === 0
-  if (value instanceof File) return false
+  if (isFileLike(value)) return false
   if (isStoredFileAnswer(value)) return false
   return true
 }
@@ -88,7 +97,7 @@ export function validateField(
     if (dateError) return dateError
   }
 
-  if (field.type === 'file' && value instanceof File) {
+  if (field.type === 'file' && isFileLike(value)) {
     if (validation?.allowedFileTypes?.length) {
       if (!validation.allowedFileTypes.includes(value.type)) {
         return errorMessage ?? 'File type not allowed.'

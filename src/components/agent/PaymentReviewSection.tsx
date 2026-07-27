@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
 import Modal from '../ui/Modal';
+import Image from '../ui/Image';
 import { formatApiError } from '../../lib/api';
 import { formatLocalDateTime } from '../../lib/dates';
 import { paymentStatusBadgeVariant, paymentStatusLabel } from '../../lib/labels';
@@ -118,10 +119,11 @@ export function PaymentHistorySection({
         maxWidth="2xl"
       >
         {previewUrl ? (
-          <img
+          <Image
             src={previewUrl}
             alt={t('agent.payment.screenshot_alt', 'Payment screenshot')}
-            className="max-h-[70vh] w-full rounded-lg border border-border object-contain bg-surface-muted"
+            priority
+            className="max-h-[70vh] w-full rounded-lg border border-border bg-surface-muted"
           />
         ) : null}
       </Modal>
@@ -214,11 +216,11 @@ export function PaymentReviewSection({
             <div className="h-48 rounded-lg border border-border bg-surface-muted animate-pulse" />
           ) : screenshotUrl ? (
             <a href={screenshotUrl} target="_blank" rel="noopener noreferrer">
-              <img
+              <Image
                 key={payment.screenShot}
                 src={screenshotUrl}
                 alt={t('agent.payment.screenshot_alt', 'Payment screenshot')}
-                className="max-h-80 w-full rounded-lg border border-border object-contain bg-surface-muted"
+                className="max-h-80 w-full rounded-lg border border-border bg-surface-muted"
               />
             </a>
           ) : (

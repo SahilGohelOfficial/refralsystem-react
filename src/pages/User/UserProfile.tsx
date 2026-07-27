@@ -1,6 +1,7 @@
-import { type ElementType } from 'react';
+import { type ElementType, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 import {
   Calendar,
   ChevronRight,
@@ -11,18 +12,25 @@ import {
   Mail,
   MapPin,
   Phone,
+  RefreshCw,
   Shield,
   User,
 } from 'lucide-react';
 import { Card, CardContent } from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
+import Button from '../../components/ui/Button';
 import PageHeader from '../../components/ui/PageHeader';
 import Skeleton from '../../components/ui/Skeleton';
 import { useMyProfile } from '../../hooks/queries';
 import { useToastOnError } from '../../hooks/useToastOnError';
+import { useAuth } from '../../stores/authStore';
+import { resubmitMyAccount } from '../../services/users.service';
+import { formatApiError } from '../../lib/api';
 import { formatGenderLabel, formatUserName } from '../../types/api';
-import type { UserStatus } from '../../types/api';
+import type { ApiError, UserStatus } from '../../types/api';
 import { formatCalendarDate, formatLocalDateTime } from '../../lib/dates';
+import { queryClient } from '../../lib/queryClient';
+import { queryKeys } from '../../lib/queryKeys';
 
 const statusVariant = (status: UserStatus | null) => {
   if (status === 'approved') return 'success' as const;
@@ -83,8 +91,29 @@ const InfoRow = ({
 const UserProfile = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { refreshUserProfile } = useAuth();
   const { data: profile, isLoading, error } = useMyProfile();
+  const [resubmitting, setResubmitting] = useState(false);
   useToastOnError(error);
+
+  const handleResubmit = async () => {
+    setResubmitting(true);
+    try {
+      await resubmitMyAccount();
+      await refreshUserProfile();
+      await queryClient.invalidateQueries({ queryKey: queryKeys.users.me });
+      toast.success(
+        t(
+          'user_portal.status.resubmit_success',
+          'Account resubmitted for review successfully',
+        ),
+      );
+    } catch (err) {
+      toast.error(formatApiError(err as ApiError));
+    } finally {
+      setResubmitting(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -352,13 +381,32 @@ const UserProfile = () => {
             </CardContent>
           </Card>
 
-          {profile.note ? (
+          {profile.status === 'rejected' ? (
             <Card>
-              <CardContent>
-                <p className="text-xs font-medium text-error mb-1">
-                  {t('user_portal.profile.rejection_note', 'Rejection note')}
-                </p>
-                <p className="text-sm text-text">{profile.note}</p>
+              <CardContent className="space-y-3">
+                <div>
+                  <p className="text-xs font-medium text-error mb-1">
+                    {t('user_portal.profile.rejection_note', 'Rejection note')}
+                  </p>
+                  <p className="text-sm text-text">
+                    {profile.note?.trim()
+                      ? profile.note
+                      : t(
+                          'user_portal.profile.rejection_note_empty',
+                          'Your registration was rejected. Contact your agent for details.',
+                        )}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => void handleResubmit()}
+                  isLoading={resubmitting}
+                >
+                  <RefreshCw size={14} />
+                  {t('user_portal.status.resubmit', 'Resubmit account for review')}
+                </Button>
               </CardContent>
             </Card>
           ) : null}

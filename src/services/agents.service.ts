@@ -176,6 +176,12 @@ export function updateMyUserStatus(id: string, payload: UpdateUserStatusPayload)
   });
 }
 
+export function resubmitMyUser(id: string) {
+  return api<ReferralUser>(`/agents/me/users/${id}/resubmit`, {
+    method: 'POST',
+  });
+}
+
 export function getApprovalInfo(userId: string) {
   return api<ApprovalInfo>(`/agents/me/users/${userId}/approval-info`);
 }

@@ -11,7 +11,12 @@ import {
 } from '../form'
 import DatePicker from '../../ui/DatePicker'
 import { getEffectiveDateBounds } from '../../../lib/forms/dateBounds'
-import type { FormAnswerValue, FormAnswers, FormField } from '../../../types/form'
+import type {
+  FormAnswerValue,
+  FormAnswers,
+  FormField,
+  StoredFileAnswer,
+} from '../../../types/form'
 
 type DynamicFormRendererProps = {
   fields: FormField[]
@@ -19,6 +24,7 @@ type DynamicFormRendererProps = {
   errors: Record<string, string>
   onChange: (fieldId: string, value: FormAnswerValue) => void
   onBlur: (fieldId: string) => void
+  onFilePreparingChange?: (fieldId: string, preparing: boolean) => void
   compact?: boolean
 }
 
@@ -28,6 +34,7 @@ export default function DynamicFormRenderer({
   errors,
   onChange,
   onBlur,
+  onFilePreparingChange,
   compact = false,
 }: DynamicFormRendererProps) {
   return (
@@ -186,9 +193,14 @@ export default function DynamicFormRenderer({
                 error={error}
                 accept={field.validation?.allowedFileTypes}
                 maxSizeMB={field.validation?.maxFileSizeMB}
-                value={answers[field.id] ?? null}
+                value={(answers[field.id] as File | StoredFileAnswer | null | undefined) ?? null}
                 onChange={(file) => onChange(field.id, file)}
                 onBlur={() => onBlur(field.id)}
+                onPreparingChange={
+                  onFilePreparingChange
+                    ? (preparing) => onFilePreparingChange(field.id, preparing)
+                    : undefined
+                }
               />
             )
           default:

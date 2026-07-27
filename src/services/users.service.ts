@@ -65,6 +65,12 @@ export function getMyProfile() {
   return api<ReferralUser>('/users/me');
 }
 
+export function resubmitMyAccount() {
+  return api<ReferralUser>('/users/me/resubmit', {
+    method: 'POST',
+  });
+}
+
 export function normalizePayment(data: unknown): Payment | null {
   if (data == null || typeof data !== 'object') {
     return null;

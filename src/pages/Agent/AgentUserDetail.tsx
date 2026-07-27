@@ -9,7 +9,18 @@ import {
 } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, CheckCircle, Edit2, Eye, ImagePlus, Search, Trash2, Upload, XCircle } from 'lucide-react';
+import {
+  ArrowLeft,
+  CheckCircle,
+  Edit2,
+  Eye,
+  ImagePlus,
+  RefreshCw,
+  Search,
+  Trash2,
+  Upload,
+  XCircle,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Table, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
@@ -17,6 +28,7 @@ import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Modal from '../../components/ui/Modal';
+import Image from '../../components/ui/Image';
 import Select from '../../components/ui/Select';
 import Textarea from '../../components/forms/form/Textarea';
 import PortalFormViewModal from '../../components/forms/portal/PortalFormViewModal';
@@ -36,6 +48,7 @@ import {
   getMyUserPaymentScreenshotUrl,
   listUserForms,
   presignMyUserPaymentUpload,
+  resubmitMyUser,
   updateMyUserStatus,
 } from '../../services/agents.service';
 import type {
@@ -52,9 +65,14 @@ import {
   PaymentHistorySection,
   usePaymentReview,
 } from '../../components/agent/PaymentReviewSection';
-
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-const MAX_SIZE_BYTES = 10 * 1024 * 1024;
+import {
+  isHeicLike,
+  isImageFile,
+  isPaymentApiImageType,
+  MAX_PAYMENT_IMAGE_BYTES,
+  PAYMENT_IMAGE_ACCEPT,
+  prepareImageForUpload,
+} from '../../lib/images/prepareImageForUpload';
 
 async function uploadFileToPresignedUrl(uploadUrl: string, file: File): Promise<void> {
   const response = await fetch(uploadUrl, {
@@ -74,6 +92,12 @@ const statusVariant = (status: UserStatus | null) => {
   if (status === 'pending') return 'warning';
   if (status === 'rejected') return 'error';
   return 'success';
+};
+
+const statusDefaultLabel = (status: UserStatus | null) => {
+  if (status === 'pending') return 'Pending';
+  if (status === 'rejected') return 'Rejected';
+  return 'Approved';
 };
 
 const statusLabelKey = (status: UserStatus | null) => {
@@ -98,6 +122,7 @@ const AgentUserDetail = () => {
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistory[]>([]);
   const [paymentHistoryLoading, setPaymentHistoryLoading] = useState(false);
   const [uploadingPayment, setUploadingPayment] = useState(false);
+  const [preparingImage, setPreparingImage] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [submittingStatus, setSubmittingStatus] = useState(false);
@@ -167,24 +192,26 @@ const AgentUserDetail = () => {
 
   const refreshMyUserLists = () => {
     void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUsersPrefix });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUserRequestCounts });
   };
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    if (!isImageFile(file) && !isHeicLike(file)) {
       toast.error(
         t(
           'user_portal.payment.invalid_type',
-          'Please upload a JPEG, PNG, WebP, or GIF image.',
+          'Please upload a JPEG, PNG, WebP, GIF, or iPhone (HEIC) image.',
         ),
       );
       event.target.value = '';
       return;
     }
 
-    if (file.size > MAX_SIZE_BYTES) {
+    // Allow larger HEIC inputs; compression runs before upload (API max 10MB).
+    if (file.size > MAX_PAYMENT_IMAGE_BYTES * 3) {
       toast.error(
         t('user_portal.payment.too_large', 'Image must be 10 MB or smaller.'),
       );
@@ -192,7 +219,42 @@ const AgentUserDetail = () => {
       return;
     }
 
-    setSelectedFile(file);
+    setPreparingImage(true);
+    try {
+      const prepared = await prepareImageForUpload(file);
+
+      if (!isPaymentApiImageType(prepared.type)) {
+        toast.error(
+          t(
+            'user_portal.payment.invalid_type',
+            'Please upload a JPEG, PNG, WebP, GIF, or iPhone (HEIC) image.',
+          ),
+        );
+        event.target.value = '';
+        return;
+      }
+
+      if (prepared.size > MAX_PAYMENT_IMAGE_BYTES) {
+        toast.error(
+          t('user_portal.payment.too_large', 'Image must be 10 MB or smaller.'),
+        );
+        event.target.value = '';
+        return;
+      }
+
+      setSelectedFile(prepared);
+    } catch {
+      toast.error(
+        t(
+          'user_portal.payment.prepare_failed',
+          'Could not process this image. Try a screenshot or export as JPEG/PNG.',
+        ),
+      );
+      event.target.value = '';
+      setSelectedFile(null);
+    } finally {
+      setPreparingImage(false);
+    }
   };
 
   const handleSubmitPayment = async () => {
@@ -323,6 +385,37 @@ const AgentUserDetail = () => {
     }
   };
 
+  const handleResubmit = async () => {
+    if (!user || !userId || user.status !== 'rejected') return;
+
+    const confirmed = await confirm({
+      title: t('agent.user_request_detail.resubmit_confirm_title', 'Resubmit for review?'),
+      message: t(
+        'agent.user_request_detail.resubmit_confirm_message',
+        'This will move the user back to pending so you can review and approve them again.',
+      ),
+      confirmLabel: t('agent.user_request_detail.resubmit', 'Resubmit for review'),
+    });
+    if (!confirmed) return;
+
+    setSubmittingStatus(true);
+    try {
+      const updated = await resubmitMyUser(userId);
+      setUser(updated);
+      toast.success(
+        t(
+          'agent.user_request_detail.resubmit_success',
+          'Account resubmitted for review successfully',
+        ),
+      );
+      refreshMyUserLists();
+    } catch (error) {
+      toast.error(formatApiError(error as ApiError));
+    } finally {
+      setSubmittingStatus(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-24">
@@ -340,10 +433,12 @@ const AgentUserDetail = () => {
     : (user.filledFormsCount ?? forms.filter((f) => f.isSubmitted === true).length);
   const totalCount = fromUserRequests ? 0 : (user.totalFormsCount ?? forms.length);
   const isPending = user.status === 'pending';
+  const isRejected = user.status === 'rejected';
   const canUploadPayment =
     fromUserRequests &&
     isPending &&
     (!paymentReview.payment || paymentReview.payment.status === 'not_received');
+  const canEdit = !fromUserRequests || isRejected;
 
   return (
     <div className="space-y-6">
@@ -367,7 +462,7 @@ const AgentUserDetail = () => {
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-2xl font-bold text-text truncate">{formatUserName(user)}</h1>
                 <Badge variant={statusVariant(user.status)}>
-                  {t(statusLabelKey(user.status), user.status)}
+                  {t(statusLabelKey(user.status), statusDefaultLabel(user.status))}
                 </Badge>
               </div>
               <p className="text-sm text-text-secondary mt-1">
@@ -377,7 +472,7 @@ const AgentUserDetail = () => {
           </div>
         </div>
 
-        <div className="flex gap-2 shrink-0">
+        <div className="flex flex-wrap gap-2 shrink-0">
           {fromUserRequests && isPending ? (
             <>
               <Button
@@ -410,29 +505,40 @@ const AgentUserDetail = () => {
               </Button>
             </>
           ) : null}
+          {fromUserRequests && isRejected ? (
+            <Button
+              type="button"
+              className="gap-2"
+              onClick={() => void handleResubmit()}
+              isLoading={submittingStatus}
+            >
+              <RefreshCw size={16} />
+              {t('agent.user_request_detail.resubmit', 'Resubmit for review')}
+            </Button>
+          ) : null}
+          {canEdit ? (
+            <Button
+              type="button"
+              variant="secondary"
+              className="gap-2"
+              onClick={() => setEditOpen(true)}
+              disabled={submitting || submittingStatus}
+            >
+              <Edit2 size={16} />
+              {t('agent.my_users.edit', 'Edit')}
+            </Button>
+          ) : null}
           {!fromUserRequests ? (
-            <>
-              <Button
-                type="button"
-                variant="secondary"
-                className="gap-2"
-                onClick={() => setEditOpen(true)}
-                disabled={submitting}
-              >
-                <Edit2 size={16} />
-                {t('agent.my_users.edit', 'Edit')}
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                className="gap-2 text-error border-error/30 hover:bg-error/10"
-                onClick={() => void handleDelete()}
-                disabled={submitting}
-              >
-                <Trash2 size={16} />
-                {t('agent.my_users.delete', 'Delete')}
-              </Button>
-            </>
+            <Button
+              type="button"
+              variant="secondary"
+              className="gap-2 text-error border-error/30 hover:bg-error/10"
+              onClick={() => void handleDelete()}
+              disabled={submitting}
+            >
+              <Trash2 size={16} />
+              {t('agent.my_users.delete', 'Delete')}
+            </Button>
           ) : null}
         </div>
       </div>
@@ -463,17 +569,30 @@ const AgentUserDetail = () => {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept={ALLOWED_TYPES.join(',')}
+                accept={PAYMENT_IMAGE_ACCEPT.join(',')}
                 className="hidden"
-                onChange={handleFileChange}
+                onChange={(e) => void handleFileChange(e)}
               />
 
-              {previewUrl ? (
+              {preparingImage ? (
+                <div className="rounded-xl border border-border p-8 flex flex-col items-center gap-3 text-text-secondary">
+                  <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                  <span className="text-sm font-medium">
+                    {t('user_portal.payment.preparing', 'Preparing image…')}
+                  </span>
+                  <span className="text-xs">
+                    {t(
+                      'user_portal.payment.preparing_hint',
+                      'Compressing and converting iPhone photos if needed.',
+                    )}
+                  </span>
+                </div>
+              ) : previewUrl ? (
                 <div className="rounded-lg border border-border overflow-hidden bg-surface-muted">
-                  <img
+                  <Image
                     src={previewUrl}
                     alt={t('user_portal.payment.preview_alt', 'Payment screenshot preview')}
-                    className="max-h-80 w-full object-contain"
+                    className="max-h-80 w-full"
                   />
                 </div>
               ) : (
@@ -488,7 +607,10 @@ const AgentUserDetail = () => {
                     {t('user_portal.payment.choose_file', 'Choose an image')}
                   </span>
                   <span className="text-xs">
-                    {t('user_portal.payment.file_hint', 'JPEG, PNG, WebP, or GIF up to 10 MB')}
+                    {t(
+                      'user_portal.payment.file_hint',
+                      'JPEG, PNG, WebP, GIF, or iPhone HEIC · compressed on upload',
+                    )}
                   </span>
                 </button>
               )}
@@ -498,7 +620,7 @@ const AgentUserDetail = () => {
                   type="button"
                   variant="secondary"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={!canUploadPayment || uploadingPayment}
+                  disabled={!canUploadPayment || uploadingPayment || preparingImage}
                 >
                   <Upload size={16} className="mr-2" />
                   {selectedFile
@@ -508,7 +630,12 @@ const AgentUserDetail = () => {
                 <Button
                   type="button"
                   onClick={() => void handleSubmitPayment()}
-                  disabled={!canUploadPayment || uploadingPayment || !selectedFile}
+                  disabled={
+                    !canUploadPayment ||
+                    uploadingPayment ||
+                    preparingImage ||
+                    !selectedFile
+                  }
                 >
                   {uploadingPayment
                     ? t('common.submitting', 'Submitting...')

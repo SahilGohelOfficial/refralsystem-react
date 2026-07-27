@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertCircle, CheckCircle, Clock, X } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { AlertCircle, CheckCircle, Clock, RefreshCw, X } from 'lucide-react';
 import { useAuth } from '../../stores/authStore';
 import {
   selectHasPayment,
@@ -8,7 +9,12 @@ import {
   selectPaymentStatus,
   useUserPortalStore,
 } from '../../stores/userPortalStore';
-import type { UserStatus } from '../../types/api';
+import { resubmitMyAccount } from '../../services/users.service';
+import { formatApiError } from '../../lib/api';
+import { queryClient } from '../../lib/queryClient';
+import { queryKeys } from '../../lib/queryKeys';
+import type { ApiError, UserStatus } from '../../types/api';
+import Button from '../ui/Button';
 import IconButton from '../ui/IconButton';
 
 const APPROVAL_SHOWN_KEY = (userId: string) => `userPortalApprovalShown_${userId}`;
@@ -49,6 +55,7 @@ const StatusBanner = ({
   dismissible,
   onDismiss,
   dismissLabel,
+  action,
 }: {
   styleKey: BannerStyleKey;
   icon: typeof AlertCircle;
@@ -59,6 +66,7 @@ const StatusBanner = ({
   dismissible?: boolean;
   onDismiss?: () => void;
   dismissLabel?: string;
+  action?: ReactNode;
 }) => {
   const styles = bannerStyles[styleKey];
 
@@ -78,6 +86,7 @@ const StatusBanner = ({
             {note}
           </p>
         )}
+        {action ? <div className="mt-3">{action}</div> : null}
       </div>
       {dismissible && onDismiss && (
         <IconButton size="sm" onClick={onDismiss} aria-label={dismissLabel ?? 'Dismiss'}>
@@ -90,8 +99,9 @@ const StatusBanner = ({
 
 const UserPortalStatusBanner = () => {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, refreshUserProfile } = useAuth();
   const [dismissedApproved, setDismissedApproved] = useState(false);
+  const [resubmitting, setResubmitting] = useState(false);
 
   const storeUserStatus = useUserPortalStore((state) => state.userStatus);
   const payment = useUserPortalStore((state) => state.payment);
@@ -112,6 +122,25 @@ const UserPortalStatusBanner = () => {
     }
   }, [user?.id, status]);
 
+  const handleResubmit = async () => {
+    setResubmitting(true);
+    try {
+      await resubmitMyAccount();
+      await refreshUserProfile();
+      await queryClient.invalidateQueries({ queryKey: queryKeys.users.me });
+      toast.success(
+        t(
+          'user_portal.status.resubmit_success',
+          'Account resubmitted for review successfully',
+        ),
+      );
+    } catch (error) {
+      toast.error(formatApiError(error as ApiError));
+    } finally {
+      setResubmitting(false);
+    }
+  };
+
   if (!user || user.role !== 'user') {
     return null;
   }
@@ -122,8 +151,24 @@ const UserPortalStatusBanner = () => {
         styleKey="rejected"
         icon={AlertCircle}
         title={t('user_portal.status.rejected', 'Your request was rejected by your agent')}
+        description={t(
+          'user_portal.status.rejected_desc',
+          'Review the reason below. You can resubmit your account for your agent to review again, or contact your agent to update your details first.',
+        )}
         note={note}
         noteLabel={t('user_portal.status.rejected_note', 'Reason:')}
+        action={
+          <Button
+            type="button"
+            size="sm"
+            className="gap-2"
+            onClick={() => void handleResubmit()}
+            isLoading={resubmitting}
+          >
+            <RefreshCw size={14} />
+            {t('user_portal.status.resubmit', 'Resubmit account for review')}
+          </Button>
+        }
       />
     );
   }
