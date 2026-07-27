@@ -20,8 +20,12 @@ dayjs.extend(customParseFormat);
 const ISO = 'YYYY-MM-DD';
 const ISO_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const PANEL_WIDTH = 288;
 const PANEL_GAP = 6;
+const YEAR_PAGE_SIZE = 12;
+
+type PanelMode = 'days' | 'months' | 'years';
 
 function parseIso(value: string) {
   if (!ISO_PATTERN.test(value)) return null;
@@ -41,6 +45,52 @@ function isDisabled(iso: string, min?: string, max?: string): boolean {
     if (maxD && d.isAfter(maxD, 'day')) return true;
   }
   return false;
+}
+
+function isMonthOutOfRange(year: number, month: number, min?: string, max?: string): boolean {
+  const start = dayjs.utc().year(year).month(month).date(1);
+  const end = start.endOf('month');
+  if (min) {
+    const minD = parseIso(min);
+    if (minD && end.isBefore(minD, 'day')) return true;
+  }
+  if (max) {
+    const maxD = parseIso(max);
+    if (maxD && start.isAfter(maxD, 'day')) return true;
+  }
+  return false;
+}
+
+function isYearOutOfRange(year: number, min?: string, max?: string): boolean {
+  const start = dayjs.utc().year(year).month(0).date(1);
+  const end = dayjs.utc().year(year).month(11).endOf('month');
+  if (min) {
+    const minD = parseIso(min);
+    if (minD && end.isBefore(minD, 'day')) return true;
+  }
+  if (max) {
+    const maxD = parseIso(max);
+    if (maxD && start.isAfter(maxD, 'day')) return true;
+  }
+  return false;
+}
+
+function cellButtonClass(opts: {
+  disabled: boolean;
+  selected: boolean;
+  highlighted?: boolean;
+}) {
+  return [
+    'h-9 rounded-lg text-sm tabular-nums transition-colors duration-100',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+    opts.disabled
+      ? 'cursor-not-allowed text-text-muted/40'
+      : 'cursor-pointer text-text hover:bg-surface-elevated',
+    opts.selected ? 'bg-primary text-background hover:bg-primary-hover' : '',
+    !opts.selected && opts.highlighted ? 'ring-1 ring-primary/40' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 }
 
 export type DatePickerProps = {
@@ -77,6 +127,7 @@ export default function DatePicker({
   const autoId = useId();
   const inputId = id ?? autoId;
   const [open, setOpen] = useState(false);
+  const [panelMode, setPanelMode] = useState<PanelMode>('days');
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -85,12 +136,17 @@ export default function DatePicker({
   const initialView = selected ?? parseIso(max ?? '') ?? parseIso(min ?? '') ?? dayjs.utc();
   const [viewYear, setViewYear] = useState(initialView.year());
   const [viewMonth, setViewMonth] = useState(initialView.month());
+  const [yearPageStart, setYearPageStart] = useState(
+    () => Math.floor(initialView.year() / YEAR_PAGE_SIZE) * YEAR_PAGE_SIZE,
+  );
 
   useEffect(() => {
     if (!open) return;
     const base = selected ?? parseIso(max ?? '') ?? parseIso(min ?? '') ?? dayjs.utc();
     setViewYear(base.year());
     setViewMonth(base.month());
+    setYearPageStart(Math.floor(base.year() / YEAR_PAGE_SIZE) * YEAR_PAGE_SIZE);
+    setPanelMode('days');
   }, [open, selected, min, max]);
 
   const updatePosition = useCallback(() => {
@@ -123,7 +179,7 @@ export default function DatePicker({
       window.removeEventListener('resize', onScrollOrResize);
       window.removeEventListener('scroll', onScrollOrResize, true);
     };
-  }, [open, updatePosition]);
+  }, [open, panelMode, updatePosition]);
 
   useEffect(() => {
     if (!open) return;
@@ -134,10 +190,13 @@ export default function DatePicker({
       onBlur?.();
     };
     const onKey = (event: globalThis.KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setOpen(false);
-        onBlur?.();
+      if (event.key !== 'Escape') return;
+      if (panelMode !== 'days') {
+        setPanelMode(panelMode === 'years' ? 'months' : 'days');
+        return;
       }
+      setOpen(false);
+      onBlur?.();
     };
     document.addEventListener('mousedown', onPointerDown);
     document.addEventListener('keydown', onKey);
@@ -145,7 +204,7 @@ export default function DatePicker({
       document.removeEventListener('mousedown', onPointerDown);
       document.removeEventListener('keydown', onKey);
     };
-  }, [open, onBlur]);
+  }, [open, onBlur, panelMode]);
 
   const viewCursor = dayjs.utc().year(viewYear).month(viewMonth).date(1);
   const monthLabel = viewCursor.format('MMMM YYYY');
@@ -166,10 +225,23 @@ export default function DatePicker({
     return cells;
   }, [viewYear, viewMonth]);
 
+  const years = useMemo(
+    () => Array.from({ length: YEAR_PAGE_SIZE }, (_, i) => yearPageStart + i),
+    [yearPageStart],
+  );
+
   const goMonth = (delta: number) => {
     const next = dayjs.utc().year(viewYear).month(viewMonth).date(1).add(delta, 'month');
     setViewYear(next.year());
     setViewMonth(next.month());
+  };
+
+  const goYear = (delta: number) => {
+    setViewYear((y) => y + delta);
+  };
+
+  const goYearPage = (delta: number) => {
+    setYearPageStart((start) => start + delta * YEAR_PAGE_SIZE);
   };
 
   const selectDay = (iso: string) => {
@@ -177,6 +249,18 @@ export default function DatePicker({
     onChange(iso);
     setOpen(false);
     onBlur?.();
+  };
+
+  const selectMonth = (month: number) => {
+    if (isMonthOutOfRange(viewYear, month, min, max)) return;
+    setViewMonth(month);
+    setPanelMode('days');
+  };
+
+  const selectYear = (year: number) => {
+    if (isYearOutOfRange(year, min, max)) return;
+    setViewYear(year);
+    setPanelMode('months');
   };
 
   const displayValue = value && selected ? formatCalendarDate(value) : '';
@@ -187,6 +271,35 @@ export default function DatePicker({
       if (!disabled) setOpen((v) => !v);
     }
   };
+
+  const headerTitle =
+    panelMode === 'days'
+      ? monthLabel
+      : panelMode === 'months'
+        ? String(viewYear)
+        : `${yearPageStart} – ${yearPageStart + YEAR_PAGE_SIZE - 1}`;
+
+  const onHeaderClick = () => {
+    if (panelMode === 'days') setPanelMode('months');
+    else if (panelMode === 'months') setPanelMode('years');
+  };
+
+  const onPrev = () => {
+    if (panelMode === 'days') goMonth(-1);
+    else if (panelMode === 'months') goYear(-1);
+    else goYearPage(-1);
+  };
+
+  const onNext = () => {
+    if (panelMode === 'days') goMonth(1);
+    else if (panelMode === 'months') goYear(1);
+    else goYearPage(1);
+  };
+
+  const prevLabel =
+    panelMode === 'days' ? 'Previous month' : panelMode === 'months' ? 'Previous year' : 'Previous years';
+  const nextLabel =
+    panelMode === 'days' ? 'Next month' : panelMode === 'months' ? 'Next year' : 'Next years';
 
   const panel =
     open &&
@@ -209,67 +322,138 @@ export default function DatePicker({
           <button
             type="button"
             className="icon-btn-sm"
-            onClick={() => goMonth(-1)}
-            aria-label="Previous month"
+            onClick={onPrev}
+            aria-label={prevLabel}
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <div className="text-sm font-semibold text-text tabular-nums">{monthLabel}</div>
+          <button
+            type="button"
+            onClick={onHeaderClick}
+            disabled={panelMode === 'years'}
+            aria-label={
+              panelMode === 'days'
+                ? 'Choose month'
+                : panelMode === 'months'
+                  ? 'Choose year'
+                  : undefined
+            }
+            className={[
+              'rounded-lg px-2 py-1 text-sm font-semibold text-text tabular-nums transition-colors duration-100',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+              panelMode === 'years'
+                ? 'cursor-default'
+                : 'cursor-pointer hover:bg-surface-elevated',
+            ].join(' ')}
+          >
+            {headerTitle}
+          </button>
           <button
             type="button"
             className="icon-btn-sm"
-            onClick={() => goMonth(1)}
-            aria-label="Next month"
+            onClick={onNext}
+            aria-label={nextLabel}
           >
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="mb-1 grid grid-cols-7 gap-0.5">
-          {WEEKDAYS.map((d) => (
-            <div
-              key={d}
-              className="py-1 text-center text-[11px] font-medium uppercase tracking-wide text-text-muted"
-            >
-              {d}
+        {panelMode === 'days' ? (
+          <>
+            <div className="mb-1 grid grid-cols-7 gap-0.5">
+              {WEEKDAYS.map((d) => (
+                <div
+                  key={d}
+                  className="py-1 text-center text-[11px] font-medium uppercase tracking-wide text-text-muted"
+                >
+                  {d}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        <div className="grid grid-cols-7 gap-0.5">
-          {days.map((cell, index) => {
-            if (!cell) {
-              return <div key={`empty-${index}`} className="h-9" />;
-            }
-            const disabledDay = isDisabled(cell.iso, min, max);
-            const isSelected = value === cell.iso;
-            const isToday = cell.iso === dayjs.utc().format(ISO);
+            <div className="grid grid-cols-7 gap-0.5">
+              {days.map((cell, index) => {
+                if (!cell) {
+                  return <div key={`empty-${index}`} className="h-9" />;
+                }
+                const disabledDay = isDisabled(cell.iso, min, max);
+                const isSelected = value === cell.iso;
+                const isToday = cell.iso === dayjs.utc().format(ISO);
 
-            return (
-              <button
-                key={cell.iso}
-                type="button"
-                disabled={disabledDay}
-                onClick={() => selectDay(cell.iso)}
-                className={[
-                  'h-9 rounded-lg text-sm tabular-nums transition-colors duration-100',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
-                  disabledDay
-                    ? 'cursor-not-allowed text-text-muted/40'
-                    : 'cursor-pointer text-text hover:bg-surface-elevated',
-                  isSelected ? 'bg-primary text-background hover:bg-primary-hover' : '',
-                  !isSelected && isToday ? 'ring-1 ring-primary/40' : '',
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
-              >
-                {cell.day}
-              </button>
-            );
-          })}
-        </div>
+                return (
+                  <button
+                    key={cell.iso}
+                    type="button"
+                    disabled={disabledDay}
+                    onClick={() => selectDay(cell.iso)}
+                    className={cellButtonClass({
+                      disabled: disabledDay,
+                      selected: isSelected,
+                      highlighted: isToday,
+                    })}
+                  >
+                    {cell.day}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        ) : null}
 
-        {value ? (
+        {panelMode === 'months' ? (
+          <div className="grid grid-cols-3 gap-1">
+            {MONTHS.map((name, month) => {
+              const disabledMonth = isMonthOutOfRange(viewYear, month, min, max);
+              const isSelected = selected?.year() === viewYear && selected.month() === month;
+              const isCurrent =
+                dayjs.utc().year() === viewYear && dayjs.utc().month() === month;
+
+              return (
+                <button
+                  key={name}
+                  type="button"
+                  disabled={disabledMonth}
+                  onClick={() => selectMonth(month)}
+                  className={cellButtonClass({
+                    disabled: disabledMonth,
+                    selected: isSelected,
+                    highlighted: isCurrent,
+                  })}
+                >
+                  {name}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
+
+        {panelMode === 'years' ? (
+          <div className="grid grid-cols-3 gap-1">
+            {years.map((year) => {
+              const disabledYear = isYearOutOfRange(year, min, max);
+              const isSelected = selected?.year() === year;
+              const isCurrent = dayjs.utc().year() === year;
+
+              return (
+                <button
+                  key={year}
+                  type="button"
+                  disabled={disabledYear}
+                  onClick={() => selectYear(year)}
+                  className={cellButtonClass({
+                    disabled: disabledYear,
+                    selected: isSelected,
+                    highlighted: isCurrent,
+                  })}
+                >
+                  {year}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
+
+        {value && panelMode === 'days' ? (
           <div className="mt-3 flex justify-end border-t border-border pt-2">
             <button
               type="button"
