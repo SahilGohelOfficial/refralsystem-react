@@ -260,7 +260,8 @@ export function usePaymentReview(options: {
   enabled: boolean;
   reloadKey?: string;
   fetchPayment: () => Promise<Payment | null>;
-  fetchScreenshotUrl: () => Promise<string>;
+  /** Optional — only used if payment details omit screenshotDownloadUrl. Prefer prefilled URL. */
+  fetchScreenshotUrl?: () => Promise<string>;
   fetchHistory: () => Promise<PaymentHistory[]>;
   updateStatus?: (payload: UpdatePaymentStatusPayload) => Promise<Payment>;
 }) {
@@ -306,27 +307,26 @@ export function usePaymentReview(options: {
 
     async function loadPayment() {
       try {
-        const data = await fetchPaymentRef.current();
+        const [data, historyEntries] = await Promise.all([
+          fetchPaymentRef.current(),
+          fetchHistoryRef.current(),
+        ]);
         if (cancelled) return;
 
         setPayment(data);
+        setHistory(historyEntries);
 
-        if (!data) {
-          setScreenshotUrl(null);
-          const historyEntries = await fetchHistoryRef.current();
-          if (!cancelled) {
-            setHistory(historyEntries);
+        // Prefer URL prefilled on payment details (no separate download API for preview).
+        if (data?.screenshotDownloadUrl) {
+          setScreenshotUrl(data.screenshotDownloadUrl);
+        } else if (data && fetchScreenshotUrlRef.current) {
+          try {
+            setScreenshotUrl(await fetchScreenshotUrlRef.current());
+          } catch {
+            setScreenshotUrl(null);
           }
-          return;
-        }
-
-        const [url, historyEntries] = await Promise.all([
-          fetchScreenshotUrlRef.current(),
-          fetchHistoryRef.current(),
-        ]);
-        if (!cancelled) {
-          setScreenshotUrl(url);
-          setHistory(historyEntries);
+        } else {
+          setScreenshotUrl(null);
         }
       } catch (error) {
         if (!cancelled) {
@@ -353,7 +353,11 @@ export function usePaymentReview(options: {
     if (!updateStatusRef.current) return;
     setSubmitting(true);
     try {
-      setPayment(await updateStatusRef.current({ status: 'received' }));
+      const updated = await updateStatusRef.current({ status: 'received' });
+      setPayment(updated);
+      if (updated.screenshotDownloadUrl) {
+        setScreenshotUrl(updated.screenshotDownloadUrl);
+      }
       setHistory(await fetchHistoryRef.current());
       toast.success(t('agent.payment.received_success', 'Payment marked as received'));
     } catch (error) {
@@ -367,9 +371,11 @@ export function usePaymentReview(options: {
     if (!updateStatusRef.current) return;
     setSubmitting(true);
     try {
-      setPayment(
-        await updateStatusRef.current({ status: 'not_received', note }),
-      );
+      const updated = await updateStatusRef.current({ status: 'not_received', note });
+      setPayment(updated);
+      if (updated.screenshotDownloadUrl) {
+        setScreenshotUrl(updated.screenshotDownloadUrl);
+      }
       setHistory(await fetchHistoryRef.current());
       toast.success(t('agent.payment.not_received_success', 'Payment marked as not received'));
     } catch (error) {
@@ -385,21 +391,24 @@ export function usePaymentReview(options: {
     setLoadingScreenshot(true);
     setLoadingHistory(true);
     try {
-      const data = await fetchPaymentRef.current();
-      setPayment(data);
-
-      if (!data) {
-        setScreenshotUrl(null);
-        setHistory(await fetchHistoryRef.current());
-        return;
-      }
-
-      const [url, historyEntries] = await Promise.all([
-        fetchScreenshotUrlRef.current(),
+      const [data, historyEntries] = await Promise.all([
+        fetchPaymentRef.current(),
         fetchHistoryRef.current(),
       ]);
-      setScreenshotUrl(url);
+      setPayment(data);
       setHistory(historyEntries);
+
+      if (data?.screenshotDownloadUrl) {
+        setScreenshotUrl(data.screenshotDownloadUrl);
+      } else if (data && fetchScreenshotUrlRef.current) {
+        try {
+          setScreenshotUrl(await fetchScreenshotUrlRef.current());
+        } catch {
+          setScreenshotUrl(null);
+        }
+      } else {
+        setScreenshotUrl(null);
+      }
     } catch (error) {
       toast.error(formatApiError(error as ApiError));
       setScreenshotUrl(null);

@@ -52,6 +52,7 @@ export type StoredFileAnswer = {
   name: string
   size: number
   type: string
+  downloadUrl?: string | null
 }
 
 export type FormAnswerValue =

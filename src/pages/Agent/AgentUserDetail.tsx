@@ -45,7 +45,6 @@ import {
   getMyUser,
   getMyUserPayment,
   getMyUserPaymentHistory,
-  getMyUserPaymentScreenshotUrl,
   listUserForms,
   presignMyUserPaymentUpload,
   resubmitMyUser,
@@ -136,10 +135,7 @@ const AgentUserDetail = () => {
     enabled: Boolean(userId),
     reloadKey: userId,
     fetchPayment: () => getMyUserPayment(userId!),
-    fetchScreenshotUrl: async () => {
-      const response = await getMyUserPaymentScreenshotUrl(userId!);
-      return response.downloadUrl;
-    },
+    // Screenshot preview uses screenshotDownloadUrl from payment details API.
     fetchHistory: () => getMyUserPaymentHistory(userId!),
   });
 

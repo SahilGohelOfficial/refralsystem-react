@@ -1,110 +1,66 @@
-import { Fragment, useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
-import { ChevronDown, ChevronRight } from 'lucide-react'
-import toast from 'react-hot-toast'
-import { Card } from '../../components/ui/Card'
-import Button from '../../components/ui/Button'
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { Eye, Search } from 'lucide-react';
+import { Card } from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
+import Input from '../../components/ui/Input';
 import {
   Table,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from '../../components/ui/Table'
-import Badge from '../../components/ui/Badge'
-import Loader from '../../components/ui/Loader'
-import { formatApiError } from '../../lib/api'
-import { getFormResponseFileDownloadUrl } from '../../services/forms.service'
-import { useForm, useFormResponses } from '../../hooks/queries'
-import { useToastOnError } from '../../hooks/useToastOnError'
-import type { ApiError, FormResponse, StoredFileMeta } from '../../types/api'
-import { resolveFieldLabel } from '../../lib/labels'
-import { formatLocalDateTime } from '../../lib/dates'
-
-function isStoredFileMeta(value: unknown): value is StoredFileMeta {
-  return (
-    !!value &&
-    typeof value === 'object' &&
-    'kind' in value &&
-    (value as { kind?: unknown }).kind === 'file' &&
-    'key' in value &&
-    typeof (value as { key?: unknown }).key === 'string'
-  )
-}
-
-function formatAnswerValue(value: unknown): string {
-  if (value === null) return 'null'
-  if (typeof value === 'string') return value
-  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
-  if (Array.isArray(value)) return value.join(', ')
-  return JSON.stringify(value)
-}
+} from '../../components/ui/Table';
+import Badge from '../../components/ui/Badge';
+import Loader from '../../components/ui/Loader';
+import Modal from '../../components/ui/Modal';
+import FormResponsePreview from '../../components/forms/FormResponsePreview';
+import { getFormResponseFileDownloadUrl } from '../../services/forms.service';
+import { useForm, useFormResponses } from '../../hooks/queries';
+import { useToastOnError } from '../../hooks/useToastOnError';
+import type { FormResponse } from '../../types/api';
+import { formatLocalDateTime } from '../../lib/dates';
 
 export default function FormResponses() {
-  const { t } = useTranslation()
-  const navigate = useNavigate()
-  const { formId = '' } = useParams<{ formId: string }>()
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { formId = '' } = useParams<{ formId: string }>();
 
-  const { data: form, error: formError } = useForm(formId)
-  const { data: responses = [], isLoading, error: responsesError } = useFormResponses(formId)
-  useToastOnError(formError)
-  useToastOnError(responsesError)
+  const { data: form, error: formError } = useForm(formId);
+  const { data: responses = [], isLoading, error: responsesError } = useFormResponses(formId);
+  useToastOnError(formError);
+  useToastOnError(responsesError);
+
+  const [search, setSearch] = useState('');
+  const [selected, setSelected] = useState<FormResponse | null>(null);
 
   useEffect(() => {
     if (formError || responsesError) {
-      navigate('/admin/forms', { replace: true })
+      navigate('/admin/forms', { replace: true });
     }
-  }, [formError, responsesError, navigate])
+  }, [formError, responsesError, navigate]);
 
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
-  const [downloadingFields, setDownloadingFields] = useState<Set<string>>(new Set())
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return responses;
+    return responses.filter((response) => {
+      const name = response.submitter?.name?.toLowerCase() ?? '';
+      const phone = response.submitter?.phoneNumber?.toLowerCase() ?? '';
+      return name.includes(q) || phone.includes(q);
+    });
+  }, [responses, search]);
 
-  const rows = useMemo(
-    () =>
-      responses.map((response) => {
-        const labelMap = new Map(
-          (form?.fields ?? []).map((field) => [field.id, field.label]),
-        )
-        const answers = Object.entries(response.answers ?? {}).map(([fieldId, value]) => ({
-          fieldId,
-          label: resolveFieldLabel(fieldId, labelMap),
-          value,
-        }))
-        return { response, answers }
-      }),
-    [responses, form?.fields],
-  )
-
-  const toggleExpanded = (id: string) => {
-    setExpandedIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
-
-  const handleDownload = async (response: FormResponse, fieldId: string) => {
-    const key = `${response.id}:${fieldId}`
-    if (downloadingFields.has(key)) return
-    setDownloadingFields((prev) => new Set(prev).add(key))
-    try {
-      const { downloadUrl } = await getFormResponseFileDownloadUrl(formId, response.id, fieldId)
-      window.open(downloadUrl, '_blank', 'noopener,noreferrer')
-    } catch (error) {
-      toast.error(formatApiError(error as ApiError))
-    } finally {
-      setDownloadingFields((prev) => {
-        const next = new Set(prev)
-        next.delete(key)
-        return next
-      })
-    }
-  }
+  const onDownloadFile = useCallback(
+    async (fieldId: string, responseId: string) => {
+      const res = await getFormResponseFileDownloadUrl(formId, responseId, fieldId);
+      return res.downloadUrl;
+    },
+    [formId],
+  );
 
   if (isLoading) {
-    return <Loader text={t('common.loading', 'Loading...')} />
+    return <Loader text={t('common.loading', 'Loading...')} />;
   }
 
   return (
@@ -115,7 +71,9 @@ export default function FormResponses() {
             {form?.title ?? t('forms.responses_title', 'Form Responses')}
           </h1>
           <p className="text-sm text-text-secondary mt-1">
-            {t('forms.responses_subtitle', '{{count}} responses', { count: responses.length })}
+            {t('forms.responses_subtitle', '{{count}} responses', {
+              count: responses.length,
+            })}
           </p>
         </div>
         <Button variant="secondary" onClick={() => navigate('/admin/forms')}>
@@ -123,79 +81,101 @@ export default function FormResponses() {
         </Button>
       </div>
 
-      {rows.length === 0 ? (
+      <div className="w-full sm:max-w-xs sm:ml-auto">
+        <Input
+          icon={Search}
+          placeholder={t(
+            'forms.responses_search',
+            'Search by name or phone…',
+          )}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
+      {filtered.length === 0 ? (
         <Card className="p-12 text-center text-text-secondary">
-          {t('forms.no_responses', 'No responses yet.')}
+          {responses.length === 0
+            ? t('forms.no_responses', 'No responses yet.')
+            : t('forms.responses_no_match', 'No submitters match your search.')}
         </Card>
       ) : (
         <Card padding="none" className="data-card overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-10" />
-                <TableHead>{t('forms.response_submitted', 'Submitted')}</TableHead>
                 <TableHead>{t('forms.response_submitter', 'Submitter')}</TableHead>
-                <TableHead>{t('forms.response_answers', 'Answers')}</TableHead>
+                <TableHead>{t('forms.response_type', 'Type')}</TableHead>
+                <TableHead>{t('forms.response_phone', 'Phone')}</TableHead>
+                <TableHead>{t('forms.response_submitted', 'Submitted')}</TableHead>
+                <TableHead className="text-right">
+                  {t('forms.response_actions', 'Actions')}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <tbody>
-              {rows.map(({ response, answers }) => {
-                const expanded = expandedIds.has(response.id)
+              {filtered.map((response) => {
+                const name =
+                  response.submitter?.name?.trim() ||
+                  t('forms.responses.unknown_submitter', 'Unknown submitter');
+                const type = response.submitterType ?? response.submitter?.type;
+                const phone = response.submitter?.phoneNumber ?? '—';
+
                 return (
-                  <Fragment key={response.id}>
-                    <TableRow>
-                      <TableCell>
-                        <button
-                          type="button"
-                          onClick={() => toggleExpanded(response.id)}
-                          className="p-1 text-text-secondary hover:text-text"
-                          aria-expanded={expanded}
-                        >
-                          {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                        </button>
-                      </TableCell>
-                      <TableCell>{formatLocalDateTime(response.submittedAt)}</TableCell>
-                      <TableCell>
-                        <Badge variant="neutral">{response.submitterType}</Badge>
-                      </TableCell>
-                      <TableCell className="text-text-secondary">
-                        {answers.length} {t('forms.fields', 'fields')}
-                      </TableCell>
-                    </TableRow>
-                    {expanded && (
-                      <TableRow>
-                        <TableCell colSpan={4} className="bg-surface/50">
-                          <div className="grid gap-3 py-2">
-                            {answers.map(({ fieldId, label, value }) => (
-                              <div key={fieldId} className="flex flex-col sm:flex-row sm:gap-4 text-sm">
-                                <span className="font-medium text-text min-w-[140px]">{label}</span>
-                                <span className="text-text-secondary flex-1">
-                                  {isStoredFileMeta(value) ? (
-                                    <Button
-                                      size="sm"
-                                      variant="secondary"
-                                      isLoading={downloadingFields.has(`${response.id}:${fieldId}`)}
-                                      onClick={() => void handleDownload(response, fieldId)}
-                                    >
-                                      {value.originalName ?? t('forms.download_file', 'Download file')}
-                                    </Button>
-                                  ) : (
-                                    formatAnswerValue(value)
-                                  )}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </Fragment>
-                )
+                  <TableRow key={response.id}>
+                    <TableCell>
+                      <div className="font-medium text-text">{name}</div>
+                    </TableCell>
+                    <TableCell>
+                      {type ? (
+                        <Badge variant={type === 'agent' ? 'primary' : 'neutral'} dot>
+                          {type === 'agent'
+                            ? t('forms.submitter_agent', 'Agent')
+                            : t('forms.submitter_user', 'User')}
+                        </Badge>
+                      ) : (
+                        '—'
+                      )}
+                    </TableCell>
+                    <TableCell className="text-text-secondary">{phone}</TableCell>
+                    <TableCell className="text-text-secondary">
+                      {formatLocalDateTime(response.submittedAt)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        className="gap-1.5"
+                        onClick={() => setSelected(response)}
+                      >
+                        <Eye size={14} />
+                        {t('forms.view_response', 'View')}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
               })}
             </tbody>
           </Table>
         </Card>
       )}
+
+      <Modal
+        isOpen={selected !== null}
+        onClose={() => setSelected(null)}
+        title={form?.title ?? t('forms.portal.view_title', 'Submitted form')}
+        maxWidth="2xl"
+      >
+        <div className="max-h-[70vh] overflow-y-auto -mx-1 px-1">
+          <FormResponsePreview
+            form={form ?? null}
+            response={selected}
+            showSubmitterMeta
+            onDownloadFile={onDownloadFile}
+          />
+        </div>
+      </Modal>
     </div>
-  )
+  );
 }

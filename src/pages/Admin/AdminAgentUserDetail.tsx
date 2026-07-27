@@ -24,7 +24,6 @@ import { formatCalendarDate, formatLocalDate, formatLocalDateTime } from '../../
 import {
   getAgentUserPayment,
   getAgentUserPaymentHistory,
-  getAgentUserPaymentScreenshotUrl,
   updateAgentUserPaymentStatus,
 } from '../../services/agents.service';
 import {
@@ -71,10 +70,7 @@ const AdminAgentUserDetail = () => {
     reloadKey: `${agentId}:${userId}`,
     fetchPayment: () => getAgentUserPayment(agentId, userId),
     fetchHistory: () => getAgentUserPaymentHistory(agentId, userId),
-    fetchScreenshotUrl: async () => {
-      const response = await getAgentUserPaymentScreenshotUrl(agentId, userId);
-      return response.downloadUrl;
-    },
+    // Screenshot preview uses screenshotDownloadUrl from payment details API.
     updateStatus: (payload) => updateAgentUserPaymentStatus(agentId, userId, payload),
   });
 

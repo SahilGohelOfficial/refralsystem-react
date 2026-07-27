@@ -232,6 +232,8 @@ export interface Payment {
   userId: string;
   agentId: string | null;
   screenShot: string;
+  /** Prefilled signed URL from details API for preview (no separate download call needed). */
+  screenshotDownloadUrl?: string | null;
   status: PaymentStatus;
   note: string | null;
   statusUpdatedBy: string | null;
@@ -437,6 +439,8 @@ export interface StoredFileMeta {
   name: string;
   size: number;
   type: string;
+  /** Prefilled signed URL from details/list API for preview. */
+  downloadUrl?: string | null;
 }
 
 export type SubmittedAnswerValue =
