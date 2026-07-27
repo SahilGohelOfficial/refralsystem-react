@@ -14,10 +14,7 @@ import Loader from '../../components/ui/Loader';
 import StatCard from '../../components/dashboard/StatCard';
 import DashboardSection from '../../components/dashboard/DashboardSection';
 import QuickActions from '../../components/dashboard/QuickActions';
-import {
-  useMyUserRequestCounts,
-  useMyUsers,
-} from '../../hooks/queries';
+import { useAgentDashboard } from '../../hooks/queries';
 import { useToastOnError } from '../../hooks/useToastOnError';
 import { useAuth } from '../../stores/authStore';
 import {
@@ -30,23 +27,14 @@ import { formatLocalDate } from '../../lib/dates';
 const AgentDashboard = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { data: counts, error: countsError, isLoading: countsLoading } =
-    useMyUserRequestCounts();
-  const { data: allUsers = [], error: usersError, isLoading: usersLoading } =
-    useMyUsers(undefined);
-  const { data: pendingUsers = [], error: pendingError } = useMyUsers('pending');
-  useToastOnError(countsError);
-  useToastOnError(usersError);
-  useToastOnError(pendingError);
+  const { data, error, isLoading } = useAgentDashboard();
+  useToastOnError(error);
 
-  if (countsLoading || usersLoading) {
+  if (isLoading || !data) {
     return <Loader text={t('common.loading', 'Loading...')} />;
   }
 
-  const pending = counts?.pending ?? 0;
-  const rejected = counts?.rejected ?? 0;
-  const totalUsers = allUsers.length;
-  const attention = pendingUsers.slice(0, 5);
+  const { users, attention } = data;
 
   return (
     <div className="page-shell space-y-6">
@@ -63,7 +51,7 @@ const AgentDashboard = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title={t('agent.dashboard.pending', 'Pending requests')}
-          value={pending}
+          value={users.pending}
           description={t(
             'agent.dashboard.pending_desc',
             'Awaiting review or payment',
@@ -74,7 +62,7 @@ const AgentDashboard = () => {
         />
         <StatCard
           title={t('agent.dashboard.rejected', 'Rejected')}
-          value={rejected}
+          value={users.rejected}
           description={t(
             'agent.dashboard.rejected_desc',
             'Need fixes or resubmit',
@@ -85,7 +73,7 @@ const AgentDashboard = () => {
         />
         <StatCard
           title={t('agent.dashboard.my_users', 'My users')}
-          value={totalUsers}
+          value={users.all}
           description={t('agent.dashboard.my_users_desc', 'All assigned users')}
           to="/agent/users"
           icon={<Users size={18} />}
@@ -93,9 +81,7 @@ const AgentDashboard = () => {
         />
         <StatCard
           title={t('agent.dashboard.ready_to_approve', 'Payment received')}
-          value={
-            pendingUsers.filter((u) => u.payment?.status === 'received').length
-          }
+          value={users.paymentReceivedPending}
           description={t(
             'agent.dashboard.ready_to_approve_desc',
             'Pending users ready to approve',

@@ -46,6 +46,7 @@ export function useCreateForm() {
     mutationFn: (payload: CreateFormPayload) => createForm(payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['forms'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.admins.dashboard });
     },
     onError: (error) => toast.error(formatApiError(error as ApiError)),
   });
@@ -59,6 +60,7 @@ export function useUpdateForm() {
     onSuccess: (_data, { id }) => {
       void queryClient.invalidateQueries({ queryKey: ['forms'] });
       void queryClient.invalidateQueries({ queryKey: queryKeys.forms.detail(id) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.admins.dashboard });
     },
     onError: (error) => toast.error(formatApiError(error as ApiError)),
   });
@@ -70,6 +72,7 @@ export function useDeleteForm() {
     mutationFn: (id: string) => deleteForm(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['forms'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.admins.dashboard });
     },
     onError: (error) => toast.error(formatApiError(error as ApiError)),
   });

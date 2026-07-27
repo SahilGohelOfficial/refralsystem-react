@@ -1,6 +1,7 @@
 import { api } from '../lib/api';
 import type {
   Agent,
+  AgentDashboard,
   AgentLoginResponse,
   AgentSignUpResponse,
   AgentStatus,
@@ -143,6 +144,10 @@ export function updateAgentProfile(payload: UpdateAgentProfilePayload) {
     method: 'PATCH',
     body: JSON.stringify(payload),
   });
+}
+
+export function getAgentDashboard() {
+  return api<AgentDashboard>('/agents/me/dashboard');
 }
 
 export function listMyUsers(status?: UserStatus) {

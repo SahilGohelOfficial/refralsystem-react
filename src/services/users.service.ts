@@ -8,6 +8,7 @@ import type {
   PresignFormUploadResponse,
   PresignPaymentUploadPayload,
   ReferralUser,
+  UserDashboard,
 } from '../types/api';
 
 const publicOpts = { skipAuthHandler: true as const };
@@ -63,6 +64,10 @@ export function assignAgent(userId: string, payload: AssignAgentPayload) {
 
 export function getMyProfile() {
   return api<ReferralUser>('/users/me');
+}
+
+export function getUserDashboard() {
+  return api<UserDashboard>('/users/me/dashboard');
 }
 
 export function resubmitMyAccount() {

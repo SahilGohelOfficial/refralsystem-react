@@ -127,7 +127,10 @@ const UserPortalStatusBanner = () => {
     try {
       await resubmitMyAccount();
       await refreshUserProfile();
-      await queryClient.invalidateQueries({ queryKey: queryKeys.users.me });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.users.me }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.users.dashboard }),
+      ]);
       toast.success(
         t(
           'user_portal.status.resubmit_success',

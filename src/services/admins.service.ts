@@ -1,10 +1,15 @@
 import { api } from '../lib/api';
 import type {
   Admin,
+  AdminDashboard,
   CreateAdminPayload,
   MessageResponse,
   UpdateAdminPayload,
 } from '../types/api';
+
+export function getAdminDashboard() {
+  return api<AdminDashboard>('/admins/me/dashboard');
+}
 
 export function listAdmins() {
   return api<Admin[]>('/admins');

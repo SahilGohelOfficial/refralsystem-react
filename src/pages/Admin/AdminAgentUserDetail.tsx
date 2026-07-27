@@ -63,6 +63,11 @@ const AdminAgentUserDetail = () => {
 
   const invalidatePaymentQueries = () => {
     void queryClient.invalidateQueries({ queryKey: queryKeys.agents.all });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.admins.dashboard });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.agents.paymentRequestCounts });
+    void queryClient.invalidateQueries({
+      queryKey: ['agents', 'payment-requests'],
+    });
   };
 
   const paymentReview = usePaymentReview({

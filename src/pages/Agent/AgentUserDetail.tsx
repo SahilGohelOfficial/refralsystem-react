@@ -189,6 +189,7 @@ const AgentUserDetail = () => {
   const refreshMyUserLists = () => {
     void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUsersPrefix });
     void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUserRequestCounts });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.agents.dashboard });
   };
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {

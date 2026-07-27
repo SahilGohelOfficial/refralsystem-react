@@ -4,6 +4,7 @@ export const queryKeys = {
   admins: {
     all: ['admins'] as const,
     detail: (id: string) => ['admins', id] as const,
+    dashboard: ['admins', 'me', 'dashboard'] as const,
   },
   agents: {
     all: ['agents'] as const,
@@ -22,6 +23,7 @@ export const queryKeys = {
       ['agents', 'payment-requests', status ?? 'all'] as const,
     paymentRequestCounts: ['agents', 'payment-requests', 'counts'] as const,
     myProfile: ['agents', 'me', 'profile'] as const,
+    dashboard: ['agents', 'me', 'dashboard'] as const,
     myUsersPrefix: ['agents', 'me', 'users'] as const,
     myUsers: (status?: UserStatus) =>
       [...queryKeys.agents.myUsersPrefix, status ?? 'all'] as const,
@@ -44,6 +46,7 @@ export const queryKeys = {
   },
   users: {
     me: ['users', 'me'] as const,
+    dashboard: ['users', 'me', 'dashboard'] as const,
     agentsByLocation: (stateId: number, cityId: number) =>
       ['users', 'agents', stateId, cityId] as const,
   },

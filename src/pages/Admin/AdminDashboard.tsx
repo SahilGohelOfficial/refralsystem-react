@@ -17,12 +17,7 @@ import DashboardSection from '../../components/dashboard/DashboardSection';
 import QuickActions, {
   type QuickActionItem,
 } from '../../components/dashboard/QuickActions';
-import {
-  useAgents,
-  useForms,
-  usePaymentRequestCounts,
-  usePaymentRequests,
-} from '../../hooks/queries';
+import { useAdminDashboard } from '../../hooks/queries';
 import { useToastOnError } from '../../hooks/useToastOnError';
 import { useAuth } from '../../stores/authStore';
 import { isSuperAdmin } from '../../lib/roles';
@@ -34,25 +29,8 @@ const AdminDashboard = () => {
   const { user } = useAuth();
   const superAdmin = isSuperAdmin(user?.role);
 
-  const { data: agents = [], isLoading: agentsLoading, error: agentsError } =
-    useAgents();
-  const {
-    data: paymentCounts,
-    isLoading: countsLoading,
-    error: countsError,
-  } = usePaymentRequestCounts();
-  const {
-    data: pendingPayments = [],
-    isLoading: paymentsLoading,
-    error: paymentsError,
-  } = usePaymentRequests('pending');
-  const { data: forms = [], isLoading: formsLoading, error: formsError } =
-    useForms();
-
-  useToastOnError(agentsError);
-  useToastOnError(countsError);
-  useToastOnError(paymentsError);
-  useToastOnError(formsError);
+  const { data, isLoading, error } = useAdminDashboard();
+  useToastOnError(error);
 
   // Hooks must run unconditionally (before any early return).
   const quickActions = useMemo((): QuickActionItem[] => {
@@ -122,17 +100,11 @@ const AdminDashboard = () => {
     return items;
   }, [superAdmin, t]);
 
-  if (agentsLoading || countsLoading || formsLoading) {
+  if (isLoading || !data) {
     return <Loader text={t('common.loading', 'Loading...')} />;
   }
 
-  const pendingAgents = agents.filter((a) => a.status === 'pending').length;
-  const activeAgents = agents.filter((a) => a.status === 'active').length;
-  const totalResponses = forms.reduce(
-    (sum, f) => sum + (f.submittedCount ?? 0),
-    0,
-  );
-  const attention = pendingPayments.slice(0, 5);
+  const { agents, payments, forms, pendingPayments } = data;
 
   return (
     <div className="page-shell space-y-6">
@@ -149,7 +121,7 @@ const AdminDashboard = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title={t('admin.dashboard.pending_agents', 'Pending agents')}
-          value={pendingAgents}
+          value={agents.pending}
           description={t(
             'admin.dashboard.pending_agents_desc',
             'Awaiting approval',
@@ -160,7 +132,7 @@ const AdminDashboard = () => {
         />
         <StatCard
           title={t('admin.dashboard.active_agents', 'Active agents')}
-          value={activeAgents}
+          value={agents.active}
           description={t('admin.dashboard.active_agents_desc', 'Network size')}
           to="/admin/agents"
           icon={<Users size={18} />}
@@ -168,7 +140,7 @@ const AdminDashboard = () => {
         />
         <StatCard
           title={t('admin.dashboard.pending_payments', 'Pending payments')}
-          value={paymentCounts?.pending ?? 0}
+          value={payments.pending}
           description={t(
             'admin.dashboard.pending_payments_desc',
             'Need verification',
@@ -179,9 +151,9 @@ const AdminDashboard = () => {
         />
         <StatCard
           title={t('admin.dashboard.forms', 'Forms')}
-          value={forms.length}
+          value={forms.total}
           description={t('admin.dashboard.forms_desc', '{{count}} submissions', {
-            count: totalResponses,
+            count: forms.totalSubmissions,
           })}
           to="/admin/forms"
           icon={<FileText size={18} />}
@@ -192,19 +164,19 @@ const AdminDashboard = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
           title={t('admin.dashboard.payments_received', 'Payments received')}
-          value={paymentCounts?.received ?? 0}
+          value={payments.received}
           to="/admin/payment-requests"
           accent="success"
         />
         <StatCard
           title={t('admin.dashboard.payments_not_received', 'Not received')}
-          value={paymentCounts?.notReceived ?? 0}
+          value={payments.notReceived}
           to="/admin/payment-requests"
           accent="error"
         />
         <StatCard
           title={t('admin.dashboard.payments_all', 'All payment requests')}
-          value={paymentCounts?.all ?? 0}
+          value={payments.all}
           to="/admin/payment-requests"
         />
       </div>
@@ -216,9 +188,7 @@ const AdminDashboard = () => {
           actionTo="/admin/payment-requests"
           className="lg:col-span-2"
         >
-          {paymentsLoading ? (
-            <Loader text={t('common.loading', 'Loading...')} />
-          ) : attention.length === 0 ? (
+          {pendingPayments.length === 0 ? (
             <p className="text-sm text-text-secondary py-4">
               {t(
                 'admin.dashboard.no_pending_payments',
@@ -227,39 +197,27 @@ const AdminDashboard = () => {
             </p>
           ) : (
             <ul className="divide-y divide-border">
-              {attention.map((req) => {
-                const userName = [req.userFirstName, req.userMiddleName, req.userLastName]
-                  .filter(Boolean)
-                  .join(' ');
-                const agentName = [
-                  req.agentFirstName,
-                  req.agentMiddleName,
-                  req.agentLastName,
-                ]
-                  .filter(Boolean)
-                  .join(' ');
-                return (
-                  <li
-                    key={req.id}
-                    className="flex flex-wrap items-center justify-between gap-2 py-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-text truncate">
-                        {userName || t('admin.dashboard.unknown_user', 'User')}
-                      </p>
-                      <p className="text-xs text-text-secondary mt-0.5">
-                        {req.userPhoneNumber}
-                        {agentName ? ` · ${agentName}` : ''}
-                        {' · '}
-                        {formatLocalDateTime(req.createdAt)}
-                      </p>
-                    </div>
-                    <Badge variant={paymentStatusBadgeVariant(req.status)} dot>
-                      {paymentStatusLabel(req.status)}
-                    </Badge>
-                  </li>
-                );
-              })}
+              {pendingPayments.map((req) => (
+                <li
+                  key={req.id}
+                  className="flex flex-wrap items-center justify-between gap-2 py-3"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-text truncate">
+                      {req.userName || t('admin.dashboard.unknown_user', 'User')}
+                    </p>
+                    <p className="text-xs text-text-secondary mt-0.5">
+                      {req.userPhoneNumber}
+                      {req.agentName ? ` · ${req.agentName}` : ''}
+                      {' · '}
+                      {formatLocalDateTime(req.createdAt)}
+                    </p>
+                  </div>
+                  <Badge variant={paymentStatusBadgeVariant(req.status)} dot>
+                    {paymentStatusLabel(req.status)}
+                  </Badge>
+                </li>
+              ))}
             </ul>
           )}
         </DashboardSection>

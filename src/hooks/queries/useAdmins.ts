@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import {
   createAdmin,
+  getAdminDashboard,
   listAdmins,
   resetAdminPassword,
   updateAdmin,
@@ -10,6 +11,13 @@ import {
 import { formatApiError } from '../../lib/api';
 import { queryKeys } from '../../lib/queryKeys';
 import type { ApiError, CreateAdminPayload, UpdateAdminPayload } from '../../types/api';
+
+export function useAdminDashboard() {
+  return useQuery({
+    queryKey: queryKeys.admins.dashboard,
+    queryFn: getAdminDashboard,
+  });
+}
 
 export function useAdmins() {
   return useQuery({

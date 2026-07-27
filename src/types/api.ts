@@ -325,6 +325,79 @@ export interface UserAssignedAgent {
   city: string | null;
 }
 
+/** Admin portal dashboard (GET /admins/me/dashboard). */
+export interface AdminDashboardPendingPayment {
+  id: string;
+  userId: string;
+  userName: string;
+  userPhoneNumber: string;
+  agentName: string | null;
+  status: PaymentStatus;
+  createdAt: string;
+}
+
+export interface AdminDashboard {
+  agents: {
+    pending: number;
+    active: number;
+    inactive: number;
+    rejected: number;
+    all: number;
+  };
+  payments: PaymentRequestCounts;
+  forms: {
+    total: number;
+    totalSubmissions: number;
+  };
+  pendingPayments: AdminDashboardPendingPayment[];
+}
+
+/** Agent portal dashboard (GET /agents/me/dashboard). */
+export interface AgentDashboardAttentionUser {
+  id: string;
+  firstName: string;
+  middleName: string | null;
+  lastName: string;
+  phoneNumber: string;
+  status: UserStatus;
+  payment: PaymentSummary | null;
+  createdAt: string;
+}
+
+export interface AgentDashboard {
+  users: {
+    pending: number;
+    rejected: number;
+    approved: number;
+    all: number;
+    paymentReceivedPending: number;
+  };
+  attention: AgentDashboardAttentionUser[];
+}
+
+/** User portal dashboard (GET /users/me/dashboard). */
+export interface UserDashboard {
+  user: {
+    id: string;
+    firstName: string;
+    middleName: string | null;
+    lastName: string;
+    status: UserStatus | null;
+    note: string | null;
+    referralCode: string | null;
+  };
+  agent: UserAssignedAgent | null;
+  payment: {
+    status: PaymentStatus | null;
+    note: string | null;
+    hasPayment: boolean;
+  };
+  forms: {
+    total: number;
+    filled: number;
+  };
+}
+
 export interface ReferralUser {
   id: string;
   firstName: string;

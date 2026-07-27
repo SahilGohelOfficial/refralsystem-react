@@ -6,6 +6,7 @@ import {
   deleteMyUser,
   getAgent,
   getAgentChainReferrals,
+  getAgentDashboard,
   getAgentProfile,
   getAgentUser,
   getApprovalInfo,
@@ -123,6 +124,13 @@ export function useMyUserRequestCounts(enabled = true) {
   });
 }
 
+export function useAgentDashboard() {
+  return useQuery({
+    queryKey: queryKeys.agents.dashboard,
+    queryFn: getAgentDashboard,
+  });
+}
+
 export function useMyUser(userId: string, enabled = true) {
   return useQuery({
     queryKey: queryKeys.agents.myUser(userId),
@@ -162,6 +170,7 @@ export function useCreateAgent() {
     mutationFn: (payload: CreateAgentPayload) => createAgent(payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.agents.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.admins.dashboard });
     },
     onError: (error) => toast.error(formatApiError(error as ApiError)),
   });
@@ -186,6 +195,7 @@ export function useDeleteAgent() {
     mutationFn: (id: string) => deleteAgent(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.agents.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.admins.dashboard });
     },
     onError: (error) => toast.error(formatApiError(error as ApiError)),
   });
@@ -204,6 +214,7 @@ export function useUpdateAgentStatus() {
     onSuccess: (_data, { id }) => {
       void queryClient.invalidateQueries({ queryKey: ['agents'] });
       void queryClient.invalidateQueries({ queryKey: queryKeys.agents.detail(id) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.admins.dashboard });
     },
     onError: (error) => toast.error(formatApiError(error as ApiError)),
   });
@@ -235,6 +246,7 @@ export function useUpdateMyUser() {
     onSuccess: (_data, { id }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUsersPrefix });
       void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUser(id) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.agents.dashboard });
     },
     onError: (error) => toast.error(formatApiError(error as ApiError)),
   });
@@ -246,6 +258,7 @@ export function useDeleteMyUser() {
     mutationFn: (id: string) => deleteMyUser(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUsersPrefix });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.agents.dashboard });
     },
     onError: (error) => toast.error(formatApiError(error as ApiError)),
   });
@@ -259,6 +272,7 @@ export function useUpdateMyUserStatus() {
     onSuccess: (_data, { id }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUsersPrefix });
       void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUser(id) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.agents.dashboard });
     },
     onError: (error) => toast.error(formatApiError(error as ApiError)),
   });
@@ -272,6 +286,7 @@ export function useResubmitMyUser() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUsersPrefix });
       void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUser(id) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.agents.myUserRequestCounts });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.agents.dashboard });
     },
     onError: (error) => toast.error(formatApiError(error as ApiError)),
   });

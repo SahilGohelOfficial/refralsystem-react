@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -19,16 +19,9 @@ import Button from '../../components/ui/Button';
 import Loader from '../../components/ui/Loader';
 import DashboardSection from '../../components/dashboard/DashboardSection';
 import StatCard from '../../components/dashboard/StatCard';
-import { useMyProfile } from '../../hooks/queries';
-import { useForms } from '../../hooks/queries';
+import { useUserDashboard } from '../../hooks/queries';
 import { useToastOnError } from '../../hooks/useToastOnError';
 import { useAuth } from '../../stores/authStore';
-import {
-  selectHasPayment,
-  selectPaymentLoaded,
-  selectPaymentStatus,
-  useUserPortalStore,
-} from '../../stores/userPortalStore';
 import { resubmitMyAccount } from '../../services/users.service';
 import { formatApiError } from '../../lib/api';
 import { paymentStatusBadgeVariant, paymentStatusLabel } from '../../lib/labels';
@@ -45,39 +38,34 @@ const statusBadge = (status: UserStatus | null | undefined) => {
 const UserDashboard = () => {
   const { t } = useTranslation();
   const { user, refreshUserProfile } = useAuth();
-  const { data: profile, isLoading, error } = useMyProfile();
-  const { data: forms = [] } = useForms('user');
+  const { data, isLoading, error } = useUserDashboard();
   useToastOnError(error);
-
-  const payment = useUserPortalStore((s) => s.payment);
-  const paymentStatus = useUserPortalStore(selectPaymentStatus);
-  const paymentLoaded = useUserPortalStore(selectPaymentLoaded);
-  const hasPayment = useUserPortalStore(selectHasPayment);
-  const fetchPayment = useUserPortalStore((s) => s.fetchPayment);
 
   const [resubmitting, setResubmitting] = useState(false);
 
-  useEffect(() => {
-    void fetchPayment();
-  }, [fetchPayment]);
-
-  if (isLoading) {
+  if (isLoading || !data) {
     return <Loader text={t('common.loading', 'Loading...')} />;
   }
 
-  const status = profile?.status ?? user?.status ?? null;
-  const note = profile?.note ?? user?.note;
-  const displayName = profile ? formatUserName(profile) : user?.name ?? '';
-  const agent = profile?.agent ?? null;
-  const formsTotal = forms.length;
-  const formsDone = forms.filter((f) => f.isSubmitted).length;
+  const status = data.user.status ?? user?.status ?? null;
+  const note = data.user.note ?? user?.note;
+  const displayName = formatUserName(data.user) || user?.name || '';
+  const agent = data.agent;
+  const { hasPayment } = data.payment;
+  const paymentStatus = data.payment.status;
+  const paymentNote = data.payment.note;
+  const formsTotal = data.forms.total;
+  const formsDone = data.forms.filled;
 
   const handleResubmit = async () => {
     setResubmitting(true);
     try {
       await resubmitMyAccount();
       await refreshUserProfile();
-      await queryClient.invalidateQueries({ queryKey: queryKeys.users.me });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.users.me }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.users.dashboard }),
+      ]);
       toast.success(
         t(
           'user_portal.status.resubmit_success',
@@ -183,19 +171,19 @@ const UserDashboard = () => {
                   {note}
                 </p>
               ) : null}
-              {paymentLoaded && payment && payment.status === 'not_received' && payment.note ? (
+              {paymentStatus === 'not_received' && paymentNote ? (
                 <p className="mt-3 text-sm text-text">
                   <span className="font-medium text-error">
                     {t('user_portal.status.rejected_note', 'Reason:')}{' '}
                   </span>
-                  {payment.note}
+                  {paymentNote}
                 </p>
               ) : null}
-              {paymentLoaded && payment ? (
+              {hasPayment && paymentStatus ? (
                 <p className="mt-3 text-sm text-text-secondary">
                   {t('user_portal.dashboard.payment_label', 'Payment')}:{' '}
-                  <Badge variant={paymentStatusBadgeVariant(payment.status)} dot>
-                    {paymentStatusLabel(payment.status)}
+                  <Badge variant={paymentStatusBadgeVariant(paymentStatus)} dot>
+                    {paymentStatusLabel(paymentStatus)}
                   </Badge>
                 </p>
               ) : null}
@@ -320,7 +308,7 @@ const UserDashboard = () => {
         <StatCard
           title={t('user_portal.dashboard.referral', 'Referral code')}
           value={
-            profile?.referralCode ??
+            data.user.referralCode ??
             t('user_portal.dashboard.referral_none', '—')
           }
           description={
