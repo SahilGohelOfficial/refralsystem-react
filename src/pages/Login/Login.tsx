@@ -1,4 +1,4 @@
-import React, { useState, FormEvent, useEffect } from 'react';
+import React, { useState, FormEvent } from 'react';
 import { Mail, Lock, ArrowLeft, User, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../stores/authStore';
@@ -32,7 +32,6 @@ const Login = () => {
   let identifierLabel = 'Email address';
   let identifierType: 'email' | 'text' = 'email';
   let identifierPlaceholder = 'admin@example.com';
-  let demoHint = 'superadmin@test.com / superpassword123';
 
   if (path.includes('agent')) {
     portal = 'agent';
@@ -40,23 +39,13 @@ const Login = () => {
     identifierLabel = 'Agent Login ID';
     identifierType = 'text';
     identifierPlaceholder = 'AGT-XXXXXX';
-    demoHint = 'Use credentials provided when your agent account was created';
   } else if (path.startsWith('/user')) {
     portal = 'user';
     title = 'User Portal';
     identifierLabel = 'Phone number';
     identifierType = 'text';
     identifierPlaceholder = '9876543210';
-    demoHint = 'Use your registered phone number and password';
   }
-
-  useEffect(() => {
-    if (portal === 'admin') {
-      setIdentifier('superadmin@test.com');
-    } else {
-      setIdentifier('');
-    }
-  }, [portal]);
 
   if (isAuthenticated && user) {
     return <Navigate to={getDashboardPath(user.role)} replace />;
@@ -222,37 +211,50 @@ const Login = () => {
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-xs text-text-muted">
-            <p>
-              {portal === 'admin' && 'API credentials (after seed):'}
-              <br />
-              {demoHint}
-            </p>
-            {portal === 'agent' && (
-              <p className="mt-3 text-sm text-text-secondary">
-                {t('agent.signup.new_agent', 'New agent?')}{' '}
-                <button
-                  type="button"
-                  onClick={() => navigate('/agent/sign-up')}
-                  className="text-primary hover:underline font-medium"
-                >
-                  {t('agent.signup.link', 'Sign up')}
-                </button>
-              </p>
-            )}
-            {portal === 'user' && (
-              <p className="mt-3 text-sm text-text-secondary">
-                New user?{' '}
-                <button
-                  type="button"
-                  onClick={() => navigate('/register')}
-                  className="text-primary hover:underline font-medium"
-                >
-                  Register for referral
-                </button>
-              </p>
-            )}
-          </div>
+          {(portal === 'agent' || portal === 'user') && (
+            <div className="mt-6 text-center text-xs text-text-muted">
+              {portal === 'agent' && (
+                <>
+                  <p>
+                    {t(
+                      'auth.agent_hint',
+                      'Use credentials provided when your agent account was created',
+                    )}
+                  </p>
+                  <p className="mt-3 text-sm text-text-secondary">
+                    {t('agent.signup.new_agent', 'New agent?')}{' '}
+                    <button
+                      type="button"
+                      onClick={() => navigate('/agent/sign-up')}
+                      className="text-primary hover:underline font-medium"
+                    >
+                      {t('agent.signup.link', 'Sign up')}
+                    </button>
+                  </p>
+                </>
+              )}
+              {portal === 'user' && (
+                <>
+                  <p>
+                    {t(
+                      'auth.user_hint',
+                      'Use your registered phone number and password',
+                    )}
+                  </p>
+                  <p className="mt-3 text-sm text-text-secondary">
+                    New user?{' '}
+                    <button
+                      type="button"
+                      onClick={() => navigate('/register')}
+                      className="text-primary hover:underline font-medium"
+                    >
+                      Register for referral
+                    </button>
+                  </p>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
