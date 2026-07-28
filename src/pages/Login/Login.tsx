@@ -38,7 +38,7 @@ const Login = () => {
     title = 'Agent Portal';
     identifierLabel = 'Agent Login ID';
     identifierType = 'text';
-    identifierPlaceholder = 'AGT-XXXXXX';
+    identifierPlaceholder = 'GJ-AMD-XXXX';
   } else if (path.startsWith('/user')) {
     portal = 'user';
     title = 'User Portal';
@@ -108,7 +108,9 @@ const Login = () => {
     const normalizedIdentifier =
       portal === 'user'
         ? identifier.replace(/\D/g, '')
-        : identifier.trim();
+        : portal === 'agent'
+          ? identifier.trim().toUpperCase()
+          : identifier.trim();
 
     setIsLoading(true);
     try {
