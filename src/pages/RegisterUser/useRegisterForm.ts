@@ -173,13 +173,11 @@ export function useRegisterForm({ t, isAgentPortal, agentUserId }: UseRegisterFo
     }
     if (!isMarriedChoice) {
       errors.isMarried = t('register.err_married_required', 'Please select an option');
-    } else if (isMarriedChoice === 'Yes' && !marriageDate) {
-      errors.marriageDate = t(
-        'register.err_marriage_date_required',
-        'Marriage date is required when married',
+    } else if (isMarriedChoice === 'Yes') {
+      errors.isMarried = t(
+        'register.err_married_not_allowed',
+        'Married users cannot register.',
       );
-    } else if (isMarriedChoice === 'Yes' && marriageDate && !isPastOrTodayUtc(marriageDate)) {
-      errors.marriageDate = t('register.err_marriage_date_invalid', 'Enter a valid marriage date');
     }
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
@@ -530,8 +528,15 @@ export function useRegisterForm({ t, isAgentPortal, agentUserId }: UseRegisterFo
     if (value !== 'Yes') setMarriageDate('');
     setFieldErrors((prev) => {
       const next = { ...prev };
-      delete next.isMarried;
       delete next.marriageDate;
+      if (value === 'Yes') {
+        next.isMarried = t(
+          'register.err_married_not_allowed',
+          'Married users cannot register.',
+        );
+      } else {
+        delete next.isMarried;
+      }
       return next;
     });
   };

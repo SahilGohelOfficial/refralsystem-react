@@ -77,8 +77,6 @@ const RegisterUser = () => {
     genderChoice,
     setGenderChoice,
     isMarriedChoice,
-    marriageDate,
-    setMarriageDate,
     handleMarriedChange,
     addressLine1,
     setAddressLine1,
@@ -300,8 +298,6 @@ const RegisterUser = () => {
                 genderChoice={genderChoice}
                 setGenderChoice={setGenderChoice}
                 isMarriedChoice={isMarriedChoice}
-                marriageDate={marriageDate}
-                setMarriageDate={setMarriageDate}
                 handleMarriedChange={handleMarriedChange}
                 fieldErrors={fieldErrors}
                 onContinue={() => {

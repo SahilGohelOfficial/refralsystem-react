@@ -250,6 +250,7 @@
     "date_placeholder": "तारीख चुनें",
     "err_gender_required": "कृपया लिंग चुनें",
     "err_married_required": "कृपया एक विकल्प चुनें",
+    "err_married_not_allowed": "विवाहित उपयोगकर्ता पंजीकरण नहीं कर सकते।",
     "err_marriage_date_required": "विवाहित होने पर विवाह की तिथि आवश्यक है",
     "err_marriage_date_invalid": "वैध विवाह की तिथि दर्ज करें",
     "err_address_line1": "पता पंक्ति 1 आवश्यक है",

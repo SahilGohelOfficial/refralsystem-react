@@ -250,6 +250,7 @@
     "date_placeholder": "તારીખ પસંદ કરો",
     "err_gender_required": "કૃપા કરીને લિંગ પસંદ કરો",
     "err_married_required": "કૃપા કરીને વિકલ્પ પસંદ કરો",
+    "err_married_not_allowed": "લગ્નબંધ વપરાશકર્તાઓ નોંધણી કરી શકતા નથી.",
     "err_marriage_date_required": "લગ્નબંધ હોય તો લગ્નની તારીખ જરૂરી છે",
     "err_marriage_date_invalid": "માન્ય લગ્નની તારીખ દાખલ કરો",
     "err_address_line1": "સરનામું લાઇન 1 જરૂરી છે",

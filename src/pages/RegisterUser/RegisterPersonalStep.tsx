@@ -5,7 +5,7 @@ import Input from '../../components/ui/Input';
 import DatePicker from '../../components/ui/DatePicker';
 import Button from '../../components/ui/Button';
 import { RadioGroup } from '../../components/forms/form/Radio';
-import { todayUtcDateString, yearsAgoUtcDateString } from '../../lib/dates';
+import { yearsAgoUtcDateString } from '../../lib/dates';
 
 type RegisterPersonalStepProps = {
   submitting: boolean;
@@ -26,8 +26,6 @@ type RegisterPersonalStepProps = {
   genderChoice: string;
   setGenderChoice: (v: string) => void;
   isMarriedChoice: string;
-  marriageDate: string;
-  setMarriageDate: (v: string) => void;
   handleMarriedChange: (v: string) => void;
   fieldErrors: Record<string, string>;
   onContinue: () => void;
@@ -52,8 +50,6 @@ export default function RegisterPersonalStep({
   genderChoice,
   setGenderChoice,
   isMarriedChoice,
-  marriageDate,
-  setMarriageDate,
   handleMarriedChange,
   fieldErrors,
   onContinue,
@@ -141,18 +137,6 @@ export default function RegisterPersonalStep({
         error={fieldErrors.isMarried}
         required
       />
-      {isMarriedChoice === 'Yes' && (
-        <DatePicker
-          label={t('register.marriage_date', 'Marriage Date')}
-          value={marriageDate}
-          onChange={setMarriageDate}
-          error={fieldErrors.marriageDate}
-          required
-          disabled={submitting}
-          max={todayUtcDateString()}
-          placeholder={t('register.date_placeholder', 'Select date')}
-        />
-      )}
       <Input
         label={t('register.referral_code', "User's Referral code")}
         value={referralCode}
@@ -165,7 +149,12 @@ export default function RegisterPersonalStep({
         disabled={submitting}
       />
       <div className="flex justify-end pt-2">
-        <Button type="submit" isLoading={submitting} className="gap-2">
+        <Button
+          type="submit"
+          isLoading={submitting}
+          disabled={submitting || isMarriedChoice === 'Yes'}
+          className="gap-2"
+        >
           {t('register.continue', 'Continue')}
           <ArrowRight size={16} />
         </Button>
