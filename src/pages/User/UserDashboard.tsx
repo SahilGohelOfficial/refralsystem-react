@@ -16,9 +16,10 @@ import PageHeader from '../../components/ui/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
-import Loader from '../../components/ui/Loader';
+import Skeleton from '../../components/ui/Skeleton';
 import DashboardSection from '../../components/dashboard/DashboardSection';
 import StatCard from '../../components/dashboard/StatCard';
+import StatCardSkeleton from '../../components/dashboard/StatCardSkeleton';
 import { useUserDashboard } from '../../hooks/queries';
 import { useToastOnError } from '../../hooks/useToastOnError';
 import { useAuth } from '../../stores/authStore';
@@ -35,6 +36,65 @@ const statusBadge = (status: UserStatus | null | undefined) => {
   return 'warning' as const;
 };
 
+const UserDashboardSkeleton = () => (
+  <div className="page-shell space-y-6" aria-busy="true" aria-label="Loading dashboard">
+    <div className="space-y-2">
+      <Skeleton className="h-8 w-56" />
+      <Skeleton className="h-4 w-72 max-w-full" />
+    </div>
+
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <Card padding="md" className="lg:col-span-2">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0 flex-1 space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Skeleton className="h-6 w-52" />
+              <Skeleton className="h-6 w-20 rounded-full" />
+            </div>
+            <Skeleton className="h-4 w-full max-w-md" />
+            <Skeleton className="h-4 w-40" />
+          </div>
+        </div>
+      </Card>
+
+      <Card padding="md" className="h-full">
+        <Skeleton className="h-5 w-24 mb-3" />
+        <div className="space-y-3">
+          <div className="flex items-start gap-3">
+            <Skeleton className="h-11 w-11 rounded-full shrink-0" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+          </div>
+          <Skeleton className="h-4 w-36" />
+          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-4 w-40" />
+          <div className="flex flex-wrap gap-2 pt-1">
+            <Skeleton className="h-8 w-16 rounded-lg" />
+            <Skeleton className="h-8 w-16 rounded-lg" />
+          </div>
+        </div>
+      </Card>
+    </div>
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <StatCardSkeleton key={i} />
+      ))}
+    </div>
+
+    <Card padding="md">
+      <Skeleton className="h-5 w-28 mb-4" />
+      <div className="flex flex-wrap gap-2">
+        <Skeleton className="h-9 w-24 rounded-lg" />
+        <Skeleton className="h-9 w-20 rounded-lg" />
+        <Skeleton className="h-9 w-24 rounded-lg" />
+      </div>
+    </Card>
+  </div>
+);
+
 const UserDashboard = () => {
   const { t } = useTranslation();
   const { user, refreshUserProfile } = useAuth();
@@ -44,7 +104,7 @@ const UserDashboard = () => {
   const [resubmitting, setResubmitting] = useState(false);
 
   if (isLoading || !data) {
-    return <Loader text={t('common.loading', 'Loading...')} />;
+    return <UserDashboardSkeleton />;
   }
 
   const status = data.user.status ?? user?.status ?? null;
