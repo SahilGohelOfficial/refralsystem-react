@@ -176,7 +176,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
                 <span className="relative shrink-0">
                   <item.icon size={18} strokeWidth={1.75} />
                   {isCollapsed && showBadge ? (
-                    <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-warning text-[10px] font-bold leading-4 text-center text-on-accent">
+                    <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-warning text-[10px] font-bold leading-4 text-center text-on-bright">
                       {badgeLabel}
                     </span>
                   ) : null}

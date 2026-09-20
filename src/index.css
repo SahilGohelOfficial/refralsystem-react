@@ -16,6 +16,7 @@
   --color-text-secondary: var(--text-secondary);
   --color-text-muted: var(--text-muted);
   --color-on-accent: var(--on-accent);
+  --color-on-bright: #18181b;
   --color-success: var(--success);
   --color-success-muted: var(--success-muted);
   --color-warning: var(--warning);
@@ -78,15 +79,15 @@ html.light {
   --surface: #fafafa;
   --surface-elevated: #f4f4f5;
   --card: #ffffff;
-  --primary: #b8921f;
-  --primary-hover: #a6851c;
-  --primary-muted: rgba(184, 146, 31, 0.14);
+  --primary: #8a6914;
+  --primary-hover: #755810;
+  --primary-muted: rgba(138, 105, 20, 0.14);
   --border: rgba(24, 24, 27, 0.1);
   --border-strong: rgba(24, 24, 27, 0.18);
   --text: #18181b;
   --text-secondary: #52525b;
   --text-muted: #71717a;
-  --on-accent: #18181b;
+  --on-accent: #ffffff;
   --success: #16a34a;
   --success-muted: rgba(22, 163, 74, 0.12);
   --warning: #d97706;
@@ -96,8 +97,8 @@ html.light {
   --info: #2563eb;
   --info-muted: rgba(37, 99, 235, 0.12);
   --page-glow:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(184, 146, 31, 0.1), transparent),
-    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(184, 146, 31, 0.05), transparent);
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(138, 105, 20, 0.1), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(138, 105, 20, 0.05), transparent);
   --scrollbar-thumb: rgba(24, 24, 27, 0.18);
   --scrollbar-thumb-hover: rgba(24, 24, 27, 0.28);
   --app-shadow-sm: 0 1px 2px rgba(24, 24, 27, 0.05);
