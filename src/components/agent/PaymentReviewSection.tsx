@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import { Eye } from 'lucide-react';
+import { Eye, MoreVertical, Trash2, Upload } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import Image from '../ui/Image';
+import IconButton from '../ui/IconButton';
+import { Dropdown, DropdownItem } from '../ui/Dropdown';
 import { formatApiError } from '../../lib/api';
 import { formatLocalDateTime } from '../../lib/dates';
 import { paymentStatusBadgeVariant, paymentStatusLabel } from '../../lib/labels';
@@ -30,11 +32,19 @@ type PaymentReviewSectionProps = {
 type PaymentHistorySectionProps = {
   paymentHistory?: PaymentHistory[];
   loadingHistory?: boolean;
+  manageablePaymentId?: string | null;
+  onReupload?: (entry: PaymentHistory) => void;
+  onDelete?: (entry: PaymentHistory) => void;
+  actionsBusy?: boolean;
 };
 
 export function PaymentHistorySection({
   paymentHistory = [],
   loadingHistory = false,
+  manageablePaymentId = null,
+  onReupload,
+  onDelete,
+  actionsBusy = false,
 }: PaymentHistorySectionProps) {
   const { t } = useTranslation();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -91,18 +101,55 @@ export function PaymentHistorySection({
                       {t('agent.payment.admin_note', 'Admin note')}: {entry.note}
                     </p>
                   ) : null}
-                  {entry.screenshotDownloadUrl ? (
-                    <div className="mt-3">
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="secondary"
-                        className="gap-2"
-                        onClick={() => setPreviewUrl(entry.screenshotDownloadUrl)}
-                      >
-                        <Eye size={14} />
-                        {t('agent.payment.history_preview', 'Preview')}
-                      </Button>
+                  {entry.screenshotDownloadUrl ||
+                  (manageablePaymentId === entry.id && onReupload && onDelete) ? (
+                    <div className="mt-3 flex items-center justify-between gap-2">
+                      {entry.screenshotDownloadUrl ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          className="gap-2"
+                          onClick={() => setPreviewUrl(entry.screenshotDownloadUrl)}
+                        >
+                          <Eye size={14} />
+                          {t('agent.payment.history_preview', 'Preview')}
+                        </Button>
+                      ) : (
+                        <span />
+                      )}
+                      {manageablePaymentId === entry.id && onReupload && onDelete ? (
+                        <Dropdown
+                          align="right"
+                          trigger={
+                            <IconButton
+                              size="sm"
+                              disabled={actionsBusy}
+                              aria-label={t('common.actions', 'Actions')}
+                            >
+                              <MoreVertical size={16} />
+                            </IconButton>
+                          }
+                        >
+                          <DropdownItem
+                            onClick={() => {
+                              if (!actionsBusy) onReupload(entry);
+                            }}
+                          >
+                            <Upload size={14} />
+                            {t('agent.payment.history_reupload', 'Reupload')}
+                          </DropdownItem>
+                          <DropdownItem
+                            danger
+                            onClick={() => {
+                              if (!actionsBusy) onDelete(entry);
+                            }}
+                          >
+                            <Trash2 size={14} />
+                            {t('agent.payment.history_delete_screenshot', 'Delete screenshot')}
+                          </DropdownItem>
+                        </Dropdown>
+                      ) : null}
                     </div>
                   ) : null}
                 </div>

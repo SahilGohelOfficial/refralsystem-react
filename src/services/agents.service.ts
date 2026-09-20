@@ -284,6 +284,35 @@ export function confirmMyUserPayment(
   });
 }
 
+export function presignMyUserPaymentReplace(
+  userId: string,
+  payload: PresignPaymentUploadPayload,
+) {
+  return api<{ uploadUrl: string; key: string; url: string; expiresIn: number }>(
+    `/agents/me/users/${userId}/payment/replace/presign`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export function confirmMyUserPaymentReplace(
+  userId: string,
+  payload: ConfirmPaymentPayload,
+) {
+  return api<Payment>(`/agents/me/users/${userId}/payment/replace/confirm`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteMyUserPayment(userId: string) {
+  return api<MessageResponse>(`/agents/me/users/${userId}/payment`, {
+    method: 'DELETE',
+  });
+}
+
 export function getAgentUserPayment(agentId: string, userId: string) {
   return api<Payment | null>(`/agents/${agentId}/users/${userId}/payment`);
 }

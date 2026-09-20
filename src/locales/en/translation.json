@@ -12,7 +12,8 @@
     "confirm_delete_title": "Confirm Delete",
     "confirm_edit_title": "Confirm Changes",
     "loading": "Loading...",
-    "coming_soon": "Coming Soon"
+    "coming_soon": "Coming Soon",
+    "actions": "Actions"
   },
   "auth": {
     "forgot": {
@@ -472,7 +473,16 @@
       "confirm_not_received_message": "The user will be asked to upload a new payment screenshot.",
       "received_success": "Payment marked as received",
       "not_received_success": "Payment marked as not received",
-      "approve_blocked": "Mark payment as received before approving this user."
+      "approve_blocked": "Mark payment as received before approving this user.",
+      "history_preview": "Preview",
+      "history_agent": "Agent",
+      "history_status_changed": "Status changed",
+      "history_reupload": "Reupload",
+      "history_delete_screenshot": "Delete screenshot",
+      "delete_confirm_title": "Delete payment screenshot?",
+      "delete_confirm_message": "This removes the pending payment submission so you can upload a new screenshot.",
+      "reupload_success": "Payment screenshot replaced successfully.",
+      "delete_success": "Payment screenshot deleted successfully."
     },
     "user_request_detail": {
       "back": "Back",

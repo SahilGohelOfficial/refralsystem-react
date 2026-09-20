@@ -12,7 +12,8 @@
     "confirm_delete_title": "हटाने की पुष्टि करें",
     "confirm_edit_title": "परिवर्तनों की पुष्टि करें",
     "loading": "लोड हो रहा है...",
-    "coming_soon": "जल्द आ रहा है"
+    "coming_soon": "जल्द आ रहा है",
+    "actions": "क्रियाएँ"
   },
   "auth": {
     "forgot": {

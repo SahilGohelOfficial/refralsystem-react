@@ -12,7 +12,8 @@
     "confirm_delete_title": "કાઢી નાખવાની પુષ્ટિ કરો",
     "confirm_edit_title": "ફેરફારોની પુષ્ટિ કરો",
     "loading": "લોડ થઈ રહ્યું છે...",
-    "coming_soon": "ટૂંક સમયમાં આવી રહ્યું છે"
+    "coming_soon": "ટૂંક સમયમાં આવી રહ્યું છે",
+    "actions": "ક્રિયાઓ"
   },
   "auth": {
     "forgot": {

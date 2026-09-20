@@ -40,12 +40,15 @@ import { queryKeys } from '../../lib/queryKeys';
 import { useAgentUserPaths } from '../../lib/agentUserPaths';
 import {
   confirmMyUserPayment,
+  confirmMyUserPaymentReplace,
   deleteMyUser,
+  deleteMyUserPayment,
   getApprovalInfo,
   getMyUser,
   getMyUserPayment,
   getMyUserPaymentHistory,
   listUserForms,
+  presignMyUserPaymentReplace,
   presignMyUserPaymentUpload,
   resubmitMyUser,
   updateMyUserStatus,
@@ -110,6 +113,7 @@ const AgentUserDetail = () => {
   const confirm = useConfirm();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const replaceFileInputRef = useRef<HTMLInputElement>(null);
   const { userId, fromUserRequests, backListPath, formSubmitPath } = useAgentUserPaths();
   const [user, setUser] = useState<ReferralUser | null>(null);
   const [forms, setForms] = useState<FormSummary[]>([]);
@@ -121,6 +125,7 @@ const AgentUserDetail = () => {
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistory[]>([]);
   const [paymentHistoryLoading, setPaymentHistoryLoading] = useState(false);
   const [uploadingPayment, setUploadingPayment] = useState(false);
+  const [managingPayment, setManagingPayment] = useState(false);
   const [preparingImage, setPreparingImage] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -192,10 +197,10 @@ const AgentUserDetail = () => {
     void queryClient.invalidateQueries({ queryKey: queryKeys.agents.dashboard });
   };
 
-  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+  const preparePaymentImage = async (
+    file: File,
+    input: HTMLInputElement,
+  ): Promise<File | null> => {
     if (!isImageFile(file) && !isHeicLike(file)) {
       toast.error(
         t(
@@ -203,8 +208,8 @@ const AgentUserDetail = () => {
           'Please upload a JPEG, PNG, WebP, GIF, or iPhone (HEIC) image.',
         ),
       );
-      event.target.value = '';
-      return;
+      input.value = '';
+      return null;
     }
 
     // Allow larger HEIC inputs; compression runs before upload (API max 10MB).
@@ -212,8 +217,8 @@ const AgentUserDetail = () => {
       toast.error(
         t('user_portal.payment.too_large', 'Image must be 10 MB or smaller.'),
       );
-      event.target.value = '';
-      return;
+      input.value = '';
+      return null;
     }
 
     setPreparingImage(true);
@@ -227,19 +232,19 @@ const AgentUserDetail = () => {
             'Please upload a JPEG, PNG, WebP, GIF, or iPhone (HEIC) image.',
           ),
         );
-        event.target.value = '';
-        return;
+        input.value = '';
+        return null;
       }
 
       if (prepared.size > MAX_PAYMENT_IMAGE_BYTES) {
         toast.error(
           t('user_portal.payment.too_large', 'Image must be 10 MB or smaller.'),
         );
-        event.target.value = '';
-        return;
+        input.value = '';
+        return null;
       }
 
-      setSelectedFile(prepared);
+      return prepared;
     } catch {
       toast.error(
         t(
@@ -247,10 +252,80 @@ const AgentUserDetail = () => {
           'Could not process this image. Try a screenshot or export as JPEG/PNG.',
         ),
       );
-      event.target.value = '';
-      setSelectedFile(null);
+      input.value = '';
+      return null;
     } finally {
       setPreparingImage(false);
+    }
+  };
+
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const prepared = await preparePaymentImage(file, event.target);
+    if (!prepared) {
+      setSelectedFile(null);
+      return;
+    }
+
+    setSelectedFile(prepared);
+  };
+
+  const handleReplaceFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !userId) return;
+
+    const prepared = await preparePaymentImage(file, event.target);
+    if (!prepared) return;
+
+    setManagingPayment(true);
+    try {
+      const presign = await presignMyUserPaymentReplace(userId, {
+        fileName: prepared.name,
+        contentType: prepared.type,
+        size: prepared.size,
+      });
+      await uploadFileToPresignedUrl(presign.uploadUrl, prepared);
+      await confirmMyUserPaymentReplace(userId, { screenShot: presign.key });
+      await paymentReview.reloadPayment();
+      toast.success(
+        t('agent.payment.reupload_success', 'Payment screenshot replaced successfully.'),
+      );
+    } catch (error) {
+      toast.error(formatApiError(error as ApiError));
+    } finally {
+      setManagingPayment(false);
+      event.target.value = '';
+    }
+  };
+
+  const handleDeletePayment = async () => {
+    if (!userId) return;
+
+    const confirmed = await confirm({
+      title: t('agent.payment.delete_confirm_title', 'Delete payment screenshot?'),
+      message: t(
+        'agent.payment.delete_confirm_message',
+        'This removes the pending payment submission so you can upload a new screenshot.',
+      ),
+      variant: 'danger',
+      confirmLabel: t('agent.payment.history_delete_screenshot', 'Delete screenshot'),
+    });
+    if (!confirmed) return;
+
+    setManagingPayment(true);
+    try {
+      await deleteMyUserPayment(userId);
+      await paymentReview.reloadPayment();
+      toast.success(
+        t('agent.payment.delete_success', 'Payment screenshot deleted successfully.'),
+      );
+      refreshMyUserLists();
+    } catch (error) {
+      toast.error(formatApiError(error as ApiError));
+    } finally {
+      setManagingPayment(false);
     }
   };
 
@@ -435,6 +510,10 @@ const AgentUserDetail = () => {
     fromUserRequests &&
     isPending &&
     (!paymentReview.payment || paymentReview.payment.status === 'not_received');
+  const manageablePaymentId =
+    fromUserRequests && isPending && paymentReview.payment?.status === 'pending'
+      ? paymentReview.payment.id
+      : null;
   const canEdit = !fromUserRequests || isRejected;
 
   return (
@@ -491,9 +570,9 @@ const AgentUserDetail = () => {
                 title={
                   paymentReview.payment?.status !== 'received'
                     ? t(
-                        'agent.payment.approve_blocked',
-                        'Mark payment as received before approving this user.',
-                      )
+                      'agent.payment.approve_blocked',
+                      'Mark payment as received before approving this user.',
+                    )
                     : undefined
                 }
               >
@@ -884,9 +963,21 @@ const AgentUserDetail = () => {
         </Card>
       ) : null}
 
+      <input
+        ref={replaceFileInputRef}
+        type="file"
+        accept={PAYMENT_IMAGE_ACCEPT.join(',')}
+        className="hidden"
+        onChange={(e) => void handleReplaceFileChange(e)}
+      />
+
       <PaymentHistorySection
         paymentHistory={paymentHistory}
         loadingHistory={paymentHistoryLoading}
+        manageablePaymentId={manageablePaymentId}
+        onReupload={() => replaceFileInputRef.current?.click()}
+        onDelete={() => void handleDeletePayment()}
+        actionsBusy={managingPayment || preparingImage}
       />
 
       <AgentUserEditModal
