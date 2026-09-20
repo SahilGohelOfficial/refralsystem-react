@@ -7,6 +7,7 @@ import Input from '../../components/ui/Input';
 import { useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getDashboardPath } from '../../lib/roles';
+import ThemeToggle from '../../components/ui/ThemeToggle';
 
 type LoginFieldErrors = {
   identifier?: string;
@@ -129,6 +130,9 @@ const Login = () => {
 
   return (
     <div className="auth-shell">
+      <div className="absolute top-4 right-4 z-20">
+        <ThemeToggle />
+      </div>
       <div className="auth-glow-top" />
       <div className="auth-glow-bottom" />
 
@@ -141,7 +145,7 @@ const Login = () => {
           <span className="text-sm">Back</span>
         </button>
         <div className="flex justify-center mb-6 mt-10">
-          <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center text-background font-bold text-xl shadow-sm">
+          <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center text-on-accent font-bold text-xl shadow-sm">
             A
           </div>
         </div>

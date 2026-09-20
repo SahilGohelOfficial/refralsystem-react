@@ -86,7 +86,13 @@
     "language_desc": "Select your preferred language for the interface.",
     "english": "English",
     "hindi": "Hindi",
-    "gujarati": "Gujarati"
+    "gujarati": "Gujarati",
+    "theme_preference": "Appearance",
+    "theme_desc": "Choose light, dark, or match your device.",
+    "theme_light": "Light",
+    "theme_dark": "Dark",
+    "theme_system": "System",
+    "theme_toggle": "Toggle theme"
   },
   "forms": {
     "title": "Dynamic Forms",

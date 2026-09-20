@@ -119,7 +119,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
         <div className="flex items-center h-16 px-4 border-b border-border shrink-0 relative">
           {!isCollapsed ? (
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-background font-bold text-sm shrink-0 shadow-sm">
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-on-accent font-bold text-sm shrink-0 shadow-sm">
                 A
               </div>
               <div className="min-w-0">
@@ -130,7 +130,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
               </div>
             </div>
           ) : (
-            <div className="w-8 h-8 mx-auto rounded-lg bg-primary flex items-center justify-center text-background font-bold text-sm shrink-0 shadow-sm">
+            <div className="w-8 h-8 mx-auto rounded-lg bg-primary flex items-center justify-center text-on-accent font-bold text-sm shrink-0 shadow-sm">
               A
             </div>
           )}
@@ -176,7 +176,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
                 <span className="relative shrink-0">
                   <item.icon size={18} strokeWidth={1.75} />
                   {isCollapsed && showBadge ? (
-                    <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-warning text-[10px] font-bold leading-4 text-center text-background">
+                    <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-warning text-[10px] font-bold leading-4 text-center text-on-accent">
                       {badgeLabel}
                     </span>
                   ) : null}

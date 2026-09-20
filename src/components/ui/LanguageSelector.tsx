@@ -17,7 +17,7 @@ const LanguageSelector = () => {
   ];
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-start gap-5 max-w-lg">
+    <div className="flex flex-col sm:flex-row sm:items-start gap-5">
       <div className="w-11 h-11 rounded-xl bg-primary-muted border border-primary/20 flex items-center justify-center text-primary shrink-0">
         <Globe size={20} strokeWidth={1.75} />
       </div>

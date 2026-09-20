@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Menu, Lock, User } from 'lucide-react';
 import { useAuth } from '../stores/authStore';
 import { formatRoleLabel, isAdminPortalRole } from '../lib/roles';
+import ThemeToggle from '../components/ui/ThemeToggle';
 import type { PortalRole } from '../types/api';
 
 const getProfilePath = (role: PortalRole): string | null => {
@@ -59,7 +60,8 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
         </button>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
+        <ThemeToggle />
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setShowProfileMenu(!showProfileMenu)}

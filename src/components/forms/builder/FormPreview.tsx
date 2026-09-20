@@ -127,7 +127,7 @@ export default function FormPreview({ schema }: FormPreviewProps) {
               className={cn(
                 'flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-medium transition-all sm:px-3',
                 viewport === id
-                  ? 'bg-primary text-background shadow-[0_0_12px_rgba(212,160,23,0.25)]'
+                  ? 'bg-primary text-on-accent shadow-[0_0_12px_rgba(212,160,23,0.25)]'
                   : 'text-text-secondary hover:text-text hover:bg-surface/80',
               )}
             >

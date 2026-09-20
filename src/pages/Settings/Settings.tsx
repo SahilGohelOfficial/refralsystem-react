@@ -1,5 +1,7 @@
 import LanguageSelector from '../../components/ui/LanguageSelector';
+import ThemeSelector from '../../components/ui/ThemeSelector';
 import PageHeader from '../../components/ui/PageHeader';
+import { Card } from '../../components/ui/Card';
 import { useTranslation } from 'react-i18next';
 
 const Settings = () => {
@@ -11,7 +13,11 @@ const Settings = () => {
         title={t('nav.admin.settings', 'Settings')}
         description="Manage your dashboard preferences."
       />
-      <LanguageSelector />
+      <Card className="space-y-6">
+        <ThemeSelector />
+        <div className="divider" />
+        <LanguageSelector />
+      </Card>
     </div>
   );
 };

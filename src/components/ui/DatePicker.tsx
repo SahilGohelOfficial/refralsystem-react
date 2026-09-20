@@ -86,7 +86,7 @@ function cellButtonClass(opts: {
     opts.disabled
       ? 'cursor-not-allowed text-text-muted/40'
       : 'cursor-pointer text-text hover:bg-surface-elevated',
-    opts.selected ? 'bg-primary text-background hover:bg-primary-hover' : '',
+    opts.selected ? 'bg-primary text-on-accent hover:bg-primary-hover' : '',
     !opts.selected && opts.highlighted ? 'ring-1 ring-primary/40' : '',
   ]
     .filter(Boolean)

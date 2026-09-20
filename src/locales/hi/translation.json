@@ -85,7 +85,13 @@
     "language_desc": "इंटरफ़ेस के लिए अपनी पसंदीदा भाषा चुनें।",
     "english": "अंग्रेज़ी",
     "hindi": "हिंदी",
-    "gujarati": "गुजराती"
+    "gujarati": "गुजराती",
+    "theme_preference": "दिखावट",
+    "theme_desc": "हल्की, गहरी, या अपने डिवाइस से मिलाएं।",
+    "theme_light": "हल्की",
+    "theme_dark": "गहरी",
+    "theme_system": "सिस्टम",
+    "theme_toggle": "थीम बदलें"
   },
   "forms": {
     "title": "डायनामिक फॉर्म",

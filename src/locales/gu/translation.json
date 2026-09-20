@@ -85,7 +85,13 @@
     "language_desc": "ઇન્ટરફેસ માટે તમારી પસંદીદા ભાષા પસંદ કરો.",
     "english": "અંગ્રેજી",
     "hindi": "હિન્દી",
-    "gujarati": "ગુજરાતી"
+    "gujarati": "ગુજરાતી",
+    "theme_preference": "દેખાવ",
+    "theme_desc": "હળવું, ઘાટું, અથવા તમારા ડિવાઇસ સાથે મેળવો.",
+    "theme_light": "હળવું",
+    "theme_dark": "ઘાટું",
+    "theme_system": "સિસ્ટમ",
+    "theme_toggle": "થીમ બદલો"
   },
   "forms": {
     "title": "ડાયનેમિક ફોર્મ",

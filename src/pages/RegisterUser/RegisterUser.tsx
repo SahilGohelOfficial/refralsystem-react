@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Card, CardContent } from '../../components/ui/Card';
+import ThemeToggle from '../../components/ui/ThemeToggle';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import { useAuth } from '../../stores/authStore';
@@ -181,7 +182,10 @@ const RegisterUser = () => {
             <ArrowLeft size={16} />
             {t('register.back', 'Back')}
           </button>
-          <Badge variant="primary">{t('register.badge', 'Referral registration')}</Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="primary">{t('register.badge', 'Referral registration')}</Badge>
+            <ThemeToggle />
+          </div>
         </div>
 
         <div>
@@ -220,7 +224,7 @@ const RegisterUser = () => {
                       <div
                         className={`relative z-[1] flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-full border text-xs font-medium transition-colors ${
                           isActive
-                            ? 'border-primary bg-primary text-background shadow-sm shadow-primary/25'
+                            ? 'border-primary bg-primary text-on-accent shadow-sm shadow-primary/25'
                             : isDone
                               ? 'border-primary/50 bg-primary/10 text-primary'
                               : 'border-border bg-card text-text-secondary'

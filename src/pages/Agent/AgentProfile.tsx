@@ -267,7 +267,7 @@ const AgentProfile = () => {
             aria-hidden="true"
           />
           <div className="relative flex flex-col sm:flex-row sm:items-center gap-5">
-            <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center text-background text-xl font-bold shadow-lg shadow-primary/20 shrink-0">
+            <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center text-on-accent text-xl font-bold shadow-lg shadow-primary/20 shrink-0">
               {initials || <User size={28} strokeWidth={1.75} />}
             </div>
             <div className="min-w-0 flex-1">

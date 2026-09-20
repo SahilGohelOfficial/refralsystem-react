@@ -32,13 +32,13 @@ const Switch = ({
         'disabled:cursor-not-allowed disabled:opacity-50',
         checked
           ? 'border-primary bg-primary'
-          : 'border-border bg-surface hover:border-border-strong',
+          : 'border-border bg-text-muted/25 hover:border-border-strong',
         className,
       )}
     >
       <span
         className={cn(
-          'pointer-events-none inline-block size-5 rounded-full bg-background shadow-sm transition-transform duration-150',
+          'pointer-events-none inline-block size-5 rounded-full bg-card shadow-sm ring-1 ring-border transition-transform duration-150',
           checked ? 'translate-x-[22px]' : 'translate-x-0.5',
         )}
       />

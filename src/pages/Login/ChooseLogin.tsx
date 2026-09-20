@@ -1,6 +1,7 @@
 import React from 'react';
 import { Shield, Users, Wallet, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import ThemeToggle from '../../components/ui/ThemeToggle';
 
 const portals = [
   {
@@ -28,12 +29,15 @@ const ChooseLogin = () => {
 
   return (
     <div className="auth-shell px-4">
+      <div className="absolute top-4 right-4 z-20">
+        <ThemeToggle />
+      </div>
       <div className="auth-glow-top" />
       <div className="auth-glow-bottom" />
 
       <div className="sm:mx-auto sm:w-full sm:max-w-4xl relative z-10">
         <div className="flex justify-center mb-6">
-          <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-background font-bold text-2xl shadow-sm">
+          <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-on-accent font-bold text-2xl shadow-sm">
             A
           </div>
         </div>

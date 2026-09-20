@@ -17,6 +17,7 @@ import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import { RadioGroup } from '../../components/forms/form/Radio';
 import { Card, CardContent } from '../../components/ui/Card';
+import ThemeToggle from '../../components/ui/ThemeToggle';
 import { agentSignUp, sendAgentRegistrationOtp } from '../../services/agents.service';
 import { listCities, listStates } from '../../services/location.service';
 import { validateRegistrationEmail } from '../../services/users.service';
@@ -326,14 +327,17 @@ const AgentSignUp = () => {
   return (
     <div className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-lg mx-auto space-y-6">
-        <button
-          type="button"
-          onClick={() => navigate('/agent/login')}
-          className="flex items-center gap-2 text-sm text-text-secondary hover:text-text transition-colors"
-        >
-          <ArrowLeft size={16} />
-          {t('agent.signup.back_login', 'Back to login')}
-        </button>
+        <div className="flex items-center justify-between gap-4">
+          <button
+            type="button"
+            onClick={() => navigate('/agent/login')}
+            className="flex items-center gap-2 text-sm text-text-secondary hover:text-text transition-colors"
+          >
+            <ArrowLeft size={16} />
+            {t('agent.signup.back_login', 'Back to login')}
+          </button>
+          <ThemeToggle />
+        </div>
 
         <div className="text-center sm:text-left">
           <div className="inline-flex items-center justify-center size-12 rounded-xl bg-primary/15 text-primary mb-4">
@@ -358,7 +362,7 @@ const AgentSignUp = () => {
                   <div
                     className={`flex items-center justify-center size-8 shrink-0 rounded-full border text-xs font-medium transition-colors ${
                       isActive
-                        ? 'border-primary bg-primary text-background'
+                        ? 'border-primary bg-primary text-on-accent'
                         : isDone
                           ? 'border-primary/50 bg-primary/10 text-primary'
                           : 'border-border bg-surface text-text-secondary'
