@@ -302,6 +302,14 @@ const AdminAgentUserDetail = () => {
                 {user.referralCode ?? '—'}
               </dd>
             </div>
+            <div>
+              <dt className="text-xs text-text-secondary">
+                {t('agent.user_detail.joined_chain', 'Joined chain')}
+              </dt>
+              <dd className="text-sm font-medium text-text mt-0.5">
+                {user.chainName ?? '—'}
+              </dd>
+            </div>
             {showForms ? (
               <div>
                 <dt className="text-xs text-text-secondary">

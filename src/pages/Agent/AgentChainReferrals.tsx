@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ChainReferralBoard from '../../components/chains/ChainReferralBoard';
 import { useMyChainReferrals } from '../../hooks/queries';
@@ -5,6 +6,7 @@ import { useToastOnError } from '../../hooks/useToastOnError';
 
 const AgentChainReferrals = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { data: chains = [], isLoading, error } = useMyChainReferrals();
   useToastOnError(error);
 
@@ -21,7 +23,11 @@ const AgentChainReferrals = () => {
           )}
         </p>
       </div>
-      <ChainReferralBoard chains={chains} loading={isLoading} />
+      <ChainReferralBoard
+        chains={chains}
+        loading={isLoading}
+        onUserClick={(userId) => navigate(`/agent/users/${userId}`)}
+      />
     </div>
   );
 };

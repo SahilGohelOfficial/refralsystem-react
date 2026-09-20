@@ -412,6 +412,7 @@ export interface ReferralUser {
   referralCode: string | null;
   referredByUserId: string | null;
   referredByName: string | null;
+  chainName?: string | null;
   payment?: PaymentSummary | null;
   dateOfBirth?: string | null;
   gender?: Gender | null;

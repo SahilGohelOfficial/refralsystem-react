@@ -433,7 +433,8 @@
       "forms_section": "ફોર્મ",
       "forms_completed": "પૂર્ણ",
       "referred_by": "રેફરલ દ્વારા",
-      "referral_code": "રેફરલ કોડ"
+      "referral_code": "રેફરલ કોડ",
+      "joined_chain": "જોડાયેલ ચેઈન"
     },
     "approval_modal": {
       "title": "વપરાશકર્તા મંજૂર કરો — ચેઈન પસંદ કરો",

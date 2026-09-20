@@ -433,7 +433,8 @@
       "forms_section": "फॉर्म",
       "forms_completed": "पूर्ण",
       "referred_by": "रेफरल द्वारा",
-      "referral_code": "रेफरल कोड"
+      "referral_code": "रेफरल कोड",
+      "joined_chain": "शामिल चेन"
     },
     "approval_modal": {
       "title": "उपयोगकर्ता स्वीकृत करें — चेन चुनें",

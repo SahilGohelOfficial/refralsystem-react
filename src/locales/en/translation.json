@@ -515,7 +515,8 @@
       "forms_section": "Forms",
       "forms_completed": "completed",
       "referred_by": "Referral by",
-      "referral_code": "Referral code"
+      "referral_code": "Referral code",
+      "joined_chain": "Joined chain"
     },
     "approval_modal": {
       "title": "Approve User — Select Chain",
