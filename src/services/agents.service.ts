@@ -26,6 +26,7 @@ import type {
   UpdateUserStatusPayload,
   UserStatus,
   ApprovalInfo,
+  AgentChainAccess,
   ChainWithUsers,
   Payment,
   PaymentHistory,
@@ -197,6 +198,13 @@ export function getMyChainReferrals() {
 
 export function getAgentChainReferrals(agentId: string) {
   return api<{ chains: ChainWithUsers[] }>(`/agents/${agentId}/chain-referrals`);
+}
+
+export function setAgentChainEnabled(agentId: string, chainId: string, enabled: boolean) {
+  return api<AgentChainAccess>(`/agents/${agentId}/chains/${chainId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ enabled }),
+  });
 }
 
 export function listUserForms(userId: string) {

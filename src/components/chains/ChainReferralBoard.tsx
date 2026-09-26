@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ChainWithUsers } from '../../types/api';
 import ChainColumn from './ChainColumn';
@@ -6,9 +7,17 @@ interface ChainReferralBoardProps {
   chains: ChainWithUsers[];
   loading?: boolean;
   onUserClick?: (userId: string) => void;
+  renderHeaderExtra?: (chain: ChainWithUsers) => ReactNode;
+  dimDisabled?: boolean;
 }
 
-const ChainReferralBoard = ({ chains, loading, onUserClick }: ChainReferralBoardProps) => {
+const ChainReferralBoard = ({
+  chains,
+  loading,
+  onUserClick,
+  renderHeaderExtra,
+  dimDisabled = false,
+}: ChainReferralBoardProps) => {
   const { t } = useTranslation();
 
   if (loading) {
@@ -30,7 +39,13 @@ const ChainReferralBoard = ({ chains, loading, onUserClick }: ChainReferralBoard
   return (
     <div className="flex gap-4 overflow-x-auto pb-4">
       {chains.map((chain) => (
-        <ChainColumn key={chain.id} chain={chain} onUserClick={onUserClick} />
+        <ChainColumn
+          key={chain.id}
+          chain={chain}
+          onUserClick={onUserClick}
+          headerExtra={renderHeaderExtra?.(chain)}
+          dimmed={dimDisabled && chain.enabled !== true}
+        />
       ))}
     </div>
   );

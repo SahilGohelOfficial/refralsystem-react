@@ -1068,20 +1068,29 @@ const AgentUserDetail = () => {
               'Select the chain this user should be assigned to.',
             )}
           </p>
-          <Select
-            label={t('agent.approval_modal.chain_label', 'Chain')}
-            value={selectedChainId}
-            onChange={(e) => setSelectedChainId(e.target.value)}
-            required
-            disabled={submittingStatus}
-            options={[
-              { value: '', label: t('agent.approval_modal.select_chain', '— Select a chain —') },
-              ...(approvalInfo?.chains.map((chain) => ({
-                value: chain.id,
-                label: chain.name,
-              })) ?? []),
-            ]}
-          />
+          {approvalInfo && approvalInfo.chains.length === 0 ? (
+            <p className="text-sm text-error">
+              {t(
+                'agent.approval_modal.none_enabled',
+                'No chains are enabled for your account. Ask an admin to enable a chain before approving this user.',
+              )}
+            </p>
+          ) : (
+            <Select
+              label={t('agent.approval_modal.chain_label', 'Chain')}
+              value={selectedChainId}
+              onChange={(e) => setSelectedChainId(e.target.value)}
+              required
+              disabled={submittingStatus}
+              options={[
+                { value: '', label: t('agent.approval_modal.select_chain', '— Select a chain —') },
+                ...(approvalInfo?.chains.map((chain) => ({
+                  value: chain.id,
+                  label: chain.name,
+                })) ?? []),
+              ]}
+            />
+          )}
           <div className="flex justify-end gap-2 pt-2">
             <Button
               type="button"
@@ -1095,7 +1104,11 @@ const AgentUserDetail = () => {
             >
               {t('common.cancel', 'Cancel')}
             </Button>
-            <Button type="submit" isLoading={submittingStatus} disabled={!selectedChainId}>
+            <Button
+              type="submit"
+              isLoading={submittingStatus}
+              disabled={!selectedChainId || approvalInfo?.chains.length === 0}
+            >
               {t('agent.approval_modal.confirm', 'Confirm Approve')}
             </Button>
           </div>

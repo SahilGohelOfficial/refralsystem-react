@@ -20,6 +20,7 @@ import {
   getMyUserRequestCounts,
   getPaymentRequestCounts,
   resetAgentPassword,
+  setAgentChainEnabled,
   updateAgent,
   updateAgentProfile,
   updateAgentStatus,
@@ -32,6 +33,7 @@ import { queryKeys } from '../../lib/queryKeys';
 import type {
   AgentStatus,
   ApiError,
+  ChainWithUsers,
   CreateAgentPayload,
   PaymentStatus,
   UpdateAgentPayload,
@@ -161,6 +163,52 @@ export function useApprovalInfo(userId: string, enabled = true) {
     queryKey: queryKeys.agents.approvalInfo(userId),
     queryFn: () => getApprovalInfo(userId),
     enabled: Boolean(userId) && enabled,
+  });
+}
+
+export function useSetAgentChainEnabled() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      agentId,
+      chainId,
+      enabled,
+    }: {
+      agentId: string;
+      chainId: string;
+      enabled: boolean;
+    }) => setAgentChainEnabled(agentId, chainId, enabled),
+    onMutate: async ({ agentId, chainId, enabled }) => {
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.agents.chainReferrals(agentId),
+      });
+      const previous = queryClient.getQueryData<ChainWithUsers[]>(
+        queryKeys.agents.chainReferrals(agentId),
+      );
+      queryClient.setQueryData<ChainWithUsers[]>(
+        queryKeys.agents.chainReferrals(agentId),
+        (current) =>
+          current?.map((chain) => (chain.id === chainId ? { ...chain, enabled } : chain)),
+      );
+      return { previous, agentId };
+    },
+    onError: (error, _variables, context) => {
+      if (context) {
+        queryClient.setQueryData(
+          queryKeys.agents.chainReferrals(context.agentId),
+          context.previous,
+        );
+      }
+      toast.error(formatApiError(error as ApiError));
+    },
+    onSettled: (_data, _error, { agentId }) => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.agents.chainReferrals(agentId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.agents.myChainReferrals,
+      });
+    },
   });
 }
 

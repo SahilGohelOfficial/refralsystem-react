@@ -647,5 +647,12 @@ export interface ChainReferralUser {
 export interface ChainWithUsers {
   id: string;
   name: string;
+  enabled?: boolean;
   users: ChainReferralUser[];
+}
+
+export interface AgentChainAccess {
+  agentId: string;
+  chainId: string;
+  enabled: boolean;
 }

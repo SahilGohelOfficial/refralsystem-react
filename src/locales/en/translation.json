@@ -529,11 +529,12 @@
       "description": "Select the chain this user should be assigned to.",
       "chain_label": "Chain",
       "select_chain": "— Select a chain —",
-      "confirm": "Confirm Approve"
+      "confirm": "Confirm Approve",
+      "none_enabled": "No chains are enabled for your account. Ask an admin to enable a chain before approving this user."
     },
     "chain_referrals": {
       "title": "Your Chains",
-      "subtitle": "View all chains and your referral positions within each.",
+      "subtitle": "View the chains enabled for you and your referral positions within each.",
       "empty": "No chains available",
       "not_joined": "Not joined yet",
       "user_count": "{{count}} users",
@@ -577,7 +578,8 @@
     },
     "agent_detail": {
       "chain_view": "Chain View",
-      "chain_view_desc": "All chains and this agent's referral positions within each."
+      "chain_view_desc": "All chains for this agent. Chains are off until you enable them. Placements already made stay in place.",
+      "chain_enabled": "Enabled for this agent"
     },
     "payment_requests": {
       "title": "User Payment Requests",
@@ -620,7 +622,18 @@
     "noResults": "No chains match your search.",
     "created": "Created",
     "updated": "Updated",
-    "actions": "Actions"
+    "actions": "Actions",
+    "agentAccess": {
+      "title": "Agent chain access",
+      "description": "Choose an agent and turn chains on or off. Chains are off until you enable them. The agent only sees enabled chains.",
+      "agent": "Agent",
+      "select_agent": "Select an agent",
+      "enabled": "Enabled",
+      "search": "Search chains...",
+      "empty_agent": "Select an agent to enable or disable chains.",
+      "empty_chains": "No chains yet.",
+      "no_results": "No chains match your search."
+    }
   },
   "locations": {
     "title": "State & City Management",

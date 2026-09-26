@@ -11,10 +11,15 @@ import Modal from '../../components/ui/Modal';
 import PageHeader from '../../components/ui/PageHeader';
 import IconButton from '../../components/ui/IconButton';
 import Loader from '../../components/ui/Loader';
+import Select from '../../components/ui/Select';
+import Switch from '../../components/ui/Switch';
 import {
+  useAgentChainReferrals,
+  useAgents,
   useChains,
   useCreateChain,
   useDeleteChain,
+  useSetAgentChainEnabled,
   useUpdateChain,
 } from '../../hooks/queries';
 import { useConfirm } from '../../stores/confirmStore';
@@ -22,6 +27,7 @@ import { useToastOnError } from '../../hooks/useToastOnError';
 import { useAuth } from '../../stores/authStore';
 import { isSuperAdmin } from '../../lib/roles';
 import type { Chain } from '../../types/api';
+import { formatAgentName } from '../../types/api';
 import { formatLocalDate } from '../../lib/dates';
 
 type ChainModal = { mode: 'create' } | { mode: 'edit'; chain: Chain };
@@ -32,14 +38,24 @@ const Chains = () => {
   const { user } = useAuth();
   const canManage = isSuperAdmin(user?.role);
   const { data: chains = [], isLoading, error } = useChains();
+  const { data: agents = [], isLoading: agentsLoading } = useAgents();
   const createChainMutation = useCreateChain();
   const updateChainMutation = useUpdateChain();
   const deleteChainMutation = useDeleteChain();
   useToastOnError(error);
 
   const [search, setSearch] = useState('');
+  const [accessAgentId, setAccessAgentId] = useState('');
+  const [accessSearch, setAccessSearch] = useState('');
   const [modal, setModal] = useState<ChainModal | null>(null);
   const [formName, setFormName] = useState('');
+  const {
+    data: agentChains = [],
+    isLoading: agentChainsLoading,
+    error: agentChainsError,
+  } = useAgentChainReferrals(accessAgentId, Boolean(accessAgentId));
+  const setChainEnabled = useSetAgentChainEnabled();
+  useToastOnError(agentChainsError);
 
   const submitting = createChainMutation.isPending || updateChainMutation.isPending;
 
@@ -109,6 +125,17 @@ const Chains = () => {
 
   const query = search.toLowerCase();
   const filteredChains = chains.filter((chain) => chain.name.toLowerCase().includes(query));
+  const accessQuery = accessSearch.toLowerCase();
+  const filteredAgentChains = agentChains.filter((chain) =>
+    chain.name.toLowerCase().includes(accessQuery),
+  );
+  const agentOptions = [
+    { value: '', label: t('chains.agentAccess.select_agent', 'Select an agent') },
+    ...agents.map((agent) => ({
+      value: agent.id,
+      label: `${formatAgentName(agent)} (${agent.agentLoginId})`,
+    })),
+  ];
 
   return (
     <div className="page-shell">
@@ -184,6 +211,102 @@ const Chains = () => {
                       </Dropdown>
                     </TableCell>
                   ) : null}
+                </TableRow>
+              ))}
+            </tbody>
+          </Table>
+        )}
+      </Card>
+
+      <Card padding="none" className="data-card">
+        <div className="px-5 py-4 border-b border-border bg-surface/40 space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold text-text">
+              {t('chains.agentAccess.title', 'Agent chain access')}
+            </h2>
+            <p className="text-sm text-text-secondary mt-1">
+              {t(
+                'chains.agentAccess.description',
+                'Choose an agent and turn chains on or off. Chains are off until you enable them. The agent only sees enabled chains.',
+              )}
+            </p>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="w-full sm:max-w-md">
+              <Select
+                label={t('chains.agentAccess.agent', 'Agent')}
+                value={accessAgentId}
+                onChange={(e) => {
+                  setAccessAgentId(e.target.value);
+                  setAccessSearch('');
+                }}
+                options={agentOptions}
+                disabled={agentsLoading}
+              />
+            </div>
+            {accessAgentId ? (
+              <div className="w-full sm:max-w-md">
+                <Input
+                  icon={Search}
+                  placeholder={t('chains.agentAccess.search', 'Search chains...')}
+                  value={accessSearch}
+                  onChange={(e) => setAccessSearch(e.target.value)}
+                />
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        {!accessAgentId ? (
+          <div className="py-16 text-center text-sm text-text-secondary">
+            {t('chains.agentAccess.empty_agent', 'Select an agent to enable or disable chains.')}
+          </div>
+        ) : agentChainsLoading ? (
+          <Loader text={t('common.loading', 'Loading...')} />
+        ) : filteredAgentChains.length === 0 ? (
+          <div className="py-16 text-center text-sm text-text-secondary">
+            {accessSearch
+              ? t('chains.agentAccess.no_results', 'No chains match your search.')
+              : t('chains.agentAccess.empty_chains', 'No chains yet.')}
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12">{t('chains.index')}</TableHead>
+                <TableHead>{t('chains.name')}</TableHead>
+                <TableHead className="text-right">
+                  {t('chains.agentAccess.enabled', 'Enabled')}
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <tbody>
+              {filteredAgentChains.map((chain, index) => (
+                <TableRow key={chain.id}>
+                  <TableCell className="text-text-secondary">{index + 1}</TableCell>
+                  <TableCell>
+                    <div className="font-medium text-text">{chain.name}</div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="inline-flex">
+                      <Switch
+                        checked={chain.enabled === true}
+                        disabled={
+                          setChainEnabled.isPending &&
+                          setChainEnabled.variables?.chainId === chain.id &&
+                          setChainEnabled.variables?.agentId === accessAgentId
+                        }
+                        aria-label={t('admin.agent_detail.chain_enabled', 'Enabled for this agent')}
+                        onChange={(enabled) =>
+                          setChainEnabled.mutate({
+                            agentId: accessAgentId,
+                            chainId: chain.id,
+                            enabled,
+                          })
+                        }
+                      />
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </tbody>

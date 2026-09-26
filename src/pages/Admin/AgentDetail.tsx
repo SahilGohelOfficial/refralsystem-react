@@ -14,7 +14,9 @@ import {
   useAgent,
   useAgentChainReferrals,
   useAgentUsers,
+  useSetAgentChainEnabled,
 } from '../../hooks/queries';
+import Switch from '../../components/ui/Switch';
 import { useToastOnError } from '../../hooks/useToastOnError';
 import { formatApiError } from '../../lib/api';
 import type { ApiError, UserStatus } from '../../types/api';
@@ -61,6 +63,7 @@ const AgentDetail = () => {
     isLoading: loadingChains,
     error: chainsError,
   } = useAgentChainReferrals(agentId, activeTab === 'chains');
+  const setChainEnabled = useSetAgentChainEnabled();
 
   useToastOnError(usersError);
   useToastOnError(chainsError);
@@ -306,15 +309,36 @@ const AgentDetail = () => {
             <p className="text-sm text-text-secondary">
               {t(
                 'admin.agent_detail.chain_view_desc',
-                'All chains and this agent’s referral positions within each.',
+                'All chains for this agent. Chains are off until you enable them. Placements already made stay in place.',
               )}
             </p>
             <ChainReferralBoard
               chains={chains}
               loading={loadingChains}
+              dimDisabled
               onUserClick={(userId) =>
                 navigate(`/admin/agents/${agentId}/users/${userId}`)
               }
+              renderHeaderExtra={(chain) => (
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  <span className="text-[10px] uppercase tracking-wide text-text-muted">
+                    {t('chains.agentAccess.enabled', 'Enabled')}
+                  </span>
+                  <Switch
+                    checked={chain.enabled === true}
+                    disabled={
+                      setChainEnabled.isPending && setChainEnabled.variables?.chainId === chain.id
+                    }
+                    aria-label={t(
+                      'admin.agent_detail.chain_enabled',
+                      'Enabled for this agent',
+                    )}
+                    onChange={(enabled) =>
+                      setChainEnabled.mutate({ agentId, chainId: chain.id, enabled })
+                    }
+                  />
+                </div>
+              )}
             />
           </div>
         ) : (
