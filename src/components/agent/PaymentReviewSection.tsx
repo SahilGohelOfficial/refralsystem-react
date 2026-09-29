@@ -102,7 +102,10 @@ export function PaymentHistorySection({
                     </p>
                   ) : null}
                   {entry.screenshotDownloadUrl ||
-                  (manageablePaymentId === entry.id && onReupload && onDelete) ? (
+                  (manageablePaymentId === entry.id &&
+                    entry.status === 'pending' &&
+                    onReupload &&
+                    onDelete) ? (
                     <div className="mt-3 flex items-center justify-between gap-2">
                       {entry.screenshotDownloadUrl ? (
                         <Button
@@ -118,7 +121,10 @@ export function PaymentHistorySection({
                       ) : (
                         <span />
                       )}
-                      {manageablePaymentId === entry.id && onReupload && onDelete ? (
+                      {manageablePaymentId === entry.id &&
+                      entry.status === 'pending' &&
+                      onReupload &&
+                      onDelete ? (
                         <Dropdown
                           align="right"
                           trigger={

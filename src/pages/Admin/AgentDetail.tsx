@@ -3,8 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Search } from 'lucide-react';
 import AgentActionsMenu from '../../components/admin/AgentActionsMenu';
-import AgentChainEnableSwitch from '../../components/chains/AgentChainEnableSwitch';
 import ChainReferralBoard from '../../components/chains/ChainReferralBoard';
+import Switch from '../../components/ui/Switch';
 import { Card } from '../../components/ui/Card';
 import { Table, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
 import Badge from '../../components/ui/Badge';
@@ -311,19 +311,42 @@ const AgentDetail = () => {
               onUserClick={(userId) =>
                 navigate(`/admin/agents/${agentId}/users/${userId}`)
               }
-              renderHeaderExtra={(chain) => (
-                <AgentChainEnableSwitch
-                  chain={chain}
-                  showLabel
-                  pending={
-                    setChainEnabled.isPending &&
-                    setChainEnabled.variables?.chainId === chain.id
-                  }
-                  onChange={(enabled) =>
-                    setChainEnabled.mutate({ agentId, chainId: chain.id, enabled })
-                  }
-                />
-              )}
+              renderHeaderExtra={(chain) => {
+                const locked = chain.enabled === true && chain.users.length > 0;
+                const pending =
+                  setChainEnabled.isPending &&
+                  setChainEnabled.variables?.chainId === chain.id;
+                return (
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className="text-[10px] uppercase tracking-wide text-text-muted">
+                      {t('chains.agentAccess.enabled', 'Enabled')}
+                    </span>
+                    <span
+                      title={
+                        locked
+                          ? t(
+                              'chains.agentAccess.locked_with_users',
+                              'Cannot turn off while users are on this chain',
+                            )
+                          : undefined
+                      }
+                      className="inline-flex"
+                    >
+                      <Switch
+                        checked={chain.enabled === true}
+                        disabled={locked || pending}
+                        aria-label={t(
+                          'admin.agent_detail.chain_enabled',
+                          'Enabled for this agent',
+                        )}
+                        onChange={(enabled) =>
+                          setChainEnabled.mutate({ agentId, chainId: chain.id, enabled })
+                        }
+                      />
+                    </span>
+                  </div>
+                );
+              }}
             />
           </div>
         ) : (

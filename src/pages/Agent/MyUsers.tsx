@@ -137,15 +137,17 @@ const MyUsers = () => {
                         <Edit2 size={14} />
                         {t('common.edit', 'Edit')}
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="danger"
-                        onClick={() => void handleDelete(user)}
-                        isLoading={deleteUserMutation.isPending}
-                      >
-                        <Trash2 size={14} />
-                        {t('common.delete', 'Delete')}
-                      </Button>
+                      {user.status !== 'approved' && user.payment?.status !== 'received' ? (
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          onClick={() => void handleDelete(user)}
+                          isLoading={deleteUserMutation.isPending}
+                        >
+                          <Trash2 size={14} />
+                          {t('common.delete', 'Delete')}
+                        </Button>
+                      ) : null}
                     </div>
                   </TableCell>
                 </TableRow>

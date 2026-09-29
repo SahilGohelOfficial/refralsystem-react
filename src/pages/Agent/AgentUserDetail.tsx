@@ -505,11 +505,16 @@ const AgentUserDetail = () => {
     fromUserRequests &&
     isPending &&
     (!paymentReview.payment || paymentReview.payment.status === 'not_received');
+  const latestPayment = paymentReview.payment ?? user.payment;
   const manageablePaymentId =
-    fromUserRequests && isPending && paymentReview.payment?.status === 'pending'
+    fromUserRequests &&
+    user.status === 'pending' &&
+    paymentReview.payment?.status === 'pending'
       ? paymentReview.payment.id
       : null;
   const canEdit = !fromUserRequests || isRejected;
+  const canDeleteUser =
+    user.status !== 'approved' && latestPayment?.status !== 'received';
 
   return (
     <div className="space-y-6">
@@ -599,7 +604,7 @@ const AgentUserDetail = () => {
               {t('agent.my_users.edit', 'Edit')}
             </Button>
           ) : null}
-          {!fromUserRequests ? (
+          {canDeleteUser ? (
             <Button
               type="button"
               variant="secondary"

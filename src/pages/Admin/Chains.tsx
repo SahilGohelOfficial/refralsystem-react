@@ -12,7 +12,7 @@ import PageHeader from '../../components/ui/PageHeader';
 import IconButton from '../../components/ui/IconButton';
 import Loader from '../../components/ui/Loader';
 import Select from '../../components/ui/Select';
-import AgentChainEnableSwitch from '../../components/chains/AgentChainEnableSwitch';
+import Switch from '../../components/ui/Switch';
 import {
   useAgentChainReferrals,
   useAgents,
@@ -281,31 +281,50 @@ const Chains = () => {
               </TableRow>
             </TableHeader>
             <tbody>
-              {filteredAgentChains.map((chain, index) => (
-                <TableRow key={chain.id}>
-                  <TableCell className="text-text-secondary">{index + 1}</TableCell>
-                  <TableCell>
-                    <div className="font-medium text-text">{chain.name}</div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <AgentChainEnableSwitch
-                      chain={chain}
-                      pending={
-                        setChainEnabled.isPending &&
-                        setChainEnabled.variables?.chainId === chain.id &&
-                        setChainEnabled.variables?.agentId === accessAgentId
-                      }
-                      onChange={(enabled) =>
-                        setChainEnabled.mutate({
-                          agentId: accessAgentId,
-                          chainId: chain.id,
-                          enabled,
-                        })
-                      }
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
+              {filteredAgentChains.map((chain, index) => {
+                const locked = chain.enabled === true && chain.users.length > 0;
+                const pending =
+                  setChainEnabled.isPending &&
+                  setChainEnabled.variables?.chainId === chain.id &&
+                  setChainEnabled.variables?.agentId === accessAgentId;
+                return (
+                  <TableRow key={chain.id}>
+                    <TableCell className="text-text-secondary">{index + 1}</TableCell>
+                    <TableCell>
+                      <div className="font-medium text-text">{chain.name}</div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <span
+                        title={
+                          locked
+                            ? t(
+                                'chains.agentAccess.locked_with_users',
+                                'Cannot turn off while users are on this chain',
+                              )
+                            : undefined
+                        }
+                        className="inline-flex"
+                      >
+                        <Switch
+                          checked={chain.enabled === true}
+                          disabled={locked || pending}
+                          aria-label={t(
+                            'admin.agent_detail.chain_enabled',
+                            'Enabled for this agent',
+                          )}
+                          onChange={(enabled) =>
+                            setChainEnabled.mutate({
+                              agentId: accessAgentId,
+                              chainId: chain.id,
+                              enabled,
+                            })
+                          }
+                        />
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </tbody>
           </Table>
         )}
