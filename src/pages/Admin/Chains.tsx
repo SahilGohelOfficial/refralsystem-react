@@ -12,7 +12,7 @@ import PageHeader from '../../components/ui/PageHeader';
 import IconButton from '../../components/ui/IconButton';
 import Loader from '../../components/ui/Loader';
 import Select from '../../components/ui/Select';
-import Switch from '../../components/ui/Switch';
+import AgentChainEnableSwitch from '../../components/chains/AgentChainEnableSwitch';
 import {
   useAgentChainReferrals,
   useAgents,
@@ -227,7 +227,7 @@ const Chains = () => {
             <p className="text-sm text-text-secondary mt-1">
               {t(
                 'chains.agentAccess.description',
-                'Choose an agent and turn chains on or off. Chains are off until you enable them. The agent only sees enabled chains.',
+                'Choose an agent and turn chains on or off. Chains are off until you enable them. Once users join a chain, it cannot be turned off. The agent only sees enabled chains.',
               )}
             </p>
           </div>
@@ -288,24 +288,21 @@ const Chains = () => {
                     <div className="font-medium text-text">{chain.name}</div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="inline-flex">
-                      <Switch
-                        checked={chain.enabled === true}
-                        disabled={
-                          setChainEnabled.isPending &&
-                          setChainEnabled.variables?.chainId === chain.id &&
-                          setChainEnabled.variables?.agentId === accessAgentId
-                        }
-                        aria-label={t('admin.agent_detail.chain_enabled', 'Enabled for this agent')}
-                        onChange={(enabled) =>
-                          setChainEnabled.mutate({
-                            agentId: accessAgentId,
-                            chainId: chain.id,
-                            enabled,
-                          })
-                        }
-                      />
-                    </div>
+                    <AgentChainEnableSwitch
+                      chain={chain}
+                      pending={
+                        setChainEnabled.isPending &&
+                        setChainEnabled.variables?.chainId === chain.id &&
+                        setChainEnabled.variables?.agentId === accessAgentId
+                      }
+                      onChange={(enabled) =>
+                        setChainEnabled.mutate({
+                          agentId: accessAgentId,
+                          chainId: chain.id,
+                          enabled,
+                        })
+                      }
+                    />
                   </TableCell>
                 </TableRow>
               ))}

@@ -31,12 +31,7 @@ import {
   PaymentReviewSection,
   usePaymentReview,
 } from '../../components/agent/PaymentReviewSection';
-
-const statusVariant = (status: UserStatus | null) => {
-  if (status === 'pending') return 'warning';
-  if (status === 'rejected') return 'error';
-  return 'success';
-};
+import { userStatusBadgeVariant } from '../../lib/labels';
 
 const statusLabelKey = (status: UserStatus | null) => {
   if (status === 'pending') return 'agent.user_requests.status_pending';
@@ -163,7 +158,7 @@ const AdminAgentUserDetail = () => {
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-2xl font-bold text-text truncate">{formatUserName(user)}</h1>
-                <Badge variant={statusVariant(user.status)}>
+                <Badge variant={userStatusBadgeVariant(user.status)}>
                   {t(statusLabelKey(user.status), user.status)}
                 </Badge>
               </div>

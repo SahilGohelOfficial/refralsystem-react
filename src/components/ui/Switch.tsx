@@ -27,19 +27,20 @@ const Switch = ({
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={cn(
-        'relative inline-flex h-6 w-11 shrink-0 rounded-full border transition-all duration-150',
+        'relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors duration-150',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         'disabled:cursor-not-allowed disabled:opacity-50',
         checked
-          ? 'border-primary bg-primary'
-          : 'border-border bg-text-muted/25 hover:border-border-strong',
+          ? 'bg-primary'
+          : 'bg-text-muted/25 ring-1 ring-inset ring-border hover:ring-border-strong',
         className,
       )}
     >
       <span
+        aria-hidden
         className={cn(
-          'pointer-events-none inline-block size-5 rounded-full bg-card shadow-sm ring-1 ring-border transition-transform duration-150',
-          checked ? 'translate-x-[22px]' : 'translate-x-0.5',
+          'pointer-events-none absolute top-0.5 left-0.5 size-5 rounded-full bg-card shadow-sm transition-transform duration-150',
+          checked && 'translate-x-5',
         )}
       />
     </button>

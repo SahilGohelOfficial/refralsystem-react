@@ -1,4 +1,4 @@
-import type { AgentStatus, PaymentStatus } from '../types/api';
+import type { AgentStatus, PaymentStatus, UserStatus } from '../types/api';
 
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -32,6 +32,20 @@ export function agentStatusBadgeVariant(
     default:
       return 'neutral';
   }
+}
+
+export function userStatusLabel(status: UserStatus | null): string {
+  if (status === 'pending') return 'Pending';
+  if (status === 'rejected') return 'Rejected';
+  return 'Accepted';
+}
+
+export function userStatusBadgeVariant(
+  status: UserStatus | null,
+): 'success' | 'warning' | 'error' {
+  if (status === 'pending') return 'warning';
+  if (status === 'rejected') return 'error';
+  return 'success';
 }
 
 export function paymentStatusLabel(status: PaymentStatus): string {

@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Search } from 'lucide-react';
-import toast from 'react-hot-toast';
 import AgentActionsMenu from '../../components/admin/AgentActionsMenu';
+import AgentChainEnableSwitch from '../../components/chains/AgentChainEnableSwitch';
 import ChainReferralBoard from '../../components/chains/ChainReferralBoard';
 import { Card } from '../../components/ui/Card';
 import { Table, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
@@ -16,10 +16,7 @@ import {
   useAgentUsers,
   useSetAgentChainEnabled,
 } from '../../hooks/queries';
-import Switch from '../../components/ui/Switch';
 import { useToastOnError } from '../../hooks/useToastOnError';
-import { formatApiError } from '../../lib/api';
-import type { ApiError, UserStatus } from '../../types/api';
 import { formatAgentName, formatGenderLabel, formatUserName } from '../../types/api';
 import { formatLocation } from '../../lib/location';
 import { formatLocalDate, formatLocalDateTime } from '../../lib/dates';
@@ -28,17 +25,12 @@ import {
   agentStatusLabel,
   paymentStatusBadgeVariant,
   paymentStatusLabel,
+  userStatusBadgeVariant,
+  userStatusLabel,
 } from '../../lib/labels';
 import TabCount from '../../components/ui/TabCount';
 
-type UserTab = 'approved' | 'pending' | 'rejected';
-type DetailTab = UserTab | 'chains';
-
-const statusVariant = (status: UserStatus) => {
-  if (status === 'pending') return 'warning';
-  if (status === 'rejected') return 'error';
-  return 'success';
-};
+type DetailTab = 'approved' | 'pending' | 'rejected' | 'chains';
 
 const AgentDetail = () => {
   const { agentId = '' } = useParams();
@@ -67,9 +59,9 @@ const AgentDetail = () => {
 
   useToastOnError(usersError);
   useToastOnError(chainsError);
+  useToastOnError(agentError);
   useEffect(() => {
     if (!agentError) return;
-    toast.error(formatApiError(agentError as ApiError));
     navigate('/admin/agents');
   }, [agentError, navigate]);
 
@@ -309,7 +301,7 @@ const AgentDetail = () => {
             <p className="text-sm text-text-secondary">
               {t(
                 'admin.agent_detail.chain_view_desc',
-                'All chains for this agent. Chains are off until you enable them. Placements already made stay in place.',
+                'All chains for this agent. Chains are off until you enable them. Once users join a chain, it cannot be turned off.',
               )}
             </p>
             <ChainReferralBoard
@@ -320,24 +312,17 @@ const AgentDetail = () => {
                 navigate(`/admin/agents/${agentId}/users/${userId}`)
               }
               renderHeaderExtra={(chain) => (
-                <div className="flex flex-col items-end gap-1 shrink-0">
-                  <span className="text-[10px] uppercase tracking-wide text-text-muted">
-                    {t('chains.agentAccess.enabled', 'Enabled')}
-                  </span>
-                  <Switch
-                    checked={chain.enabled === true}
-                    disabled={
-                      setChainEnabled.isPending && setChainEnabled.variables?.chainId === chain.id
-                    }
-                    aria-label={t(
-                      'admin.agent_detail.chain_enabled',
-                      'Enabled for this agent',
-                    )}
-                    onChange={(enabled) =>
-                      setChainEnabled.mutate({ agentId, chainId: chain.id, enabled })
-                    }
-                  />
-                </div>
+                <AgentChainEnableSwitch
+                  chain={chain}
+                  showLabel
+                  pending={
+                    setChainEnabled.isPending &&
+                    setChainEnabled.variables?.chainId === chain.id
+                  }
+                  onChange={(enabled) =>
+                    setChainEnabled.mutate({ agentId, chainId: chain.id, enabled })
+                  }
+                />
               )}
             />
           </div>
@@ -386,12 +371,8 @@ const AgentDetail = () => {
                       <TableCell>{user.phoneNumber}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>
-                        <Badge variant={statusVariant(user.status)}>
-                          {user.status === 'pending'
-                            ? 'Pending'
-                            : user.status === 'rejected'
-                              ? 'Rejected'
-                              : 'Accepted'}
+                        <Badge variant={userStatusBadgeVariant(user.status)}>
+                          {userStatusLabel(user.status)}
                         </Badge>
                       </TableCell>
                       {activeTab === 'pending' ? (

@@ -578,7 +578,7 @@
     },
     "agent_detail": {
       "chain_view": "Chain View",
-      "chain_view_desc": "All chains for this agent. Chains are off until you enable them. Placements already made stay in place.",
+      "chain_view_desc": "All chains for this agent. Chains are off until you enable them. Once users join a chain, it cannot be turned off.",
       "chain_enabled": "Enabled for this agent"
     },
     "payment_requests": {
@@ -625,10 +625,11 @@
     "actions": "Actions",
     "agentAccess": {
       "title": "Agent chain access",
-      "description": "Choose an agent and turn chains on or off. Chains are off until you enable them. The agent only sees enabled chains.",
+      "description": "Choose an agent and turn chains on or off. Chains are off until you enable them. Once users join a chain, it cannot be turned off. The agent only sees enabled chains.",
       "agent": "Agent",
       "select_agent": "Select an agent",
       "enabled": "Enabled",
+      "locked_with_users": "Cannot turn off while users are on this chain",
       "search": "Search chains...",
       "empty_agent": "Select an agent to enable or disable chains.",
       "empty_chains": "No chains yet.",

@@ -10,20 +10,18 @@ import Loader from '../../components/ui/Loader';
 import TabCount from '../../components/ui/TabCount';
 import { useMyUserRequestCounts, useMyUsers } from '../../hooks/queries';
 import { useToastOnError } from '../../hooks/useToastOnError';
-import { paymentStatusBadgeVariant, paymentStatusLabel } from '../../lib/labels';
-import type { UserStatus } from '../../types/api';
+import {
+  paymentStatusBadgeVariant,
+  paymentStatusLabel,
+  userStatusBadgeVariant,
+  userStatusLabel,
+} from '../../lib/labels';
 import { formatUserName } from '../../types/api';
 import { formatLocalDate } from '../../lib/dates';
 
 type RequestTab = 'pending' | 'rejected';
 
 const EMPTY_COUNTS = { pending: 0, rejected: 0 };
-
-const statusVariant = (status: UserStatus | null) => {
-  if (status === 'pending') return 'warning';
-  if (status === 'rejected') return 'error';
-  return 'success';
-};
 
 const UserRequests = () => {
   const { t } = useTranslation();
@@ -133,8 +131,8 @@ const UserRequests = () => {
                   </TableCell>
                   <TableCell>{user.phoneNumber}</TableCell>
                   <TableCell>
-                    <Badge variant={statusVariant(user.status)} dot>
-                      {user.status ?? '—'}
+                    <Badge variant={userStatusBadgeVariant(user.status)} dot>
+                      {user.status ? userStatusLabel(user.status) : '—'}
                     </Badge>
                   </TableCell>
                   <TableCell>

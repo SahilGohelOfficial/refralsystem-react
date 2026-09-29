@@ -63,6 +63,7 @@ import type {
 } from '../../types/api';
 import { formatGenderLabel, formatUserName } from '../../types/api';
 import { formatCalendarDate, formatLocalDate, formatLocalDateTime } from '../../lib/dates';
+import { userStatusBadgeVariant } from '../../lib/labels';
 import {
   PaymentHistorySection,
   usePaymentReview,
@@ -89,12 +90,6 @@ async function uploadFileToPresignedUrl(uploadUrl: string, file: File): Promise<
     throw new Error(`Upload failed (${response.status})`);
   }
 }
-
-const statusVariant = (status: UserStatus | null) => {
-  if (status === 'pending') return 'warning';
-  if (status === 'rejected') return 'error';
-  return 'success';
-};
 
 const statusDefaultLabel = (status: UserStatus | null) => {
   if (status === 'pending') return 'Pending';
@@ -537,7 +532,7 @@ const AgentUserDetail = () => {
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-2xl font-bold text-text truncate">{formatUserName(user)}</h1>
-                <Badge variant={statusVariant(user.status)}>
+                <Badge variant={userStatusBadgeVariant(user.status)}>
                   {t(statusLabelKey(user.status), statusDefaultLabel(user.status))}
                 </Badge>
               </div>
